@@ -1,0 +1,32 @@
+package datapp.machat.application;
+
+import android.app.Application;
+
+import com.parse.Parse;
+import com.parse.ParseFacebookUtils;
+import com.parse.PushService;
+
+import datapp.machat.R;
+
+/**
+ * Created by hat on 6/30/15.
+ */
+public class MaChatApplication extends Application {
+    private static MaChatApplication ourInstance;
+
+    public static MaChatApplication getInstance() {
+        return ourInstance;
+    }
+
+    public MaChatApplication() {
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        ourInstance = this;
+        Parse.initialize(this, getString(R.string.parse_first_arg), getString(R.string.parse_second_arg));
+        ParseFacebookUtils.initialize(getString(R.string.fb_app_id));
+        //PushService.setDefaultPushCallback(this, MainActivity.class);
+    }
+}
