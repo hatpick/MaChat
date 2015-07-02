@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="primary" type="color">#ff00b764</item>
+    <item name="secondary" type="color">#ffe4e4e4</item>
+</resources>

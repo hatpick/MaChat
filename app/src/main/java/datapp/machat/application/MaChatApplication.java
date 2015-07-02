@@ -26,7 +26,7 @@ public class MaChatApplication extends Application {
         super.onCreate();
         ourInstance = this;
         Parse.initialize(this, getString(R.string.parse_first_arg), getString(R.string.parse_second_arg));
-        ParseFacebookUtils.initialize(getString(R.string.fb_app_id));
+        ParseFacebookUtils.initialize(this.getApplicationContext());
         //PushService.setDefaultPushCallback(this, MainActivity.class);
     }
 }
