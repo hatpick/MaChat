@@ -17,6 +17,7 @@ import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -82,7 +83,7 @@ public class LoginActivity extends CustomActivity {
                 }
             });
         } else if(v.getId() == R.id.facebookBtn){
-            final List<String> permissions = Arrays.asList("public_profile", "email");
+            final List<String> permissions = Arrays.asList("public_profile", "email", "user_friends");
             ParseFacebookUtils.logInWithReadPermissionsInBackground(LoginActivity.this, permissions, new LogInCallback() {
                 @Override
                 public void done(ParseUser parseUser, ParseException e) {
@@ -115,6 +116,14 @@ public class LoginActivity extends CustomActivity {
                                         } catch (JSONException e1) {
                                             e1.printStackTrace();
                                         }
+                                    }
+                                }
+                            }).executeAsync();
+                            GraphRequest.newMyFriendsRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONArrayCallback() {
+                                @Override
+                                public void onCompleted(JSONArray jsonArray, GraphResponse graphResponse) {
+                                    if(jsonArray.length() > 0){
+
                                     }
                                 }
                             }).executeAsync();
