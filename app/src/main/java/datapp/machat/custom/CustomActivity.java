@@ -3,8 +3,9 @@ package datapp.machat.custom;
 /**
  * Created by hat on 7/2/15.
  */
-import android.app.ActionBar;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
 
@@ -16,7 +17,7 @@ import datapp.machat.helper.TouchEffect;
  * inherit the common behaviors like implementing a common interface that can be
  * used in all child activities.
  */
-public class CustomActivity extends FragmentActivity implements OnClickListener
+public class CustomActivity extends ActionBarActivity implements OnClickListener
 {
 
     /**
@@ -43,23 +44,15 @@ public class CustomActivity extends FragmentActivity implements OnClickListener
      */
     protected void setupActionBar()
     {
-        final ActionBar actionBar = getActionBar();
+        final ActionBar actionBar = getSupportActionBar();
         if (actionBar == null)
             return;
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setDisplayUseLogoEnabled(true);
-        actionBar.setLogo(R.mipmap.ic_launcher);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
     }
 
-    /**
-     * Sets the touch and click listener for a view with given id.
-     *
-     * @param id
-     *            the id
-     * @return the view on which listeners applied
-     */
     public View setTouchNClick(int id)
     {
 
@@ -69,13 +62,6 @@ public class CustomActivity extends FragmentActivity implements OnClickListener
         return v;
     }
 
-    /**
-     * Sets the click listener for a view with given id.
-     *
-     * @param id
-     *            the id
-     * @return the view on which listener is applied
-     */
     public View setClick(int id)
     {
 
@@ -85,9 +71,6 @@ public class CustomActivity extends FragmentActivity implements OnClickListener
         return v;
     }
 
-    /* (non-Javadoc)
-     * @see android.view.View.OnClickListener#onClick(android.view.View)
-     */
     @Override
     public void onClick(View v)
     {

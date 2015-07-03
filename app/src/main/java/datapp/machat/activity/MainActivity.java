@@ -1,38 +1,62 @@
 package datapp.machat.activity;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
-
-import com.parse.GetCallback;
-import com.parse.ParseException;
-import com.parse.ParsePush;
+import android.widget.GridView;
+import android.widget.LinearLayout;
 import com.parse.ParseUser;
+
+import java.util.ArrayList;
 
 import datapp.machat.R;
 import datapp.machat.custom.CustomActivity;
 
 public class MainActivity extends CustomActivity {
-
+    private ArrayList<ParseUser> friends = new ArrayList<>();
+    private GridView friendsList;
+    private LinearLayout mainContainer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setTouchNClick(R.id.logoutBtn);
+        friendsList = (GridView) findViewById(R.id.friendView);
+        mainContainer = (LinearLayout) findViewById(R.id.main_container);
+
+        setPadding(mainContainer);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+    }
+
+    private void setPadding(View v){
+        int actionBarHeight = 0, statusBarHeight = 0, defaultPadding = 0;
+        defaultPadding = getResources().getDimensionPixelSize(R.dimen.activity_vertical_margin)/2;
+        statusBarHeight = getStatusBarHeight();
+        TypedValue tv = new TypedValue();
+        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
+        {
+            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+        }
+
+        int dpAsPixels = statusBarHeight + defaultPadding + actionBarHeight;
+        v.setPadding(v.getPaddingLeft(),dpAsPixels, v.getPaddingRight(), v.getPaddingBottom());
+
+    }
+
+    private int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 
     @Override
     public void onClick(View v) {
         super.onClick(v);
-        if(v.getId() == R.id.logoutBtn) {
-            ParseUser.logOut();
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
-            finish();
-        }
     }
 
     @Override
@@ -50,7 +74,10 @@ public class MainActivity extends CustomActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_logout) {
+            ParseUser.logOut();
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            finish();
             return true;
         }
 
