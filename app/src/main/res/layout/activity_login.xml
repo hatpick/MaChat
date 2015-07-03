@@ -3,23 +3,17 @@
     android:orientation="vertical" android:gravity="center_horizontal" android:layout_height="match_parent"
     android:paddingLeft="@dimen/activity_horizontal_margin" android:paddingRight="@dimen/activity_horizontal_margin" android:paddingBottom="@dimen/activity_horizontal_margin" tools:context="datapp.machat.activity.LoginActivity" android:paddingTop="50dp">
     <ImageView
+        android:id="@+id/login_logo"
         android:src="@mipmap/ic_launcher"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_marginBottom="10dp"
+        android:layout_width="120dp"
+            android:layout_height="120dp" />
     <TextView
-        android:text="@string/app_name"
-        android:textSize="40sp"
-        android:textColor="#fff"
-        android:fontFamily="sans-serif"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:text="Own your communications!"
+        android:text="own your communications"
         android:textColor="#fff"
         android:fontFamily="sans-serif-thin"
         android:paddingBottom="10dp"
+        android:textAllCaps="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
     <Button
@@ -36,7 +30,8 @@
     </Button>
     <TextView
         android:textColor="#fff"
-        android:padding="5dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="10dp"
         android:textSize="20sp"
         android:text="or"
         android:gravity="center"
