@@ -2,10 +2,12 @@ package datapp.machat.activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -34,6 +36,7 @@ import datapp.machat.custom.CustomActivity;
 public class LoginActivity extends CustomActivity {
     private EditText inputUsername;
     private EditText inputPassword;
+    private TextView forgotPassworBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +49,14 @@ public class LoginActivity extends CustomActivity {
 
         inputUsername = (EditText) findViewById(R.id.login_username);
         inputPassword = (EditText) findViewById(R.id.login_password);
+        forgotPassworBtn= (TextView) findViewById(R.id.forgotPasswordBtn);
+
+        forgotPassworBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(LoginActivity.this, ForgotPassword.class));
+            }
+        });
     }
 
     @Override
@@ -53,7 +64,6 @@ public class LoginActivity extends CustomActivity {
         super.onClick(v);
         if(v.getId() == R.id.registerBtn){
             startActivity(new Intent(this, RegisterActivity.class));
-            finish();
         } else if(v.getId() == R.id.loginBtn){
             String username = inputUsername.getText().toString();
             String password = inputPassword.getText().toString();
@@ -139,7 +149,6 @@ public class LoginActivity extends CustomActivity {
                 }
             });
         }
-
     }
 
     final private void getFacebookIdInBackground() {

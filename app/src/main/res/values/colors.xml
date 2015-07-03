@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="primary" type="color">#fff1f1f1</item>
-    <item name="secondary" type="color">#FFe8e8e8</item>
+    <item name="text_primary" type="color">#444</item>
+    <item name="text_secondary" type="color">#99808080</item>
+    <item name="primary" type="color">#fff</item>
+    <item name="secondary" type="color">#fff</item>
 </resources>
