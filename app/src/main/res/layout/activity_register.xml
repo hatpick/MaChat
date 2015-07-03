@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:background="@drawable/splashscreen_bg"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:background="@drawable/bg"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:orientation="vertical" android:gravity="center_horizontal"
     android:padding="@dimen/activity_horizontal_margin" android:layout_height="match_parent" tools:context="datapp.machat.activity.RegisterActivity">
@@ -17,36 +17,36 @@
     <EditText
         android:inputType="textEmailAddress"
         android:fontFamily="sans-serif-light"
-        android:padding="15dp"
+        android:padding="10dp"
         android:gravity="center_vertical"
         android:background="@drawable/input"
         android:hint="Username"
         android:id="@+id/register_username"
         android:layout_width="fill_parent"
         android:layout_marginBottom="10dp"
-        android:layout_height="60dp" />
+        android:layout_height="wrap_content" />
     <EditText
         android:inputType="textEmailAddress"
         android:fontFamily="sans-serif-light"
-        android:padding="15dp"
+        android:padding="10dp"
         android:gravity="center_vertical"
         android:background="@drawable/input"
         android:hint="Email"
         android:id="@+id/register_email"
         android:layout_width="fill_parent"
         android:layout_marginBottom="10dp"
-        android:layout_height="60dp" />
+        android:layout_height="wrap_content" />
     <EditText
         android:fontFamily="sans-serif-light"
         android:inputType="textPassword"
-        android:padding="15dp"
+        android:padding="10dp"
         android:gravity="center_vertical"
         android:background="@drawable/input"
         android:hint="Password"
         android:id="@+id/register_password"
         android:layout_width="fill_parent"
         android:layout_marginBottom="10dp"
-        android:layout_height="60dp" />
+        android:layout_height="wrap_content" />
     <Button
         android:id="@+id/registerBtn"
         android:paddingTop="10dp"
@@ -55,5 +55,5 @@
         android:background="@drawable/button"
         android:text="Register"
         android:layout_width="fill_parent"
-        android:layout_height="60dp" />
+        android:layout_height="wrap_content" />
 </LinearLayout>

@@ -1,5 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:background="@drawable/splashscreen_bg"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:background="@drawable/bg"
     android:orientation="vertical" android:gravity="center_horizontal" android:layout_height="match_parent"
     android:padding="@dimen/activity_horizontal_margin" tools:context="datapp.machat.activity.LoginActivity">
     <ImageView
@@ -28,6 +28,7 @@
         android:id="@+id/facebookBtn"
         android:padding="10dp"
         android:drawableLeft="@drawable/com_facebook_button_icon"
+        android:alpha="75"
         android:drawablePadding="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
@@ -42,10 +43,11 @@
         android:layout_height="wrap_content" />
     <EditText
         android:fontFamily="sans-serif-light"
-        android:padding="15dp"
+        android:padding="10dp"
         android:gravity="center_vertical"
         android:background="@drawable/input"
         android:hint="Username"
+        android:alpha="75"
         android:id="@+id/login_username"
         android:layout_width="fill_parent"
         android:layout_marginBottom="10dp"
@@ -53,10 +55,11 @@
     <EditText
         android:fontFamily="sans-serif-light"
         android:inputType="textPassword"
-        android:padding="15dp"
+        android:padding="10dp"
         android:gravity="center_vertical"
         android:background="@drawable/input"
         android:hint="Password"
+        android:alpha="75"
         android:id="@+id/login_password"
         android:layout_width="fill_parent"
         android:layout_marginBottom="10dp"
@@ -73,6 +76,7 @@
             android:textColor="#fff"
             android:background="@drawable/button"
             android:text="Login"
+            android:alpha="75"
             android:layout_marginRight="5dp"
             android:layout_weight="1"
             android:layout_width="match_parent"
@@ -80,6 +84,7 @@
         <Button
             android:id="@+id/registerBtn"
             android:layout_marginLeft="5dp"
+            android:alpha="75"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
             android:textColor="#fff"
