@@ -20,5 +20,12 @@
         <item name="android:windowActionBarOverlay">true</item>
         <item name="windowActionBarOverlay">true</item>
     </style>
+    
+    <style name="ProgressBarTitle" parent="@style/Widget.AppCompat.ActionBar">
+        <item name="android:padding">10dp</item>
+        <item name="android:fontFamily">san-serif-light</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/primary</item>
+    </style>
 
 </resources>

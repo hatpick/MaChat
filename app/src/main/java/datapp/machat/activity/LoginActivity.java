@@ -2,11 +2,15 @@ package datapp.machat.activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +30,7 @@ import com.parse.SaveCallback;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -36,6 +41,7 @@ import java.util.List;
 
 import datapp.machat.R;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.helper.BlurBuilder;
 
 public class LoginActivity extends CustomActivity {
     private EditText inputUsername;
@@ -81,8 +87,13 @@ public class LoginActivity extends CustomActivity {
                 return;
             }
 
-            final ProgressDialog dia = ProgressDialog.show(this, null,
-                    getString(R.string.alert_wait));
+            final ProgressDialog dia = new ProgressDialog(this);
+            dia.setContentView(R.layout.progress_dialog);
+            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
+            diaTitle.setText(getString(R.string.alert_wait));
+            ProgressBar diaProgressBar = (ProgressBar ) dia.findViewById(R.id.pd_progressBar);
+            diaProgressBar.setProgress(77);
+            dia.show();
 
             ParseUser.logInInBackground(username, password, new LogInCallback() {
                 @Override
@@ -98,6 +109,14 @@ public class LoginActivity extends CustomActivity {
                 }
             });
         } else if(v.getId() == R.id.facebookBtn){
+            final ProgressDialog dia = new ProgressDialog(this);
+            dia.show();
+            dia.setContentView(R.layout.progress_dialog);
+            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
+            diaTitle.setText(getString(R.string.alert_wait));
+            ProgressBar diaProgressBar = (ProgressBar ) dia.findViewById(R.id.pd_progressBar);
+            diaProgressBar.setProgress(77);
+
             final List<String> permissions = Arrays.asList("public_profile", "email", "user_friends");
             ParseFacebookUtils.logInWithReadPermissionsInBackground(LoginActivity.this, permissions, new LogInCallback() {
                 @Override
@@ -105,6 +124,7 @@ public class LoginActivity extends CustomActivity {
                     if (e == null) {
                         if (parseUser == null) {
                             Toast.makeText(LoginActivity.this, "Facebook login failed!", Toast.LENGTH_SHORT).show();
+                            dia.dismiss();
                         } else if (parseUser.isNew()) {
                             //New user
                             GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
@@ -120,6 +140,7 @@ public class LoginActivity extends CustomActivity {
                                             pUser.saveInBackground(new SaveCallback() {
                                                 @Override
                                                 public void done(ParseException e) {
+                                                    dia.dismiss();
                                                     if(e == null){
                                                         GraphRequest.newMyFriendsRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONArrayCallback() {
                                                             @Override
@@ -155,6 +176,7 @@ public class LoginActivity extends CustomActivity {
                                                         });
 
                                                     } else {
+                                                        dia.dismiss();
                                                         Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                                                     }
                                                 }
@@ -162,6 +184,8 @@ public class LoginActivity extends CustomActivity {
                                         } catch (JSONException e1) {
                                             e1.printStackTrace();
                                         }
+                                    } else {
+                                        dia.dismiss();
                                     }
                                 }
                             }).executeAsync();
@@ -175,28 +199,19 @@ public class LoginActivity extends CustomActivity {
                                         ParseUser.getCurrentUser().fetchInBackground(new GetCallback<ParseUser>() {
                                             @Override
                                             public void done(ParseUser currentUser, ParseException e) {
-                                                if(e != null){
-                                                    Toast.makeText(LoginActivity.this, "PPFAILED: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                                }
-
-                                                GraphRequest.newMyFriendsRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONArrayCallback() {
-                                                    @Override
-                                                    public void onCompleted(JSONArray jsonArray, GraphResponse graphResponse) {
-                                                        ParseUser pUser = ParseUser.getCurrentUser();
-                                                        if(jsonArray.length() > 0){
-                                                            pUser.addAllUnique("friends", Arrays.asList(jsonArray));
-                                                            parseUser.saveEventually();
-                                                            //TODO: sync friends
-                                                        }
-                                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                                        finish();
-                                                    }
-                                                }).executeAsync();
+                                            if(e != null){
+                                                Toast.makeText(LoginActivity.this, "PPFAILED: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
                                             }
                                         });
+                                    } else {
+                                        Toast.makeText(LoginActivity.this, "PPFAILED: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 }
                             });
+                            dia.dismiss();
+                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                            finish();
                         }
                     } else {
                         Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show();

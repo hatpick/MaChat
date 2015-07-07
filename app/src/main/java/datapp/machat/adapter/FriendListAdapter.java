@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -44,9 +46,11 @@ public class FriendListAdapter extends ArrayAdapter<Friend>{
     private LayoutInflater inflater;
     private final String TAG = "FriendListAdapter";
     private Transformation transformation;
+    private Context mContext;
 
     public FriendListAdapter(Context context, int resource, ArrayList<Friend> friends) {
         super(context, 0, friends);
+        mContext = context;
         inflater = ((Activity) context).getLayoutInflater();
         mLastPosition = -1;
         transformation = new RoundedTransformationBuilder()
@@ -96,6 +100,12 @@ public class FriendListAdapter extends ArrayAdapter<Friend>{
                 }
             }
         });
+
+        if (position > mLastPosition) {
+            Animation bounceInAnimation = AnimationUtils.loadAnimation(mContext, R.anim.bounce_in);
+            row.startAnimation(bounceInAnimation);
+            mLastPosition = position;
+        }
 
         return row;
     }

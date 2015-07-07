@@ -3,7 +3,9 @@ package datapp.machat.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.util.DisplayMetrics;
@@ -13,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -35,6 +38,7 @@ import datapp.machat.R;
 import datapp.machat.adapter.FriendListAdapter;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.Friend;
+import datapp.machat.helper.BlurBuilder;
 
 public class MainActivity extends CustomActivity {
     private ArrayList<ParseUser> friends = new ArrayList<>();
@@ -91,17 +95,31 @@ public class MainActivity extends CustomActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         LinearLayout linearLayout = new LinearLayout(actionBar.getThemedContext());
+        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
         linearLayout.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
 
         //App name textview
-        TextView app_name = new TextView(actionBar.getThemedContext());
-        app_name.setText(getString(R.string.app_name));
-        app_name.setPadding(20, 0, 0, 0);
-        app_name.setTextSize(17);
+        LinearLayout textLinearLayout = new LinearLayout(actionBar.getThemedContext());
+        textLinearLayout.setOrientation(LinearLayout.VERTICAL);
+        linearLayout.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+
+        TextView user_name = new TextView(actionBar.getThemedContext());
+        user_name.setText(ParseUser.getCurrentUser().getString("fName") + " " + ParseUser.getCurrentUser().getString("lName"));
+        user_name.setPadding(20, 0, 0, 0);
+        user_name.setTextSize(16);
         ActionBar.LayoutParams txtLayoutParams = new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT , Gravity.LEFT
                 | Gravity.CENTER_VERTICAL);
         txtLayoutParams.leftMargin = 20;
-        app_name.setLayoutParams(txtLayoutParams);
+        user_name.setLayoutParams(txtLayoutParams);
+
+        TextView user_email = new TextView(actionBar.getThemedContext());
+        user_email.setText(ParseUser.getCurrentUser().getString("email"));
+        user_email.setPadding(20, 0, 0, 0);
+        user_email.setTextSize(14);
+        user_email.setLayoutParams(txtLayoutParams);
+
+        textLinearLayout.addView(user_name);
+        textLinearLayout.addView(user_email);
 
         ImageView pp_picture = new ImageView(actionBar.getThemedContext());transformation = new RoundedTransformationBuilder()
                 .borderColor(Color.parseColor("#ffffff"))
@@ -120,7 +138,7 @@ public class MainActivity extends CustomActivity {
         pp_picture.setLayoutParams(imgLayoutParams);
 
         linearLayout.addView(pp_picture);
-        linearLayout.addView(app_name);
+        linearLayout.addView(textLinearLayout);
 
 
         actionBar.setCustomView(linearLayout);
