@@ -13,8 +13,11 @@ import android.widget.Toast;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.parse.FunctionCallback;
+import com.parse.GetCallback;
 import com.parse.LogInCallback;
 import com.parse.Parse;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
@@ -28,6 +31,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 
 import datapp.machat.R;
@@ -97,7 +101,7 @@ public class LoginActivity extends CustomActivity {
             final List<String> permissions = Arrays.asList("public_profile", "email", "user_friends");
             ParseFacebookUtils.logInWithReadPermissionsInBackground(LoginActivity.this, permissions, new LogInCallback() {
                 @Override
-                public void done(ParseUser parseUser, ParseException e) {
+                public void done(final ParseUser parseUser, ParseException e) {
                     if (e == null) {
                         if (parseUser == null) {
                             Toast.makeText(LoginActivity.this, "Facebook login failed!", Toast.LENGTH_SHORT).show();
@@ -117,8 +121,39 @@ public class LoginActivity extends CustomActivity {
                                                 @Override
                                                 public void done(ParseException e) {
                                                     if(e == null){
-                                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                                        finish();
+                                                        GraphRequest.newMyFriendsRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONArrayCallback() {
+                                                            @Override
+                                                            public void onCompleted(JSONArray jsonArray, GraphResponse graphResponse) {
+                                                                ParseUser pUser = ParseUser.getCurrentUser();
+                                                                if(jsonArray.length() > 0){
+                                                                    pUser.addAllUnique("friends", Arrays.asList(jsonArray));
+                                                                    parseUser.saveEventually();
+                                                                }
+
+                                                                //TODO: sync friends
+                                                            }
+                                                        }).executeAsync();
+
+                                                        HashMap<String, Object> params = new HashMap<String, Object>();
+                                                        ParseCloud.callFunctionInBackground("fetchProfilePicture", params, new FunctionCallback<String>() {
+                                                            @Override
+                                                            public void done(String s, ParseException e) {
+                                                                if (e == null) {
+                                                                    ParseUser.getCurrentUser().fetchInBackground(new GetCallback<ParseUser>() {
+                                                                        @Override
+                                                                        public void done(ParseUser currentUser, ParseException e) {
+                                                                            if(e != null){
+                                                                                Toast.makeText(LoginActivity.this, "PPFAILED: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                                            } else {
+                                                                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                                                                finish();
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                }
+                                                            }
+                                                        });
+
                                                     } else {
                                                         Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                                                     }
@@ -130,18 +165,38 @@ public class LoginActivity extends CustomActivity {
                                     }
                                 }
                             }).executeAsync();
-                            GraphRequest.newMyFriendsRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONArrayCallback() {
-                                @Override
-                                public void onCompleted(JSONArray jsonArray, GraphResponse graphResponse) {
-                                    if(jsonArray.length() > 0){
-
-                                    }
-                                }
-                            }).executeAsync();
                         } else {
                             //Returning user
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                            finish();
+                            HashMap<String, Object> params = new HashMap<String, Object>();
+                            ParseCloud.callFunctionInBackground("fetchProfilePicture", params, new FunctionCallback<String>() {
+                                @Override
+                                public void done(String s, ParseException e) {
+                                    if (e == null) {
+                                        ParseUser.getCurrentUser().fetchInBackground(new GetCallback<ParseUser>() {
+                                            @Override
+                                            public void done(ParseUser currentUser, ParseException e) {
+                                                if(e != null){
+                                                    Toast.makeText(LoginActivity.this, "PPFAILED: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                }
+
+                                                GraphRequest.newMyFriendsRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONArrayCallback() {
+                                                    @Override
+                                                    public void onCompleted(JSONArray jsonArray, GraphResponse graphResponse) {
+                                                        ParseUser pUser = ParseUser.getCurrentUser();
+                                                        if(jsonArray.length() > 0){
+                                                            pUser.addAllUnique("friends", Arrays.asList(jsonArray));
+                                                            parseUser.saveEventually();
+                                                            //TODO: sync friends
+                                                        }
+                                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                                        finish();
+                                                    }
+                                                }).executeAsync();
+                                            }
+                                        });
+                                    }
+                                }
+                            });
                         }
                     } else {
                         Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show();

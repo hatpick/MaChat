@@ -18,8 +18,11 @@
         android:layout_height="wrap_content" />
     <GridView
         android:background="@android:color/transparent"
-        android:numColumns="4"
-        android:padding="10dp"
+        android:numColumns="auto_fit"
+        android:verticalSpacing="10dp"
+        android:columnWidth="120dp"
+        android:horizontalSpacing="10dp"
+        android:stretchMode="columnWidth"
         android:id="@+id/friendView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

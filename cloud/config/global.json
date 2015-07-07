@@ -1,0 +1,17 @@
+{
+  "global": {
+    "parseVersion": "1.4.2"
+  },
+  "applications": {
+    "MaChat": {
+      "applicationId": "mwcgXaKRExMiJVNajR3MrAwobjKmQjkhtdAUwQEv",
+      "masterKey": "IUAodK60lDV9ugb7mFT17Me3rfZTJaQwcZ16ytaO"
+    },
+    "_default": {
+      "link": "MaChat"
+    },
+    "cloud": {
+      "link": "MaChat"
+    }
+  }
+}
