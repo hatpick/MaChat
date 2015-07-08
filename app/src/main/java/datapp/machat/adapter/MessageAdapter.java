@@ -2,6 +2,7 @@ package datapp.machat.adapter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -68,6 +70,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.messageContainer = (LinearLayout) row.findViewById(R.id.message_container);
             messageHolder.iconWrapper = (LinearLayout) row.findViewById(R.id.icon_wrapper);
             messageHolder.messageWrapper = (LinearLayout) row.findViewById(R.id.message_wrapper);
+
             row.setTag(messageHolder);
         } else {
             messageHolder = (MessageHolder) row.getTag();
@@ -84,9 +87,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         else
             messageHolder.messageDate.setText("Just now");
 
-        if(message.getString("type").equals("text"))
+        if(message.getString("type").equals("text")) {
             messageHolder.messageContent.setText(message.getString("content"));
-        else {
+        } else {
             //set selfiecon
         }
 
