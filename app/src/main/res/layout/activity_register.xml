@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:background="@drawable/bg_alt"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:background="@drawable/bg"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:orientation="vertical" android:gravity="center_horizontal"
     android:paddingBottom="@dimen/activity_horizontal_margin" android:paddingLeft="@dimen/activity_horizontal_margin" android:paddingRight="@dimen/activity_horizontal_margin" android:paddingTop="?attr/actionBarSize" android:layout_height="match_parent" tools:context="datapp.machat.activity.RegisterActivity">

@@ -74,7 +74,7 @@ public class ChatActivity extends CustomActivity {
 
         BlurBehind.getInstance()
                 .withAlpha(65)
-                .withFilterColor(Color.parseColor("#B5FF4A71"))
+                .withFilterColor(Color.parseColor("#B5008795"))
                 .setBackground(this);
 
         sender = ParseUser.getCurrentUser();
