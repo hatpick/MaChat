@@ -3,9 +3,7 @@ package datapp.machat.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.util.DisplayMetrics;
@@ -15,24 +13,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.facebook.login.widget.ProfilePictureView;
+import com.bumptech.glide.Glide;
 import com.faradaj.blurbehind.BlurBehind;
 import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.makeramen.roundedimageview.RoundedTransformationBuilder;
-import com.parse.GetCallback;
-import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Transformation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,12 +35,13 @@ import datapp.machat.R;
 import datapp.machat.adapter.FriendListAdapter;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.Friend;
+import datapp.machat.helper.CircleTransform;
 
 public class MainActivity extends CustomActivity {
     private ArrayList<ParseUser> friends = new ArrayList<>();
     private GridView friendsListView;
     private LinearLayout mainContainer;
-    private Transformation transformation;
+    private CircleTransform transformation;
 
     private ArrayList<Friend> friendsArray;
     private FriendListAdapter friendListAdapter;
@@ -145,16 +137,13 @@ public class MainActivity extends CustomActivity {
         textLinearLayout.addView(user_name);
         textLinearLayout.addView(user_email);
 
-        ImageView pp_picture = new ImageView(actionBar.getThemedContext());transformation = new RoundedTransformationBuilder()
-                .borderColor(Color.parseColor("#ffffff"))
-                .borderWidthDp(1)
-                .cornerRadiusDp(30)
-                .oval(false)
-                .build();
+        ImageView pp_picture = new ImageView(actionBar.getThemedContext());
+        transformation = new CircleTransform(this);
 
-        Picasso.with(this)
+        Glide.with(this)
                 .load(ParseUser.getCurrentUser().getParseFile("profilePicture").getUrl())
-                .fit()
+                .centerCrop()
+                .centerCrop()
                 .transform(transformation)
                 .into(pp_picture);
         ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams(convertDpToPixel(40, this), convertDpToPixel(40, this) , Gravity.LEFT

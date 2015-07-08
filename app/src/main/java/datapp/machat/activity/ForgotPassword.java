@@ -8,8 +8,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.gif.GifDrawable;
 import com.parse.ParseUser;
 import com.parse.RequestPasswordResetCallback;
 
@@ -19,6 +23,7 @@ import java.util.regex.Pattern;
 
 import datapp.machat.R;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.helper.CircleTransform;
 
 public class ForgotPassword extends CustomActivity {
     private EditText inputEmail;
@@ -33,6 +38,13 @@ public class ForgotPassword extends CustomActivity {
         setTouchNClick(R.id.resetPasswordBtn);
 
         inputEmail = (EditText) findViewById(R.id.forgot_password_email);
+//        ImageView gif = (ImageView) findViewById(R.id.gif);
+//        Glide.with(this)
+//                .load("http://media.giphy.com/media/1a36onP1bmbfi/giphy.gif")
+//                .asGif()
+//                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+//                .placeholder(R.drawable.circle_placeholder)
+//                .into(gif);
     }
 
     @Override

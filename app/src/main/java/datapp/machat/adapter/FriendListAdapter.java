@@ -2,8 +2,6 @@ package datapp.machat.adapter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,31 +10,21 @@ import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.makeramen.roundedimageview.RoundedTransformationBuilder;
+import com.bumptech.glide.Glide;
 import com.parse.FunctionCallback;
-import com.parse.GetCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
-import com.parse.ParseUser;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Transformation;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import datapp.machat.R;
-import datapp.machat.activity.MainActivity;
 import datapp.machat.dao.Friend;
+import datapp.machat.helper.CircleTransform;
 
 /**
  * Created by hat on 7/6/15.
@@ -45,7 +33,7 @@ public class FriendListAdapter extends ArrayAdapter<Friend>{
     private int mLastPosition;
     private LayoutInflater inflater;
     private final String TAG = "FriendListAdapter";
-    private Transformation transformation;
+    private CircleTransform transformation;
     private Context mContext;
 
     public FriendListAdapter(Context context, int resource, ArrayList<Friend> friends) {
@@ -53,12 +41,7 @@ public class FriendListAdapter extends ArrayAdapter<Friend>{
         mContext = context;
         inflater = ((Activity) context).getLayoutInflater();
         mLastPosition = -1;
-        transformation = new RoundedTransformationBuilder()
-                .borderColor(Color.parseColor("#ccffffff"))
-                .borderWidthDp(3)
-                .cornerRadiusDp(100)
-                .oval(false)
-                .build();
+        transformation = new CircleTransform(context);
     }
 
     @Override
@@ -89,9 +72,10 @@ public class FriendListAdapter extends ArrayAdapter<Friend>{
                 if (e == null) {
                     try {
                         JSONObject friendObj = new JSONObject(s);
-                        Picasso.with(getContext())
+                        Glide.with(getContext())
                                 .load(friendObj.getJSONObject("profilePicture").getString("url"))
-                                .fit()
+                                .centerCrop()
+                                .crossFade()
                                 .transform(transformation)
                                 .into(refHolder.friendAvatar);
                     } catch (JSONException e1) {

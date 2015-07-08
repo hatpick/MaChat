@@ -2,7 +2,6 @@ package datapp.machat.adapter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,23 +9,21 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.github.kevinsawicki.timeago.TimeAgo;
-import com.makeramen.roundedimageview.RoundedTransformationBuilder;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Transformation;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.TimeZone;
 
 import datapp.machat.R;
+import datapp.machat.helper.CircleTransform;
 
 /**
  * Created by hat on 7/7/15.
@@ -35,7 +32,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     private int mLastPosition;
     private LayoutInflater inflater;
     private final String TAG = "MessageAdapter";
-    private Transformation transformation;
+    private CircleTransform transformation;
     private Context mContext;
     private ArrayList<ParseObject> chatMessages;
 
@@ -45,11 +42,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         chatMessages = messages;
         inflater = ((Activity) context).getLayoutInflater();
         mLastPosition = -1;
-        transformation = new RoundedTransformationBuilder()
-                .borderWidthDp(0)
-                .cornerRadiusDp(30)
-                .oval(false)
-                .build();
+        transformation = new CircleTransform(context);
     }
 
     @Override
@@ -76,9 +69,10 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder = (MessageHolder) row.getTag();
         }
 
-        Picasso.with(getContext())
+        Glide.with(mContext)
                 .load(message.getParseUser("from").getParseFile("profilePicture").getUrl())
-                .fit()
+                .centerCrop()
+                .crossFade()
                 .transform(transformation)
                 .into(messageHolder.avatar);
 
