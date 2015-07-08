@@ -23,7 +23,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.facebook.login.widget.ProfilePictureView;
+import com.faradaj.blurbehind.BlurBehind;
+import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.makeramen.roundedimageview.RoundedTransformationBuilder;
+import com.parse.GetCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
@@ -38,7 +44,6 @@ import datapp.machat.R;
 import datapp.machat.adapter.FriendListAdapter;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.Friend;
-import datapp.machat.helper.BlurBuilder;
 
 public class MainActivity extends CustomActivity {
     private ArrayList<ParseUser> friends = new ArrayList<>();
@@ -62,7 +67,26 @@ public class MainActivity extends CustomActivity {
         _setupActionBar();
         _setupFriendList();
 
-        setPadding(mainContainer);
+        //setPadding(mainContainer);
+
+        friendsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                final int position = i;
+                BlurBehind.getInstance().execute(MainActivity.this, new OnBlurCompleteListener() {
+                    @Override
+                    public void onBlurComplete() {
+                        Friend receiver = friendListAdapter.getItem(position);
+                        Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
+                        chatIntent.putExtra("receiverFbId", receiver.getFbId());
+                        chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
+                        chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        startActivity(chatIntent);
+                    }
+                });
+
+            }
+        });
     }
 
     private void _setupFriendList() {
@@ -156,14 +180,25 @@ public class MainActivity extends CustomActivity {
         defaultPadding = getResources().getDimensionPixelSize(R.dimen.activity_vertical_margin)/2;
         statusBarHeight = getStatusBarHeight();
         TypedValue tv = new TypedValue();
+
         if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
         {
             actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
         }
 
-        int dpAsPixels = statusBarHeight + defaultPadding + actionBarHeight;
-        v.setPadding(v.getPaddingLeft(),dpAsPixels, v.getPaddingRight(), v.getPaddingBottom());
+        int dpAsPixelsTop = statusBarHeight + defaultPadding + actionBarHeight;
+        int dpAsPixelsBottom = getNavigationBarHeight();
+        v.setPadding(v.getPaddingLeft(),dpAsPixelsTop, v.getPaddingRight(), dpAsPixelsBottom);
 
+    }
+
+    private int getNavigationBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 
     private int getStatusBarHeight() {

@@ -107,11 +107,21 @@
             android:windowSoftInputMode="stateHidden|adjustResize" >
         </activity>
         <activity
-            android:theme="@style/AppTheme.NoActionBar"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateHidden|adjustResize"
             android:name=".activity.ForgotPassword"
-            android:label="@string/title_activity_forgot_password" >
+            android:label="@string/title_activity_forgot_password"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateHidden|adjustResize" >
+        </activity>
+        <activity
+            android:windowSoftInputMode="adjustPan|stateUnchanged|adjustResize"
+            android:theme="@style/AppTheme"
+            android:name=".activity.ChatActivity"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".activity.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="datapp.machat.activity.MainActivity" />
         </activity>
     </application>
 

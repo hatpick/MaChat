@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:paddingLeft="@dimen/pad_10dp"
+    android:paddingRight="@dimen/pad_10dp"
+    android:paddingTop="@dimen/pad_5dp"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:id="@+id/message_container"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:id="@+id/icon_wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent">
+            <ImageView
+                android:id="@+id/avatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:id="@+id/message_wrapper"
+            style="@style/message_wrapper">
+            <TextView
+                style="@style/message_content"
+                android:id="@+id/message_content" />
+            <TextView
+                style="@style/message_date"
+                android:id="@+id/message_date" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -2,13 +2,8 @@ package datapp.machat.activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewTreeObserver;
-import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -20,7 +15,6 @@ import com.facebook.GraphResponse;
 import com.parse.FunctionCallback;
 import com.parse.GetCallback;
 import com.parse.LogInCallback;
-import com.parse.Parse;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
@@ -30,7 +24,6 @@ import com.parse.SaveCallback;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -41,12 +34,12 @@ import java.util.List;
 
 import datapp.machat.R;
 import datapp.machat.custom.CustomActivity;
-import datapp.machat.helper.BlurBuilder;
+
 
 public class LoginActivity extends CustomActivity {
     private EditText inputUsername;
     private EditText inputPassword;
-    private TextView forgotPassworBtn;
+    private TextView forgotPasswordBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +52,9 @@ public class LoginActivity extends CustomActivity {
 
         inputUsername = (EditText) findViewById(R.id.login_username);
         inputPassword = (EditText) findViewById(R.id.login_password);
-        forgotPassworBtn= (TextView) findViewById(R.id.forgotPasswordBtn);
+        forgotPasswordBtn = (TextView) findViewById(R.id.forgotPasswordBtn);
 
-        forgotPassworBtn.setOnClickListener(new View.OnClickListener() {
+        forgotPasswordBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(LoginActivity.this, ForgotPassword.class));
