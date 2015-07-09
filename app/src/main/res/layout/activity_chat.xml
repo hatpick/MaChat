@@ -134,7 +134,7 @@
             android:id="@+id/create_new_selfiecon_btn"
             android:background="@drawable/new_selficon_btn_bg"
             android:text="+"
-            android:visibility="gone"
+            android:visibility="visible"
             android:textSize="40sp"
             android:gravity="center"
             android:layout_gravity="center"

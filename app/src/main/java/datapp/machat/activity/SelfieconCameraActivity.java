@@ -46,6 +46,7 @@ public class SelfieconCameraActivity extends CustomActivity  {
     private Camera mCamera;
     private String receiverFbId;
     private String senderFbId;
+    private FrameLayout layout;
 
     private Camera getCameraInstance() {
         Camera c = null;
@@ -66,20 +67,26 @@ public class SelfieconCameraActivity extends CustomActivity  {
         senderFbId = getIntent().getStringExtra("senderFbId");
 
         BlurBehind.getInstance()
-                .withAlpha(65)
+                .withAlpha(80)
                 .withFilterColor(Color.parseColor("#B5008795"))
                 .setBackground(this);
 
-        FrameLayout layout = (FrameLayout)findViewById(R.id.middleSurface);
-        preview = new SelfieconCameraPreview(this);
-        layout.addView(preview);
+        layout = (FrameLayout)findViewById(R.id.middleSurface);
 
         selfie1 = (ImageView) findViewById(R.id.selfie1);
         selfie2 = (ImageView) findViewById(R.id.selfie2);
         selfie3 = (ImageView) findViewById(R.id.selfie3);
 
         _resizeSelfiePreviews();
+        //_setupPreview();
+    }
 
+    private void _setupPreview() {
+        if(preview != null) {
+            layout.removeView(preview);
+        }
+        preview = new SelfieconCameraPreview(this);
+        layout.addView(preview);
         ArrayList<ImageView> selfiePreviews = new ArrayList<>(Arrays.asList(selfie1, selfie2, selfie3));
         preview.setSelfiePreviews(selfiePreviews);
     }
@@ -109,19 +116,11 @@ public class SelfieconCameraActivity extends CustomActivity  {
         selfie3.setLayoutParams(params);
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-
-
-            //imageView.setImageBitmap(photo);
-        }
-    }
-
     @Override
     public void onResume() {
         super.onResume();
         mCamera = getCameraInstance();
+        _setupPreview();
         preview.setCamera(mCamera);
     }
 
@@ -132,7 +131,10 @@ public class SelfieconCameraActivity extends CustomActivity  {
             preview.setCamera(null);
             mCamera.release();
             mCamera = null;
+            layout.removeView(preview);
+            preview = null;
         }
+        finish();
     }
 
     private Camera openFrontFacingCameraGingerbread() {

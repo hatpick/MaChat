@@ -409,41 +409,42 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
 
                     final ParseFile _gifFile = new ParseFile(fname, bytes);
                     final ParseFile _thumbnail = new ParseFile(fname + "_thumbnail.jpg", byteArray);
-                    try {
-                        _thumbnail.save();
-                        _gifFile.saveInBackground(new SaveCallback() {
-                            public void done(ParseException e) {
-                                if(e == null) {
-                                    ParseObject gifFile = ParseObject.create("GIF");
-                                    gifFile.setACL(new ParseACL(ParseUser.getCurrentUser()));
-                                    gifFile.put("creator", ParseUser.getCurrentUser());
-                                    gifFile.put("gifFile", _gifFile);
-                                    gifFile.put("thumbnail", _thumbnail);
-                                    gifFile.saveInBackground(new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
+
+                    _thumbnail.saveInBackground(new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            if(e == null) {
+                                _gifFile.saveInBackground(new SaveCallback() {
+                                    public void done(ParseException e) {
+                                        if(e == null) {
+                                            ParseObject gifFile = ParseObject.create("GIF");
+                                            gifFile.setACL(new ParseACL(ParseUser.getCurrentUser()));
+                                            gifFile.put("creator", ParseUser.getCurrentUser());
+                                            gifFile.put("gifFile", _gifFile);
+                                            gifFile.put("thumbnail", _thumbnail);
+                                            gifFile.saveInBackground(new SaveCallback() {
+                                                @Override
+                                                public void done(ParseException e) {
+                                                    dia.dismiss();
+                                                    if(e == null) {
+                                                        ((Activity) getContext()).finish();
+                                                    } else {
+                                                        Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+                                            });
+                                        } else {
                                             dia.dismiss();
-                                            if(e == null) {
-                                                ((Activity) getContext()).finish();
-                                            } else {
-                                                Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                            }
+                                            Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                         }
-                                    });
-                                } else {
-                                    dia.dismiss();
-                                    Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
+                                    }
+                                });
+                            } else {
+                                dia.dismiss();
+                                Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
-                        }, new ProgressCallback() {
-                            public void done(Integer percentDone) {
-                                //TODO: Update your progress spinner here. percentDone will be between 0 and 100.
-                            }
-                        });
-                    } catch (ParseException e) {
-                        Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
-                    }
+                        }
+                    });
                 }
             });
         } catch (Exception e) {
