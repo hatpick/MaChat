@@ -11,9 +11,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,9 +74,11 @@ public class ChatActivity extends CustomActivity {
     private SelfieconAdapter selfieconAdapter;
     private boolean isRunning;
     private Date lastMsgDate;
+    private Date firstMsgDate;
     private static Handler handler;
     private SharedPreferences sessionDetails;
     private final int RESULT_LOAD_IMAGE = 1317;
+    SwipeRefreshLayout swipeContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +116,7 @@ public class ChatActivity extends CustomActivity {
         chatListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_NORMAL);
 
         selficonGridView = (GridView) findViewById(R.id.selfiecon_gridview);
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
 
         selficonGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -172,6 +177,18 @@ public class ChatActivity extends CustomActivity {
 
         loading.setVisibility(View.VISIBLE);
 
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                isRunning = false;
+                _loadOldConversation();
+            }
+        });
+
+        swipeContainer.setColorSchemeResources(R.color.color1,
+                R.color.color2, R.color.color3);
+
+
         messageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
@@ -220,6 +237,7 @@ public class ChatActivity extends CustomActivity {
     }
 
     private void _fetchSelficons() {
+        selficonList.clear();
         ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("GIF");
         query.whereEqualTo("creator", ParseUser.getCurrentUser());
         query.setSkip(selficonList.size());
@@ -446,7 +464,7 @@ public class ChatActivity extends CustomActivity {
             query.whereEqualTo("to", sender);
             query.whereEqualTo("from", receiver);
         }
-        query.orderByAscending("createdAt");
+        query.orderByDescending("createdAt");
         query.setLimit(50);
         query.include("from");
         query.include("to");
@@ -456,12 +474,13 @@ public class ChatActivity extends CustomActivity {
                 if(e == null) {
                     loading.setVisibility(View.GONE);
                     if(list.size() > 0) {
-                        for (int i = 0; i < list.size(); i++) {
+                        for (int i = list.size() - 1; i >= 0; i--) {
                             ParseObject messageObj = list.get(i);
                             messageList.add(messageObj);
                             if (lastMsgDate == null || lastMsgDate.before(messageObj.getCreatedAt()))
                                 lastMsgDate = messageObj.getCreatedAt();
                         }
+                        firstMsgDate = messageList.get(0).getCreatedAt();
                         messageAdapter.notifyDataSetChanged();
                     }
                 } else {
@@ -476,6 +495,44 @@ public class ChatActivity extends CustomActivity {
                             _loadConversation();
                     }
                 }, 1000);
+            }
+        });
+    }
+
+    private void _loadOldConversation() {
+        ParseQuery<ParseObject> query = new ParseQuery("Message");
+        query.whereContainedIn("sessionId", Arrays.asList(sender.getObjectId() + receiver.getObjectId(), receiver.getObjectId() + sender.getObjectId()));
+        query.orderByDescending("createdAt");
+        query.setLimit(50);
+        if(firstMsgDate != null) {
+            query.whereLessThan("createdAt", firstMsgDate);
+        }
+        query.include("from");
+        query.include("to");
+        query.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> list, ParseException e) {
+                if(e == null) {
+                    ArrayList<ParseObject> tempArray = new ArrayList<>();
+                    loading.setVisibility(View.GONE);
+                    if(list.size() > 0) {
+                        for (int i = list.size() - 1; i >= 0; i--) {
+                            ParseObject messageObj = list.get(i);
+                            tempArray.add(messageObj);
+                            if (firstMsgDate == null || firstMsgDate.after(messageObj.getCreatedAt()))
+                                firstMsgDate = messageObj.getCreatedAt();
+                        }
+                        for(ParseObject obj:messageList)
+                            tempArray.add(obj);
+                        messageList.clear();
+                        messageList.addAll(tempArray);
+                        messageAdapter.notifyDataSetChanged();
+                    }
+                } else {
+                    Toast.makeText(ChatActivity.this, "Network issue!", Toast.LENGTH_SHORT).show();
+                }
+                isRunning = true;
+                swipeContainer.setRefreshing(false);
             }
         });
     }
