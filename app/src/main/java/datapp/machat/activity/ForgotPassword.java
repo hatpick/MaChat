@@ -1,29 +1,19 @@
 package datapp.machat.activity;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.gif.GifDrawable;
 import com.parse.ParseUser;
 import com.parse.RequestPasswordResetCallback;
 
-import java.text.ParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import datapp.machat.R;
 import datapp.machat.custom.CustomActivity;
-import datapp.machat.helper.CircleTransform;
 
 public class ForgotPassword extends CustomActivity {
     private EditText inputEmail;

@@ -42,8 +42,7 @@
             android:layout_height="wrap_content">
             <Button
                 android:gravity="center"
-                android:layout_gravity="start"
-                android:enabled="false"
+                android:layout_gravity="left"
                 android:id="@+id/send_new_selfiecon_btn"
                 android:background="@mipmap/selfie_icon"
                 android:minHeight="1dp"
@@ -69,8 +68,18 @@
                 android:hint="@string/type_msg"
                 android:layout_height="30dp"/>
             <Button
+                android:layout_marginRight="40dp"
                 android:gravity="center"
-                android:layout_gravity="end"
+                android:layout_gravity="right"
+                android:id="@+id/add_attachment_btn"
+                android:background="@mipmap/ic_attach"
+                android:minHeight="1dp"
+                android:minWidth="1dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+            <Button
+                android:gravity="center"
+                android:layout_gravity="right"
                 android:enabled="false"
                 android:id="@+id/send_new_message_btn"
                 android:background="@mipmap/ic_send"
@@ -80,4 +89,56 @@
                 android:layout_height="30dp" />
         </FrameLayout>
     </LinearLayout>
+    <FrameLayout
+        android:id="@+id/selfiecon_keyboard"
+        android:layout_marginTop="@dimen/pad_5dp"
+        android:background="@color/selficon_keyboard_bg"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+        <GridView
+            android:padding="@dimen/activity_horizontal_margin"
+            android:id="@+id/selfiecon_gridview"
+            android:verticalSpacing="@dimen/pad_5dp"
+            android:horizontalSpacing="@dimen/pad_5dp"
+            android:clipToPadding="false"
+            android:stretchMode="columnWidth"
+            android:scrollbarStyle="outsideOverlay"
+            android:numColumns="3"
+            android:layout_width="match_parent"
+            android:layout_height="200dp">
+        </GridView>
+        <!--<FrameLayout-->
+            <!--android:orientation="horizontal"-->
+            <!--android:gravity="center_vertical"-->
+            <!--android:layout_gravity="bottom"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content">-->
+            <!--<Button-->
+                <!--android:id="@+id/left_switch_keyboard"-->
+                <!--android:layout_gravity="left"-->
+                <!--android:text="ABC"-->
+                <!--android:textSize="12sp"-->
+                <!--android:background="@drawable/button"-->
+                <!--android:layout_width="40dp"-->
+                <!--android:layout_height="25dp" />-->
+            <!--<Button-->
+                <!--android:id="@+id/right_switch_keyboard"-->
+                <!--android:layout_gravity="right"-->
+                <!--android:text="ABC"-->
+                <!--android:textSize="12sp"-->
+                <!--android:background="@drawable/button"-->
+                <!--android:layout_width="40dp"-->
+                <!--android:layout_height="25dp" />-->
+        <!--</FrameLayout>-->
+        <Button
+            android:id="@+id/create_new_selfiecon_btn"
+            android:background="@drawable/new_selficon_btn_bg"
+            android:text="+"
+            android:visibility="gone"
+            android:textSize="40sp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+    </FrameLayout>
 </LinearLayout>

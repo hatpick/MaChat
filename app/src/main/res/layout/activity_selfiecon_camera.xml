@@ -1,0 +1,57 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fitsSystemWindows="true"
+    android:gravity="center" android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:id="@+id/middleSurface">
+    <FrameLayout
+        android:paddingTop="@dimen/pad_20dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:id="@+id/selfieHolder"
+            android:gravity="top"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ImageView
+                android:padding="5dp"
+                android:background="@drawable/circle_bg"
+                android:id="@+id/selfie1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <ImageView
+                android:padding="5dp"
+                android:background="@drawable/circle_bg"
+                android:id="@+id/selfie2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <ImageView
+                android:padding="5dp"
+                android:background="@drawable/circle_bg"
+                android:id="@+id/selfie3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <ImageView
+            android:padding="5dp"
+            android:visibility="invisible"
+            android:id="@+id/gif"
+            android:layout_margin="16dp"
+            android:layout_gravity="center"
+            android:background="@drawable/circle_bg"
+            android:layout_width="150dp"
+            android:layout_height="150dp" />
+        <Button
+            android:visibility="invisible"
+            android:layout_gravity="center"
+            android:id="@+id/use_selfiecon_btn"
+            android:alpha="75"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/button"
+            android:text="Looks good!"
+            android:layout_marginTop="105dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </FrameLayout>
+</FrameLayout>

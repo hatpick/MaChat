@@ -81,12 +81,10 @@ public class LoginActivity extends CustomActivity {
             }
 
             final ProgressDialog dia = new ProgressDialog(this);
+            dia.show();
             dia.setContentView(R.layout.progress_dialog);
             TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
             diaTitle.setText(getString(R.string.alert_wait));
-            ProgressBar diaProgressBar = (ProgressBar ) dia.findViewById(R.id.pd_progressBar);
-            diaProgressBar.setProgress(77);
-            dia.show();
 
             ParseUser.logInInBackground(username, password, new LogInCallback() {
                 @Override
@@ -107,8 +105,6 @@ public class LoginActivity extends CustomActivity {
             dia.setContentView(R.layout.progress_dialog);
             TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
             diaTitle.setText(getString(R.string.alert_wait));
-            ProgressBar diaProgressBar = (ProgressBar ) dia.findViewById(R.id.pd_progressBar);
-            diaProgressBar.setProgress(77);
 
             final List<String> permissions = Arrays.asList("public_profile", "email", "user_friends");
             ParseFacebookUtils.logInWithReadPermissionsInBackground(LoginActivity.this, permissions, new LogInCallback() {

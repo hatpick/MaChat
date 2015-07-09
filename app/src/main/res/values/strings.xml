@@ -14,4 +14,8 @@
     <string name="title_activity_forgot_password">ForgotPassword</string>
 
     <string name="type_msg">Type message</string>
+    <string name="title_activity_selfiecon_camera">SelfieconCameraActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 </resources>

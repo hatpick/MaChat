@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import datapp.machat.R;
+import datapp.machat.custom.CircleTransform;
 import datapp.machat.dao.Friend;
-import datapp.machat.helper.CircleTransform;
 
 /**
  * Created by hat on 7/6/15.

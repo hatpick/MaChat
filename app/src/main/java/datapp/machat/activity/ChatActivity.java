@@ -1,52 +1,56 @@
 package datapp.machat.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.faradaj.blurbehind.BlurBehind;
+import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
-import com.parse.Parse;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import datapp.machat.R;
 import datapp.machat.adapter.MessageAdapter;
+import datapp.machat.adapter.SelfieconAdapter;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.helper.SizeHelper;
 
 public class ChatActivity extends CustomActivity {
     private final String TAG = "ChatActivity";
@@ -57,20 +61,27 @@ public class ChatActivity extends CustomActivity {
     private String receiverFbId;
 
     private ListView chatListView;
+    private GridView selficonGridView;
+    private FrameLayout selfieconKeyboard;
     private EditText messageEditText;
     private Button messageSendBtn;
-    private Button messageSelfieBtn;
     private FrameLayout loading;
     private ArrayList<ParseObject> messageList;
+    private ArrayList<ParseObject> selficonList;
     private MessageAdapter messageAdapter;
-    private LinearLayout mainContainer;
+    private SelfieconAdapter selfieconAdapter;
     private boolean isRunning;
     private Date lastMsgDate;
     private static Handler handler;
+    private SharedPreferences sessionDetails;
+    private final int RESULT_LOAD_IMAGE = 1317;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        sessionDetails = this.getSharedPreferences("sessionDetails", MODE_PRIVATE);
+        SharedPreferences.Editor sessionEditor = sessionDetails.edit();
 
         BlurBehind.getInstance()
                 .withAlpha(65)
@@ -80,29 +91,84 @@ public class ChatActivity extends CustomActivity {
         sender = ParseUser.getCurrentUser();
 
         receiverFbId = getIntent().getStringExtra("receiverFbId");
-        senderFbId = getIntent().getStringExtra("senderFbId");
+        if(receiverFbId == null) {
+            receiverFbId = sessionDetails.getString("receiverFbId", "");
+        } else {
+            sessionEditor.putString("receiverFbId", receiverFbId);
+            sessionEditor.apply();
+        }
 
+        senderFbId = getIntent().getStringExtra("senderFbId");
         messageEditText = (EditText)findViewById(R.id.new_message_content);
         messageEditText .setInputType(InputType.TYPE_CLASS_TEXT
                 | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         messageSendBtn = (Button)findViewById(R.id.send_new_message_btn);
-        messageSelfieBtn = (Button)findViewById(R.id.send_new_selfiecon_btn);
-
-        mainContainer = (LinearLayout) findViewById(R.id.main_container);
+        selfieconKeyboard = (FrameLayout) findViewById(R.id.selfiecon_keyboard);
         loading = (FrameLayout) findViewById(R.id.loading_chat);
 
         chatListView = (ListView) findViewById(R.id.chatSession);
-        chatListView.setDivider(null);
+        chatListView.setDivider(getResources().getDrawable(R.drawable.transparent_divider));
+        chatListView.setDividerHeight(10);
         chatListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_NORMAL);
+
+        selficonGridView = (GridView) findViewById(R.id.selfiecon_gridview);
+
+        selficonGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                return false;
+            }
+        });
+
+        selficonGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                final ParseObject selfie = selfieconAdapter.getItem(i);
+                final ParseObject message = new ParseObject("Message");
+                message.put("from", sender);
+                message.put("to", receiver);
+                message.put("content", selfie.getParseFile("gifFile").getUrl());
+                message.put("type", "selfiecon");
+                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                message.put("status", "sent");
+                messageList.add(message);
+                messageAdapter.notifyDataSetChanged();
+
+                message.saveEventually(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        if (e == null) {
+                            message.put("status", "delivered");
+                            message.saveEventually(new SaveCallback() {
+                                @Override
+                                public void done(ParseException e) {
+                                    messageAdapter.notifyDataSetChanged();
+                                }
+                            });
+                        }
+                    }
+                });
+
+
+            }
+        });
 
         messageList = new ArrayList<>();
         messageAdapter = new MessageAdapter(this, messageList);
         chatListView.setAdapter(messageAdapter);
+
+        selficonList = new ArrayList<>();
+        selfieconAdapter = new SelfieconAdapter(this, selficonList);
+        selficonGridView.setAdapter(selfieconAdapter);
+
         //setPadding(mainContainer);
         handler = new Handler();
 
         setTouchNClick(R.id.send_new_message_btn);
         setTouchNClick(R.id.send_new_selfiecon_btn);
+        setTouchNClick(R.id.new_message_content);
+        setTouchNClick(R.id.create_new_selfiecon_btn);
+        setTouchNClick(R.id.add_attachment_btn);
 
         loading.setVisibility(View.VISIBLE);
 
@@ -127,9 +193,21 @@ public class ChatActivity extends CustomActivity {
         });
     }
 
+    private void _toggleSelfieconKeyboard(){
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) selfieconKeyboard.getLayoutParams();
+        params.height = (params.height == 0)?(int)SizeHelper.convertDpToPixel(LinearLayout.LayoutParams.WRAP_CONTENT, this) : 0;
+        selfieconKeyboard.setLayoutParams(params);
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
+        //isRunning = false;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
         isRunning = false;
     }
 
@@ -138,6 +216,28 @@ public class ChatActivity extends CustomActivity {
         super.onResume();
         isRunning = true;
         _fetchReceiver();
+        _fetchSelficons();
+    }
+
+    private void _fetchSelficons() {
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("GIF");
+        query.whereEqualTo("creator", ParseUser.getCurrentUser());
+        query.setSkip(selficonList.size());
+        query.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> selficonObjs, ParseException e) {
+                if(e == null) {
+                    if(selficonObjs.size() > 0){
+                        for (int i = 0; i < selficonObjs.size(); i++) {
+                            selficonList.add(selficonObjs.get(i));
+                        }
+                        selfieconAdapter.notifyDataSetChanged();
+                    }
+                } else {
+                    Toast.makeText(ChatActivity.this, "Error loading selfiecons!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     @Override
@@ -183,9 +283,106 @@ public class ChatActivity extends CustomActivity {
                 }
             });
         } else if(v.getId() == R.id.send_new_selfiecon_btn){
-            //TODO: selfie stuff goes here
+            _toggleSelfieconKeyboard();
+        } else if(v.getId() == R.id.new_message_content) {
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) selfieconKeyboard.getLayoutParams();
+            if(params.height == 0) return;
+            params.height = 0;
+            selfieconKeyboard.setLayoutParams(params);
+        } else if(v.getId() == R.id.create_new_selfiecon_btn) {
+            BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                @Override
+                public void onBlurComplete() {
+                    Intent selfieconIntent = new Intent(ChatActivity.this, SelfieconCameraActivity.class);
+                    selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    startActivity(selfieconIntent);
+                }
+            });
+        } else if(v.getId() == R.id.add_attachment_btn) {
+            Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(i, RESULT_LOAD_IMAGE);
         }
     }
+
+    private float _getResizeFactor(int imageWidth ) {
+        float resizeFactor;
+        int displayWidth = SizeHelper.getDisplayWidth(this);
+        float ratio = imageWidth / displayWidth;
+        if(ratio < 1) resizeFactor = 1f;
+        else if(ratio > 1 && ratio <= 1.5f) resizeFactor = .6f;
+        else if(ratio > 1.5f && ratio <= 2f) resizeFactor = .5f;
+        else if(ratio > 2f && ratio <= 2.5f) resizeFactor = .4f;
+        else if(ratio > 2.5f && ratio <= 3f) resizeFactor = .3f;
+        else if(ratio > 3f && ratio <= 3.5f) resizeFactor = .2f;
+        else resizeFactor = 0;
+        return resizeFactor;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch(requestCode) {
+            case RESULT_LOAD_IMAGE:
+                if(resultCode == RESULT_OK){
+                    Uri selectedImage = data.getData();
+                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+                    Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+                    cursor.moveToFirst();
+
+                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                    String filePath = cursor.getString(columnIndex);
+                    cursor.close();
+
+                    Bitmap selectedImageBitmap = BitmapFactory.decodeFile(filePath);
+//                    float RESIZE_FACTOR = _getResizeFactor(selectedImageBitmap.getWidth());
+//                    if(RESIZE_FACTOR == 0){
+//                        Toast.makeText(ChatActivity.this, "Too big!", Toast.LENGTH_SHORT).show();
+//                        return;
+//                    }
+                    Random generator = new Random();
+                    int n = 10000;
+                    n = generator.nextInt(n);
+
+                    //Bitmap resizedBitmap = Bitmap.createScaledBitmap(selectedImageBitmap, (int)(selectedImageBitmap.getWidth() * RESIZE_FACTOR), (int)(selectedImageBitmap.getHeight() * RESIZE_FACTOR), true);
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    selectedImageBitmap.compress(Bitmap.CompressFormat.JPEG, 75, out);
+                    final ParseFile imageFile = new ParseFile("media_" + n + ".jpg", out.toByteArray());
+                    imageFile.saveInBackground(new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            final ParseObject message = new ParseObject("Message");
+                            message.put("from", sender);
+                            message.put("to", receiver);
+                            message.put("content", imageFile.getUrl());
+                            message.put("type", "media");
+                            message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                            message.put("status", "sent");
+                            messageList.add(message);
+                            messageAdapter.notifyDataSetChanged();
+
+                            message.saveEventually(new SaveCallback() {
+                                @Override
+                                public void done(ParseException e) {
+                                    if (e == null) {
+                                        message.put("status", "delivered");
+                                        message.saveEventually(new SaveCallback() {
+                                            @Override
+                                            public void done(ParseException e) {
+                                                messageAdapter.notifyDataSetChanged();
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+        }
+
+    };
 
     private void setPadding(View v){
         int actionBarHeight = 0, statusBarHeight = 0, defaultPadding = 0;

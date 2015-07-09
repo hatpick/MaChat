@@ -32,8 +32,7 @@ dependencies {
     compile 'com.google.android.gms:play-services:6.5.87'
     compile 'com.github.kevinsawicki:timeago:1.0.1'
     compile 'com.github.fengdai:alertdialogpro-theme-material:0.2.0'
-    compile 'com.lorentzos.swipecards:library:1.0.8'
-    compile 'com.github.bumptech.glide:glide:3.6.0'
+    compile 'com.github.bumptech.glide:glide:3.7.0-SNAPSHOT'
     compile 'com.makeramen:roundedimageview:2.0.0'
     compile (name:'blur-behind', ext:'aar')
 }

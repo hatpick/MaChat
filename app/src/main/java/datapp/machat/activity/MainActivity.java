@@ -33,9 +33,9 @@ import java.util.ArrayList;
 
 import datapp.machat.R;
 import datapp.machat.adapter.FriendListAdapter;
+import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.Friend;
-import datapp.machat.helper.CircleTransform;
 
 public class MainActivity extends CustomActivity {
     private ArrayList<ParseUser> friends = new ArrayList<>();

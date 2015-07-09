@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.hardware.camera" />
+    <uses-permission android:name="android.hardware.camera.autofocus" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
@@ -114,14 +117,25 @@
             android:windowSoftInputMode="stateHidden|adjustResize" >
         </activity>
         <activity
-            android:windowSoftInputMode="adjustPan|stateUnchanged|adjustResize"
-            android:theme="@style/AppTheme"
             android:name=".activity.ChatActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activity.MainActivity"
             android:screenOrientation="portrait"
-            android:parentActivityName=".activity.MainActivity" >
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustPan|stateUnchanged|adjustResize" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="datapp.machat.activity.MainActivity" />
+        </activity>
+        <activity
+            android:name=".activity.SelfieconCameraActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label=""
+            android:parentActivityName=".activity.ChatActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="datapp.machat.activity.ChatActivity" />
         </activity>
     </application>
 
