@@ -4,7 +4,9 @@
     android:gravity="center" android:focusable="false"
     android:padding="10dp" android:layout_height="match_parent">
     <ImageView
+        android:background="@drawable/circle_bg"
         android:id="@+id/friend_avatar"
+        android:padding="@dimen/pad_5dp"
         android:layout_width="75dp"
         android:layout_height="75dp" />
     <TextView
