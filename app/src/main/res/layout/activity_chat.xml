@@ -11,6 +11,7 @@
         android:id="@+id/chatSession"
         android:layout_weight="1"
         android:layout_width="match_parent"
+        android:paddingBottom="@dimen/pad_10dp"
         android:layout_height="0dp">
     </ListView>
     <FrameLayout
@@ -31,7 +32,6 @@
         android:gravity="center_vertical"
         android:background="@android:color/transparent"
         android:padding="@dimen/pad_5dp"
-        android:layout_marginTop="@dimen/pad_10dp"
         android:orientation="horizontal"
         android:focusableInTouchMode="true"
         android:layout_width="match_parent"

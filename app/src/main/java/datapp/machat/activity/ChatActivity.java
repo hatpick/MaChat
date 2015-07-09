@@ -299,8 +299,8 @@ public class ChatActivity extends CustomActivity {
                 }
             });
         } else if(v.getId() == R.id.add_attachment_btn) {
-            Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(i, RESULT_LOAD_IMAGE);
+            Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(pickPhoto , RESULT_LOAD_IMAGE);
         }
     }
 
