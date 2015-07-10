@@ -22,6 +22,7 @@ import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -390,20 +391,6 @@ public class ChatActivity extends CustomActivity {
         }
     }
 
-    private float _getResizeFactor(int imageWidth ) {
-        float resizeFactor;
-        int displayWidth = SizeHelper.getDisplayWidth(this);
-        float ratio = imageWidth / displayWidth;
-        if(ratio < 1) resizeFactor = 1f;
-        else if(ratio > 1 && ratio <= 1.5f) resizeFactor = .6f;
-        else if(ratio > 1.5f && ratio <= 2f) resizeFactor = .5f;
-        else if(ratio > 2f && ratio <= 2.5f) resizeFactor = .4f;
-        else if(ratio > 2.5f && ratio <= 3f) resizeFactor = .3f;
-        else if(ratio > 3f && ratio <= 3.5f) resizeFactor = .2f;
-        else resizeFactor = 0;
-        return resizeFactor;
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
@@ -495,39 +482,6 @@ public class ChatActivity extends CustomActivity {
         }
 
     };
-
-    private void setPadding(View v){
-        int actionBarHeight = 0, statusBarHeight = 0, defaultPadding = 0;
-        statusBarHeight = getStatusBarHeight();
-        TypedValue tv = new TypedValue();
-        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
-        {
-            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
-        }
-
-        int dpAsPixelsTop = statusBarHeight + defaultPadding + actionBarHeight;
-        int dpAsPixelsBottom = getNavigationBarHeight();
-        v.setPadding(v.getPaddingLeft(),dpAsPixelsTop, v.getPaddingRight(), dpAsPixelsBottom);
-
-    }
-
-    private int getNavigationBarHeight() {
-        int result = 0;
-        int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
-    }
-
-    private int getStatusBarHeight() {
-        int result = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
-    }
 
     private void _fetchReceiver() {
         //fetch chat history
@@ -638,8 +592,8 @@ public class ChatActivity extends CustomActivity {
                                 lastMsgDate = messageObj.getCreatedAt();
                         }
                         firstMsgDate = messageList.get(0).getCreatedAt();
-                        messageAdapter.notifyDataSetChanged();
                     }
+                    messageAdapter.notifyDataSetChanged();
                 } else {
                     Toast.makeText(ChatActivity.this, "Network issue!", Toast.LENGTH_SHORT).show();
                 }
