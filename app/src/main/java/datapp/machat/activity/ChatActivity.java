@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -93,6 +94,7 @@ public class ChatActivity extends CustomActivity {
     private SharedPreferences sessionDetails;
     private final int RESULT_LOAD_IMAGE = 1317;
     SwipeRefreshLayout swipeContainer;
+    private boolean keyboardVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +133,21 @@ public class ChatActivity extends CustomActivity {
 
         selficonGridView = (GridView) findViewById(R.id.selfiecon_gridview);
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+
+        final View activityRootView = findViewById(R.id.main_container);
+        activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                Rect r = new Rect();
+                activityRootView.getWindowVisibleDisplayFrame(r);
+                int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
+                if (heightDiff > 500) {
+                    keyboardVisible = true;
+                } else {
+                    keyboardVisible = false;
+                }
+            }
+        });
 
         selficonGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -370,6 +387,10 @@ public class ChatActivity extends CustomActivity {
                 }
             });
         } else if(v.getId() == R.id.send_new_selfiecon_btn){
+            if(keyboardVisible){
+                InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
             _toggleSelfieconKeyboard();
         } else if(v.getId() == R.id.new_message_content) {
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) selfieconKeyboard.getLayoutParams();
