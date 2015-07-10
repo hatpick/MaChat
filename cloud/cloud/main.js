@@ -56,3 +56,38 @@ Parse.Cloud.define("getFacebookImgByfbId", function(request, response) {
       }
 	});
 });
+
+Parse.Cloud.define("sendPushMessage", function(request, response) {
+    var senderUser = request.user;
+    var toId = request.params.toId;
+    var msgType = request.params.msgType;
+    var msgContent = request.params.msgContent;    
+    Parse.Cloud.useMasterKey();    
+
+    var suffixMsg;
+    switch(msgType){        
+        case "selfiecon":
+        suffixMsg = " has sent you a selfiecon!"
+        break;
+        case "media":
+        suffixMsg = " has sent you a photo!"
+        break;
+    }
+
+    var pushQuery = new Parse.Query(Parse.Installation);
+    pushQuery.equalTo("user", toId);
+    Parse.Push.send({
+        where: pushQuery,
+        data: {
+            title: senderUser.get("fName"),
+            alert: (msgType == "text")? msgContent : senderUser.get("fName") + suffixMsg
+        }
+    }, {
+        success: function() {            
+            response.success("Push success.");
+        },
+        error: function() {
+            response.error("Push failed to send with error: " + error.message);
+        }
+    });
+});

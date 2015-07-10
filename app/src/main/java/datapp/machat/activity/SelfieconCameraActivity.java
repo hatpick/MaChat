@@ -24,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.faradaj.blurbehind.BlurBehind;
+import com.parse.ParseUser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -122,6 +123,9 @@ public class SelfieconCameraActivity extends CustomActivity  {
         mCamera = getCameraInstance();
         _setupPreview();
         preview.setCamera(mCamera);
+
+        ParseUser.getCurrentUser().put("inApp", true);
+        ParseUser.getCurrentUser().saveInBackground();
     }
 
     @Override
@@ -134,6 +138,9 @@ public class SelfieconCameraActivity extends CustomActivity  {
             layout.removeView(preview);
             preview = null;
         }
+
+        ParseUser.getCurrentUser().put("inApp", false);
+        ParseUser.getCurrentUser().saveInBackground();
     }
 
     private Camera openFrontFacingCameraGingerbread() {

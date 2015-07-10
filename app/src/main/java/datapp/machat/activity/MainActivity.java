@@ -23,7 +23,11 @@ import com.bumptech.glide.Glide;
 import com.faradaj.blurbehind.BlurBehind;
 import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.makeramen.roundedimageview.RoundedTransformationBuilder;
+import com.parse.ParseException;
+import com.parse.ParseInstallation;
+import com.parse.ParsePush;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,6 +40,7 @@ import datapp.machat.adapter.FriendListAdapter;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.Friend;
+import datapp.machat.helper.SizeHelper;
 
 public class MainActivity extends CustomActivity {
     private ArrayList<ParseUser> friends = new ArrayList<>();
@@ -57,6 +62,7 @@ public class MainActivity extends CustomActivity {
         friendListAdapter = new FriendListAdapter(this, R.layout.friend_contact, friendsArray);
         friendsListView.setAdapter(friendListAdapter);
         _setupActionBar();
+        _setupNotification();
         _setupFriendList();
 
         //setPadding(mainContainer);
@@ -107,8 +113,21 @@ public class MainActivity extends CustomActivity {
         });
     }
 
+    private void _setupNotification(){
+        ParseInstallation.getCurrentInstallation().saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if(e == null) {
+                    ParseInstallation.getCurrentInstallation().put("user", ParseUser.getCurrentUser().getObjectId());
+                    ParseInstallation.getCurrentInstallation().saveInBackground();
+                }
+            }
+        });
+    }
+
     private void _setupActionBar() {
         ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         LinearLayout linearLayout = new LinearLayout(actionBar.getThemedContext());
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -146,7 +165,7 @@ public class MainActivity extends CustomActivity {
                 .centerCrop()
                 .transform(transformation)
                 .into(pp_picture);
-        ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams(convertDpToPixel(40, this), convertDpToPixel(40, this) , Gravity.LEFT
+        ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams((int) SizeHelper.convertDpToPixel(40, this), (int) SizeHelper.convertDpToPixel(40, this), Gravity.LEFT
                 | Gravity.CENTER_VERTICAL);
         pp_picture.setLayoutParams(imgLayoutParams);
 
@@ -157,46 +176,18 @@ public class MainActivity extends CustomActivity {
         actionBar.setCustomView(linearLayout);
     }
 
-    public static int convertDpToPixel(float dp, Context context){
-        Resources resources = context.getResources();
-        DisplayMetrics metrics = resources.getDisplayMetrics();
-        float px = dp * (metrics.densityDpi / 160f);
-        return (int)px;
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ParseUser.getCurrentUser().put("inApp", true);
+        ParseUser.getCurrentUser().saveInBackground();
     }
 
-    private void setPadding(View v){
-        int actionBarHeight = 0, statusBarHeight = 0, defaultPadding = 0;
-        defaultPadding = getResources().getDimensionPixelSize(R.dimen.activity_vertical_margin)/2;
-        statusBarHeight = getStatusBarHeight();
-        TypedValue tv = new TypedValue();
-
-        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
-        {
-            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
-        }
-
-        int dpAsPixelsTop = statusBarHeight + defaultPadding + actionBarHeight;
-        int dpAsPixelsBottom = getNavigationBarHeight();
-        v.setPadding(v.getPaddingLeft(),dpAsPixelsTop, v.getPaddingRight(), dpAsPixelsBottom);
-
-    }
-
-    private int getNavigationBarHeight() {
-        int result = 0;
-        int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
-    }
-
-    private int getStatusBarHeight() {
-        int result = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ParseUser.getCurrentUser().put("inApp", false);
+        ParseUser.getCurrentUser().saveInBackground();
     }
 
     @Override

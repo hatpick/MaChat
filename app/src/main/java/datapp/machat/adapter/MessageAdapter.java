@@ -22,9 +22,7 @@ import com.github.kevinsawicki.timeago.TimeAgo;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.TimeZone;
 
 import datapp.machat.R;
 import datapp.machat.custom.CircleTransform;
@@ -51,8 +49,6 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
         final ParseObject message = getItem(position);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm a EEE, d MMM yyyy");
-        dateFormat.setTimeZone(TimeZone.getDefault());
 
         MessageHolder messageHolder = null;
 

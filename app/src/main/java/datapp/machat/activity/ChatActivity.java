@@ -12,13 +12,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -26,14 +29,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.Transformation;
 import com.faradaj.blurbehind.BlurBehind;
 import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.parse.FindCallback;
+import com.parse.FunctionCallback;
 import com.parse.GetCallback;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
@@ -42,15 +51,19 @@ import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.TimeZone;
 
 import datapp.machat.R;
 import datapp.machat.adapter.MessageAdapter;
 import datapp.machat.adapter.SelfieconAdapter;
+import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.helper.SizeHelper;
 
@@ -129,32 +142,56 @@ public class ChatActivity extends CustomActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 final ParseObject selfie = selfieconAdapter.getItem(i);
-                final ParseObject message = new ParseObject("Message");
-                message.put("from", sender);
-                message.put("to", receiver);
-                message.put("content", selfie.getParseFile("gifFile").getUrl());
-                message.put("type", "selfiecon");
-                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                message.put("status", "sent");
-                messageList.add(message);
-                messageAdapter.notifyDataSetChanged();
-
-                message.saveEventually(new SaveCallback() {
+                receiver.fetchInBackground(new GetCallback<ParseUser>() {
                     @Override
-                    public void done(ParseException e) {
-                        if (e == null) {
-                            message.put("status", "delivered");
+                    public void done(ParseUser parseUser, ParseException e) {
+                        if(e == null){
+                            receiver = parseUser;
+                            if(!receiver.getBoolean("inApp")) {
+                                HashMap<String, Object> params = new HashMap<String, Object>();
+                                params.put("toId", receiver.getObjectId());
+                                params.put("msgType", "selfiecon");
+                                params.put("msgContent", selfie.getParseFile("gifFile").getUrl());
+                                params.put("toId", receiver.getObjectId());
+                                ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                                    @Override
+                                    public void done(String s, ParseException e) {
+                                        if (e != null) {
+                                            Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
+                            }
+
+                            final ParseObject message = new ParseObject("Message");
+                            message.put("from", sender);
+                            message.put("to", receiver);
+                            message.put("content", selfie.getParseFile("gifFile").getUrl());
+                            message.put("type", "selfiecon");
+                            message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                            message.put("status", "sent");
+                            messageList.add(message);
+                            messageAdapter.notifyDataSetChanged();
+
                             message.saveEventually(new SaveCallback() {
                                 @Override
                                 public void done(ParseException e) {
-                                    messageAdapter.notifyDataSetChanged();
+                                    if (e == null) {
+                                        message.put("status", "delivered");
+                                        message.saveEventually(new SaveCallback() {
+                                            @Override
+                                            public void done(ParseException e) {
+                                                messageAdapter.notifyDataSetChanged();
+                                            }
+                                        });
+                                    }
                                 }
                             });
                         }
+
                     }
                 });
-
-
             }
         });
 
@@ -220,6 +257,8 @@ public class ChatActivity extends CustomActivity {
     protected void onPause() {
         super.onPause();
         //isRunning = false;
+        ParseUser.getCurrentUser().put("inApp", false);
+        ParseUser.getCurrentUser().saveInBackground();
     }
 
     @Override
@@ -234,6 +273,8 @@ public class ChatActivity extends CustomActivity {
         isRunning = true;
         _fetchReceiver();
         _fetchSelficons();
+        ParseUser.getCurrentUser().put("inApp", true);
+        ParseUser.getCurrentUser().saveInBackground();
     }
 
     private void _fetchSelficons() {
@@ -272,32 +313,59 @@ public class ChatActivity extends CustomActivity {
     public void onClick(View v) {
         super.onClick(v);
         if(v.getId() == R.id.send_new_message_btn) {
-            String messageText = messageEditText.getText().toString();
+            final String messageText = messageEditText.getText().toString();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(messageEditText.getWindowToken(), 0);
             messageEditText.setText(null);
-            final ParseObject message = new ParseObject("Message");
-            message.put("from", sender);
-            message.put("to", receiver);
-            message.put("content", messageText);
-            message.put("type", "text");
-            message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-            message.put("status", "sent");
-            messageList.add(message);
-            messageAdapter.notifyDataSetChanged();
 
-            message.saveEventually(new SaveCallback() {
+            receiver.fetchInBackground(new GetCallback<ParseUser>() {
                 @Override
-                public void done(ParseException e) {
-                    if (e == null) {
-                        message.put("status", "delivered");
+                public void done(ParseUser parseUser, ParseException e) {
+                    if(e == null){
+                        receiver = parseUser;
+                        if(!receiver.getBoolean("inApp")) {
+                            HashMap<String, Object> params = new HashMap<String, Object>();
+                            params.put("toId", receiver.getObjectId());
+                            params.put("msgType", "text");
+                            params.put("msgContent", messageText);
+                            params.put("toId", receiver.getObjectId());
+                            ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                                @Override
+                                public void done(String s, ParseException e) {
+                                    if (e != null) {
+                                        Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                        }
+
+                        final ParseObject message = new ParseObject("Message");
+                        message.put("from", sender);
+                        message.put("to", receiver);
+                        message.put("content", messageText);
+                        message.put("type", "text");
+                        message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                        message.put("status", "sent");
+                        messageList.add(message);
+                        messageAdapter.notifyDataSetChanged();
+
                         message.saveEventually(new SaveCallback() {
                             @Override
                             public void done(ParseException e) {
-                                messageAdapter.notifyDataSetChanged();
+                                if (e == null) {
+                                    message.put("status", "delivered");
+                                    message.saveEventually(new SaveCallback() {
+                                        @Override
+                                        public void done(ParseException e) {
+                                            messageAdapter.notifyDataSetChanged();
+                                        }
+                                    });
+                                }
                             }
                         });
                     }
+
                 }
             });
         } else if(v.getId() == R.id.send_new_selfiecon_btn){
@@ -371,28 +439,54 @@ public class ChatActivity extends CustomActivity {
                     imageFile.saveInBackground(new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
-                            final ParseObject message = new ParseObject("Message");
-                            message.put("from", sender);
-                            message.put("to", receiver);
-                            message.put("content", imageFile.getUrl());
-                            message.put("type", "media");
-                            message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                            message.put("status", "sent");
-                            messageList.add(message);
-                            messageAdapter.notifyDataSetChanged();
-
-                            message.saveEventually(new SaveCallback() {
+                            receiver.fetchInBackground(new GetCallback<ParseUser>() {
                                 @Override
-                                public void done(ParseException e) {
-                                    if (e == null) {
-                                        message.put("status", "delivered");
+                                public void done(ParseUser parseUser, ParseException e) {
+                                    if(e == null){
+                                        receiver = parseUser;
+                                        if(!receiver.getBoolean("inApp")) {
+                                            HashMap<String, Object> params = new HashMap<String, Object>();
+                                            params.put("toId", receiver.getObjectId());
+                                            params.put("msgType", "media");
+                                            params.put("msgContent", imageFile.getUrl());
+                                            params.put("toId", receiver.getObjectId());
+                                            ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                                                @Override
+                                                public void done(String s, ParseException e) {
+                                                    if (e != null) {
+                                                        Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                        e.printStackTrace();
+                                                    }
+                                                }
+                                            });
+                                        }
+
+                                        final ParseObject message = new ParseObject("Message");
+                                        message.put("from", sender);
+                                        message.put("to", receiver);
+                                        message.put("content", imageFile.getUrl());
+                                        message.put("type", "media");
+                                        message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                                        message.put("status", "sent");
+                                        messageList.add(message);
+                                        messageAdapter.notifyDataSetChanged();
+
                                         message.saveEventually(new SaveCallback() {
                                             @Override
                                             public void done(ParseException e) {
-                                                messageAdapter.notifyDataSetChanged();
+                                                if (e == null) {
+                                                    message.put("status", "delivered");
+                                                    message.saveEventually(new SaveCallback() {
+                                                        @Override
+                                                        public void done(ParseException e) {
+                                                            messageAdapter.notifyDataSetChanged();
+                                                        }
+                                                    });
+                                                }
                                             }
                                         });
                                     }
+
                                 }
                             });
                         }
@@ -444,7 +538,7 @@ public class ChatActivity extends CustomActivity {
             public void done(ParseUser parseUser, ParseException e) {
                 if(e == null && parseUser != null) {
                     receiver = parseUser;
-                    getSupportActionBar().setTitle(receiver.getString("fName") + " " + receiver.getString("lName"));
+                    _setupActionBar();
                     _loadConversation();
                 } else {
                     finish();
@@ -452,6 +546,69 @@ public class ChatActivity extends CustomActivity {
                 }
             }
         });
+    }
+
+    private void _setupActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(false);
+        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        LinearLayout linearLayout = new LinearLayout(actionBar.getThemedContext());
+        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
+        linearLayout.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+
+        //App name textview
+        LinearLayout textLinearLayout = new LinearLayout(actionBar.getThemedContext());
+        textLinearLayout.setOrientation(LinearLayout.VERTICAL);
+        linearLayout.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+
+        TextView user_name = new TextView(actionBar.getThemedContext());
+        user_name.setText(receiver.getString("fName") + " " + receiver.getString("lName"));
+        user_name.setPadding(20, 0, 0, 0);
+        user_name.setTextSize(16);
+        ActionBar.LayoutParams txtLayoutParams = new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT , Gravity.LEFT
+                | Gravity.CENTER_VERTICAL);
+        txtLayoutParams.leftMargin = 20;
+        user_name.setLayoutParams(txtLayoutParams);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM yyyy");
+        dateFormat.setTimeZone(TimeZone.getDefault());
+
+        TextView user_membership = new TextView(actionBar.getThemedContext());
+        user_membership.setText("Member since " + dateFormat.format(receiver.getCreatedAt()));
+        user_membership.setPadding(20, 0, 0, 0);
+        user_membership.setTextSize(12);
+        user_membership.setLayoutParams(txtLayoutParams);
+
+        textLinearLayout.addView(user_name);
+        textLinearLayout.addView(user_membership);
+
+        ImageView pp_picture = new ImageView(actionBar.getThemedContext());
+        Transformation transformation = new CircleTransform(this);
+
+        Glide.with(this)
+                .load(receiver.getParseFile("profilePicture").getUrl())
+                .centerCrop()
+                .centerCrop()
+                .transform(transformation)
+                .into(pp_picture);
+        ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams((int)SizeHelper.convertDpToPixel(40, this), (int)SizeHelper.convertDpToPixel(40, this) , Gravity.LEFT
+                | Gravity.CENTER_VERTICAL);
+        pp_picture.setLayoutParams(imgLayoutParams);
+
+        linearLayout.addView(pp_picture);
+        linearLayout.addView(textLinearLayout);
+
+
+        actionBar.setCustomView(linearLayout);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(selfieconKeyboard.getHeight() > 0) {
+            _toggleSelfieconKeyboard();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     private void _loadConversation() {
