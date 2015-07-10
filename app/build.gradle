@@ -34,5 +34,6 @@ dependencies {
     compile 'com.github.fengdai:alertdialogpro-theme-material:0.2.0'
     compile 'com.github.bumptech.glide:glide:3.7.0-SNAPSHOT'
     compile 'com.makeramen:roundedimageview:2.0.0'
+    compile 'com.crittercism:crittercism-android-agent:5.0.6'
     compile (name:'blur-behind', ext:'aar')
 }

@@ -8,7 +8,7 @@
         android:id="@+id/swipeContainer"
         android:layout_weight="1"
         android:layout_width="match_parent"
-        android:paddingBottom="@dimen/pad_10dp"
+        android:paddingBottom="@dimen/pad_5dp"
         android:layout_height="0dp">
         <ListView
             android:stackFromBottom="true"
@@ -37,8 +37,9 @@
     <LinearLayout
         tools:context="datapp.machat.activity.ChatActivity"
         android:gravity="center_vertical"
-        android:background="@android:color/transparent"
-        android:padding="@dimen/pad_5dp"
+        android:background="@drawable/chat_input_bg"
+        android:paddingLeft="@dimen/pad_5dp" android:paddingRight="@dimen/pad_5dp"
+        android:paddingTop="@dimen/pad_10dp"
         android:orientation="horizontal"
         android:focusableInTouchMode="true"
         android:layout_width="match_parent"
@@ -56,7 +57,18 @@
                 android:minWidth="1dp"
                 android:layout_width="30dp"
                 android:layout_height="30dp" />
+            <Button
+                android:layout_marginLeft="40dp"
+                android:gravity="center"
+                android:layout_gravity="left"
+                android:id="@+id/add_location_btn"
+                android:background="@mipmap/ic_location"
+                android:minHeight="1dp"
+                android:minWidth="1dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
             <EditText
+                android:clickable="true"
                 android:background="@android:color/transparent"
                 android:gravity="left|center_vertical"
                 android:textColor="@color/white"
@@ -66,8 +78,8 @@
                 android:textSize="@dimen/txt_16sp"
                 android:paddingLeft="@dimen/pad_10dp"
                 android:paddingRight="@dimen/pad_10dp"
-                android:layout_marginLeft="@dimen/pad_30dp"
-                android:layout_marginRight="@dimen/pad_30dp"
+                android:layout_marginLeft="70dp"
+                android:layout_marginRight="60dp"
                 android:imeActionId="100"
                 android:imeOptions="actionSend"
                 android:ems="10"
@@ -75,17 +87,7 @@
                 android:hint="@string/type_msg"
                 android:layout_height="30dp"/>
             <Button
-                android:layout_marginRight="70dp"
-                android:gravity="center"
-                android:layout_gravity="right"
-                android:id="@+id/add_location_btn"
-                android:background="@mipmap/ic_location"
-                android:minHeight="1dp"
-                android:minWidth="1dp"
-                android:layout_width="30dp"
-                android:layout_height="30dp" />
-            <Button
-                android:layout_marginRight="35dp"
+                android:layout_marginRight="40dp"
                 android:gravity="center"
                 android:layout_gravity="right"
                 android:id="@+id/add_attachment_btn"

@@ -2,6 +2,7 @@ package datapp.machat.application;
 
 import android.app.Application;
 
+import com.crittercism.app.Crittercism;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 import com.parse.PushService;
@@ -29,5 +30,6 @@ public class MaChatApplication extends Application {
         Parse.initialize(this, getString(R.string.parse_first_arg), getString(R.string.parse_second_arg));
         ParseFacebookUtils.initialize(this.getApplicationContext());
         PushService.setDefaultPushCallback(this, MainActivity.class);
+        Crittercism.initialize(getApplicationContext(), getString(R.string.crittercism_app_id));
     }
 }

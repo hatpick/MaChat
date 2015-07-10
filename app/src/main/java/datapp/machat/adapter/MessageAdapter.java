@@ -2,8 +2,10 @@ package datapp.machat.adapter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -120,30 +122,10 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(messageHolder.mediaContent);
 
-            messageHolder.mediaContent.setOnTouchListener(new View.OnTouchListener() {
-
+            messageHolder.mediaContent.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public boolean onTouch(View v, MotionEvent event) {
-
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_DOWN: {
-                            ImageView view = (ImageView) v;
-                            //overlay is black with transparency of 0x77 (119)
-                            view.getDrawable().setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP);
-                            view.invalidate();
-                            break;
-                        }
-                        case MotionEvent.ACTION_UP:
-                        case MotionEvent.ACTION_CANCEL: {
-                            ImageView view = (ImageView) v;
-                            //clear the overlay
-                            view.getDrawable().clearColorFilter();
-                            view.invalidate();
-                            break;
-                        }
-                    }
-
-                    return true;
+                public void onClick(View view) {
+                    showImage(message.getString("content"));
                 }
             });
         } else if(messageType.equals("map")){
@@ -153,8 +135,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             else
                 messageHolder.messageDateMap.setText("Just now");
 
-            Double lat = new Double(message.getParseGeoPoint("location").getLatitude());
-            Double lng = new Double(message.getParseGeoPoint("location").getLongitude());
+            final Double lat = new Double(message.getParseGeoPoint("location").getLatitude());
+            final Double lng = new Double(message.getParseGeoPoint("location").getLongitude());
 
             String url = mContext.getResources().getString(R.string.maps_static)
                     .replace("{lat}", lat.toString()).replace("{lng}", lng.toString());
@@ -165,30 +147,10 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(messageHolder.mapContent);
 
-            messageHolder.mapContent.setOnTouchListener(new View.OnTouchListener() {
-
+            messageHolder.mapContent.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public boolean onTouch(View v, MotionEvent event) {
-
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_DOWN: {
-                            ImageView view = (ImageView) v;
-                            //overlay is black with transparency of 0x77 (119)
-                            view.getDrawable().setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP);
-                            view.invalidate();
-                            break;
-                        }
-                        case MotionEvent.ACTION_UP:
-                        case MotionEvent.ACTION_CANCEL: {
-                            ImageView view = (ImageView) v;
-                            //clear the overlay
-                            view.getDrawable().clearColorFilter();
-                            view.invalidate();
-                            break;
-                        }
-                    }
-
-                    return true;
+                public void onClick(View v) {
+                    showMap(Uri.parse("geo:" + lat + "," + lng + "?z=15"));
                 }
             });
         }
@@ -223,6 +185,21 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
         return row;
 
+    }
+
+    public void showMap(Uri geoLocation) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(geoLocation);
+        if (intent.resolveActivity(mContext.getPackageManager()) != null) {
+            mContext.startActivity(intent);
+        }
+    }
+
+    public void showImage(String url) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.parse(url), "image/*");
+        mContext.startActivity(intent);
     }
 
     static class MessageHolder {

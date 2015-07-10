@@ -3,6 +3,7 @@ package datapp.machat.selfiecon;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -67,6 +68,7 @@ import java.util.Random;
 
 import datapp.machat.R;
 import datapp.machat.custom.CircleTransform;
+import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.SizeHelper;
 
 /**
@@ -80,6 +82,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
     protected final Path path = new Path();
     private Camera.Size mPreviewSize;
     private float ratio;
+    final private Activity activity = ((Activity) getContext());
     private Camera mCamera;
     private List<Camera.Size> mSupportedPreviewSizes;
     private List<Bitmap> mImages = new ArrayList<Bitmap>();
@@ -132,7 +135,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Display display = ((Activity) (getContext())).getWindowManager().getDefaultDisplay();
+        Display display = activity.getWindowManager().getDefaultDisplay();
         int width = display.getWidth();
         int height = display.getHeight();
 
@@ -261,7 +264,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
         byte[] byteArray = stream.toByteArray();
 
         if(mIndex == 0) {
-            ImageView selfie1 = (ImageView) ((Activity) (getContext())).findViewById(R.id.selfie1);
+            ImageView selfie1 = (ImageView) activity.findViewById(R.id.selfie1);
             Glide.with(getContext())
                     .load(byteArray)
                     .centerCrop()
@@ -269,7 +272,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                     .transform(new CircleTransform(getContext()))
                     .into(selfie1);
         } else if(mIndex == 1){
-            ImageView selfie2 = (ImageView) ((Activity) (getContext())).findViewById(R.id.selfie2);
+            ImageView selfie2 = (ImageView) activity.findViewById(R.id.selfie2);
             Glide.with(getContext())
                     .load(byteArray)
                     .centerCrop()
@@ -277,7 +280,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                     .transform(new CircleTransform(getContext()))
                     .into(selfie2);
         } else if(mIndex == 2) {
-            ImageView selfie3 = (ImageView) ((Activity) (getContext())).findViewById(R.id.selfie3);
+            ImageView selfie3 = (ImageView) activity.findViewById(R.id.selfie3);
             Glide.with(getContext())
                     .load(byteArray)
                     .centerCrop()
@@ -294,8 +297,8 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    final ImageView imageView = (ImageView) ((Activity) (getContext())).findViewById(R.id.gif);
-                    final Button useSelfie = (Button) ((Activity) (getContext())).findViewById(R.id.use_selfiecon_btn);
+                    final ImageView imageView = (ImageView) activity.findViewById(R.id.gif);
+                    final Button useSelfie = (Button) activity.findViewById(R.id.use_selfiecon_btn);
                     imageView.setVisibility(VISIBLE);
                     for (int i = 0; i < selfiePreviews.size(); i++) {
                         moveViewToScreenCenter(selfiePreviews.get(i));
@@ -306,7 +309,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            LinearLayout selfieHolder= (LinearLayout) ((Activity) (getContext())).findViewById(R.id.selfieHolder);
+                            LinearLayout selfieHolder= (LinearLayout) activity.findViewById(R.id.selfieHolder);
                             selfieHolder.setVisibility(GONE);
                             _generateGif(imageView, useSelfie);
                             takingPicture = false;
@@ -323,7 +326,6 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
 
     private void moveViewToScreenCenter(final View view )
     {
-        Activity activity = (Activity) getContext();
         FrameLayout root = (FrameLayout) activity.findViewById(R.id.middleSurface);
         DisplayMetrics dm = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics( dm );
@@ -409,6 +411,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
 
                     final ParseFile _gifFile = new ParseFile(fname, bytes);
                     final ParseFile _thumbnail = new ParseFile(fname + "_thumbnail.jpg", byteArray);
+                    final Intent intent = new Intent();
 
                     _thumbnail.saveInBackground(new SaveCallback() {
                         @Override
@@ -417,7 +420,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                                 _gifFile.saveInBackground(new SaveCallback() {
                                     public void done(ParseException e) {
                                         if(e == null) {
-                                            ParseObject gifFile = ParseObject.create("GIF");
+                                            final ParseObject gifFile = ParseObject.create("GIF");
                                             gifFile.setACL(new ParseACL(ParseUser.getCurrentUser()));
                                             gifFile.put("creator", ParseUser.getCurrentUser());
                                             gifFile.put("gifFile", _gifFile);
@@ -427,19 +430,25 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                                                 public void done(ParseException e) {
                                                     dia.dismiss();
                                                     if(e == null) {
-                                                        ((Activity) getContext()).finish();
+                                                        Selfiecon selfiecon = new Selfiecon(gifFile.getObjectId(), _gifFile.getUrl(), _thumbnail.getUrl());
+                                                        intent.putExtra("newSelficon", selfiecon);
+                                                        activity.setResult(Activity.RESULT_OK, intent);
+                                                        activity.finish();
                                                     } else {
+                                                        activity.setResult(Activity.RESULT_CANCELED);
                                                         Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                                     }
                                                 }
                                             });
                                         } else {
+                                            activity.setResult(Activity.RESULT_CANCELED);
                                             dia.dismiss();
                                             Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                         }
                                     }
                                 });
                             } else {
+                                activity.setResult(Activity.RESULT_CANCELED);
                                 dia.dismiss();
                                 Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }

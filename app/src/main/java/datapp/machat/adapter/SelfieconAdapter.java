@@ -18,18 +18,19 @@ import java.util.ArrayList;
 
 import datapp.machat.R;
 import datapp.machat.custom.CircleTransform;
+import datapp.machat.dao.Selfiecon;
 
 /**
  * Created by hat on 7/9/15.
  */
-public class SelfieconAdapter extends ArrayAdapter<ParseObject> {
+public class SelfieconAdapter extends ArrayAdapter<Selfiecon> {
     private int mLastPosition;
     private LayoutInflater inflater;
     private CircleTransform transformation;
     private final String TAG = "SelfieconAdapter";
     private Context mContext;
 
-    public SelfieconAdapter(Context context, ArrayList<ParseObject> selfiecons) {
+    public SelfieconAdapter(Context context, ArrayList<Selfiecon> selfiecons) {
         super(context, 0, selfiecons);
         mContext = context;
         inflater = ((Activity) context).getLayoutInflater();
@@ -40,7 +41,7 @@ public class SelfieconAdapter extends ArrayAdapter<ParseObject> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
-        final ParseObject gifObj = getItem(position);
+        final Selfiecon gifObj = getItem(position);
         SelfieconHolder selfieconHolder;
         if(row == null) {
             row = inflater.inflate(R.layout.selfiecon, parent, false);
@@ -53,7 +54,7 @@ public class SelfieconAdapter extends ArrayAdapter<ParseObject> {
         }
 
         Glide.with(mContext)
-                .load(gifObj.getParseFile("gifFile").getUrl())
+                .load(gifObj.getGifUrl())
                 .transform(transformation)
                 .placeholder(R.drawable.circle_bg)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
