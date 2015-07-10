@@ -75,7 +75,17 @@
                 android:hint="@string/type_msg"
                 android:layout_height="30dp"/>
             <Button
-                android:layout_marginRight="40dp"
+                android:layout_marginRight="70dp"
+                android:gravity="center"
+                android:layout_gravity="right"
+                android:id="@+id/add_location_btn"
+                android:background="@mipmap/ic_location"
+                android:minHeight="1dp"
+                android:minWidth="1dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+            <Button
+                android:layout_marginRight="35dp"
                 android:gravity="center"
                 android:layout_gravity="right"
                 android:id="@+id/add_attachment_btn"

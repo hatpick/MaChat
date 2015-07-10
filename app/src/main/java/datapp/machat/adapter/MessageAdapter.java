@@ -58,15 +58,18 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.avatar = (ImageView) row.findViewById(R.id.avatar);
             messageHolder.gifSelfiecon = (ImageView) row.findViewById(R.id.selfiecon_content);
             messageHolder.mediaContent = (ImageView) row.findViewById(R.id.media_content);
+            messageHolder.mapContent = (ImageView) row.findViewById(R.id.map_content);
             messageHolder.messageDateText = (TextView) row.findViewById(R.id.message_date_text);
             messageHolder.messageDateMedia = (TextView) row.findViewById(R.id.message_date_media);
             messageHolder.messageDateSelfiecon = (TextView) row.findViewById(R.id.message_date_selficon);
+            messageHolder.messageDateMap = (TextView) row.findViewById(R.id.message_date_map);
             messageHolder.messageContent = (TextView) row.findViewById(R.id.message_content);
             messageHolder.messageContainer = (LinearLayout) row.findViewById(R.id.message_container);
             messageHolder.iconWrapper = (LinearLayout) row.findViewById(R.id.icon_wrapper);
             messageHolder.messageWrapper = (LinearLayout) row.findViewById(R.id.message_wrapper);
             messageHolder.selfieconWrapper = (LinearLayout) row.findViewById(R.id.selficon_wrapper);
             messageHolder.mediaWrapper= (LinearLayout) row.findViewById(R.id.media_wrapper);
+            messageHolder.mapWrapper= (LinearLayout) row.findViewById(R.id.map_wrapper);
 
             row.setTag(messageHolder);
         } else {
@@ -143,6 +146,51 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                     return true;
                 }
             });
+        } else if(messageType.equals("map")){
+            typeWrapper = messageHolder.mapWrapper;
+            if(message.getCreatedAt() != null)
+                messageHolder.messageDateMap.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
+            else
+                messageHolder.messageDateMap.setText("Just now");
+
+            Double lat = new Double(message.getParseGeoPoint("location").getLatitude());
+            Double lng = new Double(message.getParseGeoPoint("location").getLongitude());
+
+            String url = mContext.getResources().getString(R.string.maps_static)
+                    .replace("{lat}", lat.toString()).replace("{lng}", lng.toString());
+
+            Glide.with(mContext)
+                    .load(url)
+                    .crossFade()
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .into(messageHolder.mapContent);
+
+            messageHolder.mapContent.setOnTouchListener(new View.OnTouchListener() {
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
+                            ImageView view = (ImageView) v;
+                            //overlay is black with transparency of 0x77 (119)
+                            view.getDrawable().setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP);
+                            view.invalidate();
+                            break;
+                        }
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_CANCEL: {
+                            ImageView view = (ImageView) v;
+                            //clear the overlay
+                            view.getDrawable().clearColorFilter();
+                            view.invalidate();
+                            break;
+                        }
+                    }
+
+                    return true;
+                }
+            });
         }
 
         typeWrapper.setVisibility(View.VISIBLE);
@@ -194,5 +242,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         LinearLayout mediaWrapper;
         ImageView mediaContent;
         TextView messageDateMedia;
+
+        LinearLayout mapWrapper;
+        ImageView mapContent;
+        TextView messageDateMap;
     }
 }

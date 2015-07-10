@@ -72,6 +72,9 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
         case "media":
         suffixMsg = " has sent you a photo!"
         break;
+	case "map":
+	suffixMsg = " has shared their location with you!";
+	break;
     }
 
     var pushQuery = new Parse.Query(Parse.Installation);
@@ -79,7 +82,7 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
     Parse.Push.send({
         where: pushQuery,
         data: {
-            title: senderUser.get("fName"),
+            title: "MaChat",
             alert: (msgType == "text")? msgContent : senderUser.get("fName") + suffixMsg
         }
     }, {

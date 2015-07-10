@@ -71,5 +71,22 @@
                 style="@style/message_date"
                 android:id="@+id/message_date_media" />
         </LinearLayout>
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/map_wrapper"
+            android:orientation="vertical"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content">
+            <ImageView
+                android:scaleType="centerCrop"
+                android:background="@drawable/rect_bg"
+                android:padding="@dimen/pad_5dp"
+                android:id="@+id/map_content"
+                android:layout_height="250dp"
+                android:layout_width="150dp"/>
+            <TextView
+                style="@style/message_date"
+                android:id="@+id/message_date_map" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -41,12 +42,18 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.Transformation;
 import com.faradaj.blurbehind.BlurBehind;
 import com.faradaj.blurbehind.OnBlurCompleteListener;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.GetCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -69,7 +76,7 @@ import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.helper.SizeHelper;
 
-public class ChatActivity extends CustomActivity {
+public class ChatActivity extends CustomActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     private final String TAG = "ChatActivity";
     private ParseUser sender;
     private ParseUser receiver;
@@ -82,6 +89,7 @@ public class ChatActivity extends CustomActivity {
     private FrameLayout selfieconKeyboard;
     private EditText messageEditText;
     private Button messageSendBtn;
+    private Button locationSendBtn;
     private FrameLayout loading;
     private ArrayList<ParseObject> messageList;
     private ArrayList<ParseObject> selficonList;
@@ -96,10 +104,25 @@ public class ChatActivity extends CustomActivity {
     SwipeRefreshLayout swipeContainer;
     private boolean keyboardVisible = false;
 
+    private GoogleApiClient mGoogleApiClient;
+    private Location mLastLocation;
+    private LocationRequest mLocationRequest;
+    private boolean mRequestingLocationUpdates = true;
+
+    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
+            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+
+    protected final static String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
+    protected final static String LOCATION_KEY = "location-key";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        updateValuesFromBundle(savedInstanceState);
+
         sessionDetails = this.getSharedPreferences("sessionDetails", MODE_PRIVATE);
         SharedPreferences.Editor sessionEditor = sessionDetails.edit();
 
@@ -107,6 +130,8 @@ public class ChatActivity extends CustomActivity {
                 .withAlpha(65)
                 .withFilterColor(Color.parseColor("#B5008795"))
                 .setBackground(this);
+
+        buildGoogleApiClient();
 
         sender = ParseUser.getCurrentUser();
 
@@ -123,6 +148,7 @@ public class ChatActivity extends CustomActivity {
         messageEditText .setInputType(InputType.TYPE_CLASS_TEXT
                 | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         messageSendBtn = (Button)findViewById(R.id.send_new_message_btn);
+        locationSendBtn = (Button)findViewById(R.id.add_location_btn);
         selfieconKeyboard = (FrameLayout) findViewById(R.id.selfiecon_keyboard);
         loading = (FrameLayout) findViewById(R.id.loading_chat);
 
@@ -229,6 +255,7 @@ public class ChatActivity extends CustomActivity {
         setTouchNClick(R.id.new_message_content);
         setTouchNClick(R.id.create_new_selfiecon_btn);
         setTouchNClick(R.id.add_attachment_btn);
+        setTouchNClick(R.id.add_location_btn);
 
         loading.setVisibility(View.VISIBLE);
 
@@ -275,6 +302,7 @@ public class ChatActivity extends CustomActivity {
     protected void onPause() {
         super.onPause();
         //isRunning = false;
+        stopLocationUpdates();
         ParseUser.getCurrentUser().put("inApp", false);
         ParseUser.getCurrentUser().saveInBackground();
     }
@@ -289,6 +317,9 @@ public class ChatActivity extends CustomActivity {
     protected void onResume() {
         super.onResume();
         isRunning = true;
+        if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
         _fetchReceiver();
         _fetchSelficons();
         ParseUser.getCurrentUser().put("inApp", true);
@@ -303,8 +334,8 @@ public class ChatActivity extends CustomActivity {
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> selficonObjs, ParseException e) {
-                if(e == null) {
-                    if(selficonObjs.size() > 0){
+                if (e == null) {
+                    if (selficonObjs.size() > 0) {
                         for (int i = 0; i < selficonObjs.size(); i++) {
                             selficonList.add(selficonObjs.get(i));
                         }
@@ -409,6 +440,63 @@ public class ChatActivity extends CustomActivity {
         } else if(v.getId() == R.id.add_attachment_btn) {
             Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(pickPhoto , RESULT_LOAD_IMAGE);
+        } else if(v.getId() == R.id.add_location_btn) {
+            if(mLastLocation != null){
+                final ParseGeoPoint loc = new ParseGeoPoint(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                receiver.fetchInBackground(new GetCallback<ParseUser>() {
+                    @Override
+                    public void done(ParseUser parseUser, ParseException e) {
+                        if(e == null){
+                            receiver = parseUser;
+                            if(!receiver.getBoolean("inApp")) {
+                                HashMap<String, Object> params = new HashMap<String, Object>();
+                                params.put("toId", receiver.getObjectId());
+                                params.put("msgType", "map");
+                                params.put("msgContent", "Location");
+                                params.put("toId", receiver.getObjectId());
+                                ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                                    @Override
+                                    public void done(String s, ParseException e) {
+                                        if (e != null) {
+                                            Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
+                            }
+
+                            final ParseObject message = new ParseObject("Message");
+                            message.put("from", sender);
+                            message.put("to", receiver);
+                            message.put("content", "Location");
+                            message.put("location", loc);
+                            message.put("type", "map");
+                            message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                            message.put("status", "sent");
+                            messageList.add(message);
+                            messageAdapter.notifyDataSetChanged();
+
+                            message.saveEventually(new SaveCallback() {
+                                @Override
+                                public void done(ParseException e) {
+                                    if (e == null) {
+                                        message.put("status", "delivered");
+                                        message.saveEventually(new SaveCallback() {
+                                            @Override
+                                            public void done(ParseException e) {
+                                                messageAdapter.notifyDataSetChanged();
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+
+                    }
+                });
+            } else {
+                Toast.makeText(ChatActivity.this, "Location is not available!", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -511,7 +599,7 @@ public class ChatActivity extends CustomActivity {
         query.getFirstInBackground(new GetCallback<ParseUser>() {
             @Override
             public void done(ParseUser parseUser, ParseException e) {
-                if(e == null && parseUser != null) {
+                if (e == null && parseUser != null) {
                     receiver = parseUser;
                     _setupActionBar();
                     _loadConversation();
@@ -667,5 +755,93 @@ public class ChatActivity extends CustomActivity {
                 swipeContainer.setRefreshing(false);
             }
         });
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+
+        if (mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+
+    protected void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.i(TAG, "Connection suspended");
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if(mLastLocation != null) {
+            if(mLastLocation.distanceTo(location) >= 200) {
+                mLastLocation = location;
+            }
+        } else {
+            mLastLocation = location;
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + connectionResult.getErrorCode());
+    }
+
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
+                mRequestingLocationUpdates);
+        savedInstanceState.putParcelable(LOCATION_KEY, mLastLocation);
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    private void updateValuesFromBundle(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
+                mRequestingLocationUpdates = savedInstanceState.getBoolean(REQUESTING_LOCATION_UPDATES_KEY);
+            }
+            if (savedInstanceState.keySet().contains(LOCATION_KEY)) {
+                mLastLocation = savedInstanceState.getParcelable(LOCATION_KEY);
+            }
+        }
+    }
+
+    protected void stopLocationUpdates() {
+        if(mGoogleApiClient.isConnected())
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setSmallestDisplacement(100);
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mGoogleApiClient.disconnect();
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        Log.i(TAG, "Building GoogleApiClient");
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        createLocationRequest();
     }
 }
