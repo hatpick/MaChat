@@ -40,18 +40,43 @@
             android:background="@drawable/circle_bg"
             android:layout_width="150dp"
             android:layout_height="150dp" />
-        <Button
-            android:visibility="invisible"
-            android:layout_gravity="center"
-            android:id="@+id/use_selfiecon_btn"
-            android:alpha="75"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:textColor="@color/text_primary"
-            android:background="@drawable/button"
-            android:text="Looks good!"
-            android:layout_marginTop="105dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="130dp"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+            <Button
+                android:layout_marginRight="@dimen/pad_10dp"
+                android:layout_weight="1"
+                android:visibility="invisible"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/use_selfiecon_btn"
+                android:alpha="75"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/button"
+                android:text="Looks good"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <Button
+                android:layout_marginLeft="@dimen/pad_10dp"
+                android:layout_weight="1"
+                android:visibility="invisible"
+                android:layout_gravity="center"
+                android:id="@+id/restart_selfiecon_btn"
+                android:alpha="75"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/button"
+                android:text="Start Over"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            </LinearLayout>
+
     </FrameLayout>
 </FrameLayout>

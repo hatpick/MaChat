@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -24,17 +23,9 @@ import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
-import android.view.animation.AnimationUtils;
-import android.view.animation.AnticipateInterpolator;
-import android.view.animation.BounceInterpolator;
 import android.view.animation.LinearInterpolator;
-import android.view.animation.PathInterpolator;
-import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -43,7 +34,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.GenericRequestBuilder;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.parse.ParseACL;
@@ -51,7 +41,6 @@ import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
-import com.parse.ProgressCallback;
 import com.parse.SaveCallback;
 
 import java.io.BufferedInputStream;
@@ -165,21 +154,6 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
         return dst;
     }
 
-    public Bitmap getResizedBitmap(Bitmap bm, int width, int height) {
-        Bitmap background = Bitmap.createBitmap((int) width, (int) height, Bitmap.Config.ARGB_8888);
-        float originalWidth = bm.getWidth(), originalHeight = bm.getHeight();
-        Canvas canvas = new Canvas(background);
-        float scale = width / originalWidth;
-        float xTranslation = 0.0f, yTranslation = (height - originalHeight * scale) / 2.0f;
-        Matrix transformation = new Matrix();
-        transformation.postTranslate(xTranslation, yTranslation);
-        transformation.preScale(scale, scale);
-        Paint paint = new Paint();
-        paint.setFilterBitmap(true);
-        canvas.drawBitmap(bm, transformation, paint);
-        return background;
-    }
-
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
@@ -260,7 +234,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
         Bitmap picture = BitmapFactory.decodeByteArray(data, 0, data.length);
         mImages.add(picture);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        centerCrop(flip(RotateBitmap(picture, 270))).compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        RotateBitmap(flip(centerCrop(picture)), 90).compress(Bitmap.CompressFormat.JPEG, 100, stream);
         byte[] byteArray = stream.toByteArray();
 
         if(mIndex == 0) {
@@ -299,6 +273,8 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                 public void run() {
                     final ImageView imageView = (ImageView) activity.findViewById(R.id.gif);
                     final Button useSelfie = (Button) activity.findViewById(R.id.use_selfiecon_btn);
+                    final Button startOverSelfie = (Button) activity.findViewById(R.id.restart_selfiecon_btn);
+
                     imageView.setVisibility(VISIBLE);
                     for (int i = 0; i < selfiePreviews.size(); i++) {
                         moveViewToScreenCenter(selfiePreviews.get(i));
@@ -311,7 +287,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                         public void run() {
                             LinearLayout selfieHolder= (LinearLayout) activity.findViewById(R.id.selfieHolder);
                             selfieHolder.setVisibility(GONE);
-                            _generateGif(imageView, useSelfie);
+                            _generateGif(imageView, useSelfie, startOverSelfie);
                             takingPicture = false;
                         }
                     }, 1200);
@@ -354,7 +330,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
         view.startAnimation(animSet);
     }
 
-    private void _generateGif(ImageView imageView, Button useSelfie) {
+    private void _generateGif(ImageView imageView, Button useSelfie, Button startOverSelfie) {
         String root = Environment.getExternalStorageDirectory().toString();
         File myDir = new File(root + "/saved_images");
         myDir.mkdirs();
@@ -372,19 +348,32 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
             encoder.setRepeat(100);
             encoder.setDelay(200);
             for (int i = 0; i < mImages.size(); i++) {
-                encoder.addFrame(centerCrop(flip(RotateBitmap(mImages.get(i), 270))));
+                encoder.addFrame(RotateBitmap(flip(centerCrop(mImages.get(i))), 90));
 
             }
             encoder.finish();
 
             Glide.with(getContext())
                     .load(myDir + "/" + file.getName())
+                    .centerCrop().crossFade()
                     .transform(new CircleTransform(getContext()))
                     .placeholder(R.drawable.circle_bg)
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(imageView);
 
             useSelfie.setVisibility(VISIBLE);
+            startOverSelfie.setVisibility(VISIBLE);
+
+            startOverSelfie.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    activity.finish();
+                    activity.startActivity(activity.getIntent());
+
+                    //TODO: not correct
+                }
+            });
+
             useSelfie.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -406,7 +395,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                     diaTitle.setText("Saving your Selficon...");
 
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    centerCrop(flip(RotateBitmap(mImages.get(1), 270))).compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                    RotateBitmap(flip(centerCrop(mImages.get(1))), 90).compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     byte[] byteArray = stream.toByteArray();
 
                     final ParseFile _gifFile = new ParseFile(fname, bytes);

@@ -195,7 +195,8 @@ public class ChatActivity extends CustomActivity {
                             final ParseObject message = new ParseObject("Message");
                             message.put("from", sender);
                             message.put("to", receiver);
-                            message.put("content", selfie.getGifUrl());
+                            message.put("content", selfie.getThumbnailUrl());
+                            message.put("gifUrl", selfie.getGifUrl());
                             message.put("type", "selfiecon");
                             message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
                             message.put("status", "sent");
@@ -691,7 +692,8 @@ public class ChatActivity extends CustomActivity {
             query.whereEqualTo("from", receiver);
         }
         query.orderByDescending("createdAt");
-        query.setLimit(50);
+        query.setLimit(15);
+        query.include("gif");
         query.include("from");
         query.include("to");
         query.findInBackground(new FindCallback<ParseObject>() {
@@ -729,10 +731,11 @@ public class ChatActivity extends CustomActivity {
         ParseQuery<ParseObject> query = new ParseQuery("Message");
         query.whereContainedIn("sessionId", Arrays.asList(sender.getObjectId() + receiver.getObjectId(), receiver.getObjectId() + sender.getObjectId()));
         query.orderByDescending("createdAt");
-        query.setLimit(50);
+        query.setLimit(15);
         if(firstMsgDate != null) {
             query.whereLessThan("createdAt", firstMsgDate);
         }
+        query.include("gif");
         query.include("from");
         query.include("to");
         query.findInBackground(new FindCallback<ParseObject>() {

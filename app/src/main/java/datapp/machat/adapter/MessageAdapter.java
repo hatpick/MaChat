@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
+import android.os.Handler;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -58,7 +59,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             row = inflater.inflate(R.layout.message, parent, false);
             messageHolder = new MessageHolder();
             messageHolder.avatar = (ImageView) row.findViewById(R.id.avatar);
-            messageHolder.gifSelfiecon = (ImageView) row.findViewById(R.id.selfiecon_content);
+            messageHolder.gifSelfiecon = (ImageView) row.findViewById(R.id.selfiecon_content_gif);
+            messageHolder.thumbnailSelfiecon = (ImageView) row.findViewById(R.id.selfiecon_content);
             messageHolder.mediaContent = (ImageView) row.findViewById(R.id.media_content);
             messageHolder.mapContent = (ImageView) row.findViewById(R.id.map_content);
             messageHolder.messageDateText = (TextView) row.findViewById(R.id.message_date_text);
@@ -77,6 +79,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         } else {
             messageHolder = (MessageHolder) row.getTag();
         }
+
+        final ImageView gifSelfiecon = messageHolder.gifSelfiecon;
 
         String messageType = message.getString("type");
         Glide.with(mContext)
@@ -104,10 +108,35 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             Glide.with(mContext)
                     .load(message.getString("content"))
+                    .centerCrop().crossFade()
                     .transform(transformation)
                     .placeholder(R.drawable.circle_bg)
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                    .into(messageHolder.gifSelfiecon);
+                    .into(messageHolder.thumbnailSelfiecon);
+            messageHolder.thumbnailSelfiecon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(final View view) {
+                    view.setVisibility(View.GONE);
+                    gifSelfiecon.setVisibility(View.VISIBLE);
+                    Glide.with(mContext)
+                            .load(message.getString("gifUrl"))
+                            .centerCrop()
+                            .transform(transformation)
+                            .placeholder(R.drawable.circle_bg)
+                            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                            .into(gifSelfiecon);
+
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            view.setVisibility(View.VISIBLE);
+                            gifSelfiecon.setVisibility(View.GONE);
+                        }
+                    }, 1500);
+
+                }
+            });
             messageHolder.messageContainer.setBackgroundColor(Color.TRANSPARENT);
         } else if(messageType.equals("media")){
             typeWrapper = messageHolder.mediaWrapper;
@@ -118,6 +147,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             Glide.with(mContext)
                     .load(message.getString("content"))
+                    .centerCrop()
                     .crossFade()
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(messageHolder.mediaContent);
@@ -144,6 +174,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             Glide.with(mContext)
                     .load(url)
                     .crossFade()
+                    .centerCrop()
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(messageHolder.mapContent);
 
@@ -213,6 +244,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         TextView messageDateText;
 
         LinearLayout selfieconWrapper;
+        ImageView thumbnailSelfiecon;
         ImageView gifSelfiecon;
         TextView messageDateSelfiecon;
 

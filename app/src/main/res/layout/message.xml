@@ -40,15 +40,26 @@
         <LinearLayout
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:visibility="gone"
+            android:visibility="visible"
             android:id="@+id/selficon_wrapper"
             android:orientation="vertical">
-            <ImageView
-                android:background="@drawable/circle_bg"
-                android:padding="@dimen/pad_5dp"
-                android:id="@+id/selfiecon_content"
-                android:layout_height="100dp"
-                android:layout_width="100dp"/>
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp">
+                <ImageView
+                    android:background="@drawable/circle_bg"
+                    android:padding="@dimen/pad_5dp"
+                    android:id="@+id/selfiecon_content"
+                    android:layout_height="100dp"
+                    android:layout_width="100dp"/>
+                <ImageView
+                    android:visibility="gone"
+                    android:background="@drawable/circle_bg"
+                    android:padding="@dimen/pad_5dp"
+                    android:id="@+id/selfiecon_content_gif"
+                    android:layout_height="100dp"
+                    android:layout_width="100dp"/>
+            </FrameLayout>
             <TextView
                 android:layout_gravity="center"
                 style="@style/message_date"

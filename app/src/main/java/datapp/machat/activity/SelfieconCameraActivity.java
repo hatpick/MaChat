@@ -78,6 +78,9 @@ public class SelfieconCameraActivity extends CustomActivity  {
         selfie2 = (ImageView) findViewById(R.id.selfie2);
         selfie3 = (ImageView) findViewById(R.id.selfie3);
 
+        setTouchNClick(R.id.restart_selfiecon_btn);
+        setTouchNClick(R.id.use_selfiecon_btn);
+
         _resizeSelfiePreviews();
         //_setupPreview();
     }
