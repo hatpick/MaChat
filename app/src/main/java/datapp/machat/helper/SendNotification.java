@@ -35,6 +35,7 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
     private String senderId;
     private final static Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private NotificationManagerCompat notificationManager;
+    private Intent intent;
 
     public SendNotification(Context context, Intent intent, String senderId, String title, String content, String url, int id) {
         this.context = context;
@@ -43,6 +44,7 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
         this.url = url;
         this.id = id;
         this.senderId = senderId;
+        this.intent = intent;
         notificationManager = NotificationManagerCompat.from(context);
     }
 
@@ -68,8 +70,11 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
         super.onPostExecute(bitmap);
 
         Intent cIntent = new Intent(NotificationReceiver.ACTION_PUSH_OPEN);
-        cIntent.putExtra("notification", true);
-        cIntent.putExtra("receiverFbId", senderId);
+        Bundle extras = intent.getExtras();
+        extras.putBoolean("notification", true);
+        extras.putString("receiverFbId", senderId);
+        extras.putInt("nid", id);
+        cIntent.putExtras(extras);
         cIntent.setPackage(context.getPackageName());
 
         PendingIntent pContentIntent = PendingIntent.getBroadcast(context, 0, cIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -79,12 +84,12 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
                 .setContentText(content)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(bitmap)
-                //.setSound(uri)
+                .setSound(uri)
                 .setCategory(Notification.CATEGORY_SOCIAL)
 
                 .setContentIntent(pContentIntent).setDeleteIntent(pContentIntent)
                 .build();
-        notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE | Notification.DEFAULT_ALL;
+        notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
         notificationManager.notify(id, notification);
     }
 }
