@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 
 import datapp.machat.R;
 import datapp.machat.custom.CircleTransform;
+import datapp.machat.helper.SizeHelper;
 
 /**
  * Created by hat on 7/7/15.
@@ -52,6 +54,11 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
         final ParseObject message = getItem(position);
+        ParseObject prevMessage = null;
+        if(position - 1 > 0)
+            prevMessage = getItem(position - 1);
+
+        //Log.v(TAG, "id: " + position + " sessionId: " + message.getString("sessionId"));
 
         MessageHolder messageHolder = null;
 
@@ -187,10 +194,25 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         }
 
         typeWrapper.setVisibility(View.VISIBLE);
+        boolean avatarFactor = false;
+        /*if(prevMessage != null) {
+            if(message.getString("sessionId").equals(prevMessage.getString("sessionId"))) {
+                messageHolder.avatar.setVisibility(View.GONE);
+                avatarFactor = true;
+            }
+            else {
+                messageHolder.avatar.setVisibility(View.VISIBLE);
+                avatarFactor = false;
+            }
+        } else {
+            messageHolder.avatar.setVisibility(View.VISIBLE);
+            avatarFactor = false;
+        }*/
 
         if(message.getParseUser("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) typeWrapper.getLayoutParams();
-            lp.setMargins(0, 0, (int) (5 * mContext.getResources().getDisplayMetrics().density + 0.5f), 0);
+            int margin = (int) ((avatarFactor)? SizeHelper.convertDpToPixel(5f + 40f, mContext):SizeHelper.convertDpToPixel(5f, mContext));
+            lp.setMargins(0, 0, margin , 0);
             typeWrapper.setLayoutParams(lp);
 
             messageHolder.messageContainer.removeAllViews();
@@ -199,7 +221,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.messageContainer.setGravity(Gravity.RIGHT);
         } else {
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) typeWrapper.getLayoutParams();
-            lp.setMargins((int) (5 * mContext.getResources().getDisplayMetrics().density + 0.5f), 0, 0, 0);
+            int margin = (int) ((avatarFactor)? SizeHelper.convertDpToPixel(5f + 40f, mContext):SizeHelper.convertDpToPixel(5f, mContext));
+            lp.setMargins(margin, 0, 0, 0);
             typeWrapper.setLayoutParams(lp);
 
             messageHolder.messageContainer.removeAllViews();

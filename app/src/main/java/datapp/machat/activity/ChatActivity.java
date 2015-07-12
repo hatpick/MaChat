@@ -756,7 +756,7 @@ public class ChatActivity extends CustomActivity {
                         messageList.clear();
                         messageList.addAll(tempArray);
                         messageAdapter.notifyDataSetChanged();
-                        chatListView.setSelection(50);
+                        chatListView.setSelection(10);
                     }
                 } else {
                     Toast.makeText(ChatActivity.this, "Network issue!", Toast.LENGTH_SHORT).show();

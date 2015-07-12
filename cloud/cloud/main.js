@@ -62,6 +62,8 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
     var toId = request.params.toId;
     var msgType = request.params.msgType;
     var msgContent = request.params.msgContent;    
+
+    var sid = toId + senderUser.id;
     Parse.Cloud.useMasterKey();    
 
     var suffixMsg;
@@ -83,7 +85,10 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
         where: pushQuery,
         data: {
             title: "MaChat",
-            alert: (msgType == "text")? msgContent : senderUser.get("fName") + suffixMsg
+            alert: (msgType == "text")? msgContent : senderUser.get("fName") + suffixMsg,            
+            group: sid,
+            sender_img_url: senderUser.get("profilePicture").url(),
+            sender_fbId: senderUser.get("fbId")
         }
     }, {
         success: function() {            

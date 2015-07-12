@@ -153,11 +153,14 @@
             android:id="@+id/create_new_selfiecon_btn"
             android:background="@drawable/new_selficon_btn_bg"
             android:text="+"
+            android:textSize="@dimen/txt_20sp"
+            android:fontFamily="san-serif-condensed"
             android:visibility="visible"
-            android:textSize="40sp"
+            android:textColor="@color/white"
             android:gravity="center"
-            android:layout_gravity="center"
-            android:layout_width="100dp"
-            android:layout_height="100dp" />
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="@dimen/pad_10dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp" />
     </FrameLayout>
 </LinearLayout>
