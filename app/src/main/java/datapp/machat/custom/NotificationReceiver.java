@@ -75,7 +75,6 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
 
     @Override
     protected void onPushOpen(Context context, Intent intent) {
-        super.onPushOpen(context, intent);
         Intent chatIntent = new Intent(context, MainActivity.class);
         chatIntent.putExtras(intent.getExtras());
         chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NEW_TASK);
