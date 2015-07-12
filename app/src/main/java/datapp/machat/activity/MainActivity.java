@@ -1,10 +1,12 @@
 package datapp.machat.activity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -82,10 +84,38 @@ public class MainActivity extends CustomActivity {
                         startActivity(chatIntent);
                     }
                 });
-
             }
         });
+
+        isFromNotification = getIntent().getBooleanExtra("notification", false);
+        if(isFromNotification) {
+            final String senderFbId = getIntent().getStringExtra("senderFbId");
+            Handler handler = new Handler();
+            final ProgressDialog dia = new ProgressDialog(MainActivity.this);
+            dia.show();
+            dia.setContentView(R.layout.progress_dialog);
+            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
+            diaTitle.setText(getString(R.string.alert_wait_chat));
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    BlurBehind.getInstance().execute(MainActivity.this, new OnBlurCompleteListener() {
+                        @Override
+                        public void onBlurComplete() {
+                            Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
+                            chatIntent.putExtra("receiverFbId", senderFbId);
+                            chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
+                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            startActivity(chatIntent);
+                            dia.dismiss();
+                        }
+                    });
+                }
+            }, 1000);
+        }
     }
+
+    private boolean isFromNotification = false;
 
     private void _setupFriendList() {
         JSONArray friends = ParseUser.getCurrentUser().getJSONArray("friends");

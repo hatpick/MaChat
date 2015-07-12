@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
@@ -19,6 +21,7 @@ import java.net.URL;
 import java.util.Random;
 
 import datapp.machat.R;
+import datapp.machat.custom.NotificationReceiver;
 
 /**
  * Created by hat on 7/12/15.
@@ -29,15 +32,16 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
     private String content;
     private String url;
     private int id;
-    private Intent intent;
+    private String senderId;
+    private final static Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
-    public SendNotification(Context context, Intent intent, String title, String content, String url, int id) {
+    public SendNotification(Context context, Intent intent, String senderId, String title, String content, String url, int id) {
         this.context = context;
         this.title = title;
         this.content = content;
         this.url = url;
         this.id = id;
-        this.intent = intent;
+        this.senderId = senderId;
     }
 
     @Override
@@ -61,27 +65,22 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
     protected void onPostExecute(Bitmap bitmap) {
         super.onPostExecute(bitmap);
 
-        Bundle extras = intent.getExtras();
-        Random random = new Random();
-        int contentIntentRequestCode = random.nextInt();
-        int deleteIntentRequestCode = random.nextInt();
-        String packageName = context.getPackageName();
-        Intent contentIntent = new Intent("com.parse.push.intent.OPEN");
-        contentIntent.putExtras(extras);
-        contentIntent.setPackage(packageName);
-        Intent deleteIntent = new Intent("com.parse.push.intent.DELETE");
-        deleteIntent.putExtras(extras);
-        deleteIntent.setPackage(packageName);
-        PendingIntent pContentIntent = PendingIntent.getBroadcast(context, contentIntentRequestCode, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        PendingIntent pDeleteIntent = PendingIntent.getBroadcast(context, deleteIntentRequestCode, deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent cIntent = new Intent(NotificationReceiver.ACTION_PUSH_OPEN);
+        cIntent.putExtra("notification", true);
+        cIntent.putExtra("receiverFbId", senderId);
+        cIntent.setPackage(context.getPackageName());
+
+        PendingIntent pContentIntent = PendingIntent.getBroadcast(context, 0, cIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new NotificationCompat.Builder(context)
                 .setContentTitle(title)
                 .setContentText(content)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(bitmap)
-                .setContentIntent(pContentIntent).setDeleteIntent(pDeleteIntent)
+                .setSound(uri)
+                .setContentIntent(pContentIntent).setDeleteIntent(pContentIntent)
                 .build();
+        notification.flags = Notification.DEFAULT_LIGHTS | Notification.FLAG_AUTO_CANCEL;
 
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);

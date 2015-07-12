@@ -31,6 +31,7 @@ import java.util.Random;
 
 import datapp.machat.R;
 import datapp.machat.activity.ChatActivity;
+import datapp.machat.activity.MainActivity;
 import datapp.machat.helper.NotificationId;
 import datapp.machat.helper.SendNotification;
 
@@ -46,7 +47,6 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
 
     @Override
     protected void onPushReceive(final Context context, Intent intent) {
-        Log.v(TAG, "PUSH RECEIVED!!!");
         final SharedPreferences notificationDetails = context.getSharedPreferences("notificationDetails", context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = notificationDetails.edit();
 
@@ -57,6 +57,7 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
             final String alert = json.getString("alert");
             final String sid = json.getString("group");
             final String imgUrl = json.getString("sender_img_url");
+            final String senderId = json.getString("sender_fbId");
 
             Integer id = notificationDetails.getInt(sid, -1);
             if(id == -1) {
@@ -65,7 +66,7 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
                 editor.apply();
             }
 
-            new SendNotification(context, intent, title, alert, imgUrl, id).execute();
+            new SendNotification(context, intent, senderId, title, alert, imgUrl, id).execute();
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -74,21 +75,10 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
 
     @Override
     protected void onPushOpen(Context context, Intent intent) {
-        super.onPushOpen(context, intent);
-
-        try {
-            JSONObject json = new JSONObject(intent.getExtras().getString(PARSE_DATA_KEY));
-            String fbId = json.getString("sender_fbId");
-
-            Intent chatIntent = new Intent(context, ChatActivity.class);
-            chatIntent.putExtra("receiverFbId", fbId);
-            chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
-            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(chatIntent);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        Intent chatIntent = new Intent(context, MainActivity.class);
+        chatIntent.putExtras(intent.getExtras());
+        chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(chatIntent);
     }
 
     @Override
