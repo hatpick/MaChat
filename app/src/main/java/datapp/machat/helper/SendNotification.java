@@ -78,9 +78,10 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(bitmap)
                 .setSound(uri)
+                .setCategory(Notification.CATEGORY_SOCIAL)
                 .setContentIntent(pContentIntent).setDeleteIntent(pContentIntent)
                 .build();
-        notification.flags = Notification.DEFAULT_LIGHTS | Notification.FLAG_AUTO_CANCEL;
+        notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE | Notification.DEFAULT_ALL;
 
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
