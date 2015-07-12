@@ -34,6 +34,7 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
     private int id;
     private String senderId;
     private final static Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+    private NotificationManagerCompat notificationManager;
 
     public SendNotification(Context context, Intent intent, String senderId, String title, String content, String url, int id) {
         this.context = context;
@@ -42,6 +43,7 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
         this.url = url;
         this.id = id;
         this.senderId = senderId;
+        notificationManager = NotificationManagerCompat.from(context);
     }
 
     @Override
@@ -77,14 +79,12 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
                 .setContentText(content)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(bitmap)
-                .setSound(uri)
+                //.setSound(uri)
                 .setCategory(Notification.CATEGORY_SOCIAL)
+
                 .setContentIntent(pContentIntent).setDeleteIntent(pContentIntent)
                 .build();
         notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE | Notification.DEFAULT_ALL;
-
-        NotificationManagerCompat notificationManager =
-                NotificationManagerCompat.from(context);
         notificationManager.notify(id, notification);
     }
 }
