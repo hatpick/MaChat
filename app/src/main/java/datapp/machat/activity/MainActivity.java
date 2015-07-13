@@ -1,15 +1,10 @@
 package datapp.machat.activity;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,10 +19,8 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.faradaj.blurbehind.BlurBehind;
 import com.faradaj.blurbehind.OnBlurCompleteListener;
-import com.makeramen.roundedimageview.RoundedTransformationBuilder;
 import com.parse.ParseException;
 import com.parse.ParseInstallation;
-import com.parse.ParsePush;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
@@ -81,6 +74,8 @@ public class MainActivity extends CustomActivity {
                         chatIntent.putExtra("receiverFbId", receiver.getFbId());
                         chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
                         chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        chatIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        chatIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(chatIntent);
                     }
                 });
@@ -133,14 +128,6 @@ public class MainActivity extends CustomActivity {
             }
             friendListAdapter.notifyDataSetChanged();
         }
-
-        friendsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                //TODO: go to chat session with friend
-                Friend friend = friendListAdapter.getItem(i);
-            }
-        });
     }
 
     private void _setupNotification(){

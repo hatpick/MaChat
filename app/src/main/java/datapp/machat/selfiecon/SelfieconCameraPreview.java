@@ -1,6 +1,7 @@
 package datapp.machat.selfiecon;
 
 import android.app.Activity;
+import android.app.Application;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -56,6 +57,7 @@ import java.util.List;
 import java.util.Random;
 
 import datapp.machat.R;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.SizeHelper;
@@ -332,13 +334,13 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
 
     private void _generateGif(ImageView imageView, Button useSelfie, Button startOverSelfie) {
         String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/saved_images");
-        myDir.mkdirs();
+        File gifDir = new File(root + MaChatApplication.getPath() + "/saved_gifs");
+        gifDir.mkdirs();
         Random generator = new Random();
         int n = 10000;
         n = generator.nextInt(n);
-        final String fname = "Selfiecon-" + n + ".gif";
-        final File file = new File(myDir, fname);
+        final String fname = "selfiecon-" + n + ".gif";
+        final File file = new File(gifDir, fname);
         if (file.exists()) file.delete();
         try {
 
@@ -354,7 +356,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
             encoder.finish();
 
             Glide.with(getContext())
-                    .load(myDir + "/" + file.getName())
+                    .load(gifDir + "/" + file.getName())
                     .centerCrop().crossFade()
                     .transform(new CircleTransform(getContext()))
                     .placeholder(R.drawable.circle_bg)
@@ -399,7 +401,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                     byte[] byteArray = stream.toByteArray();
 
                     final ParseFile _gifFile = new ParseFile(fname, bytes);
-                    final ParseFile _thumbnail = new ParseFile(fname + "_thumbnail.jpg", byteArray);
+                    final ParseFile _thumbnail = new ParseFile(fname.replace(".gif", "") + "_thumbnail.jpg", byteArray);
                     final Intent intent = new Intent();
 
                     _thumbnail.saveInBackground(new SaveCallback() {

@@ -104,6 +104,7 @@
             android:name=".activity.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="stateHidden|adjustResize" >
         </activity>
         <activity
@@ -122,6 +123,7 @@
             android:parentActivityName=".activity.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="stateHidden|adjustResize" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -130,6 +132,7 @@
         <activity
             android:name=".activity.SelfieconCameraActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar"
             android:parentActivityName=".activity.ChatActivity" >
             <meta-data

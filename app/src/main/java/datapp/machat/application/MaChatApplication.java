@@ -1,11 +1,14 @@
 package datapp.machat.application;
 
 import android.app.Application;
+import android.os.Environment;
 
 import com.crittercism.app.Crittercism;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 import com.parse.PushService;
+
+import java.io.File;
 
 import datapp.machat.R;
 import datapp.machat.activity.MainActivity;
@@ -15,6 +18,10 @@ import datapp.machat.activity.MainActivity;
  */
 public class MaChatApplication extends Application {
     private static MaChatApplication ourInstance;
+    private static String path = "/MaChat";
+    public static String getPath() {
+        return path;
+    }
 
     public static MaChatApplication getInstance() {
         return ourInstance;
@@ -31,5 +38,9 @@ public class MaChatApplication extends Application {
         ParseFacebookUtils.initialize(this.getApplicationContext());
         PushService.setDefaultPushCallback(this, MainActivity.class);
         Crittercism.initialize(getApplicationContext(), getString(R.string.crittercism_app_id));
+
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + path);
+        myDir.mkdirs();
     }
 }

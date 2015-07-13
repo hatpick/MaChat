@@ -428,6 +428,7 @@ public class ChatActivity extends CustomActivity {
                 public void onBlurComplete() {
                     Intent selfieconIntent = new Intent(ChatActivity.this, SelfieconCameraActivity.class);
                     selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     startActivityForResult(selfieconIntent, RESULT_CREATE_GIF);
                 }
             });
