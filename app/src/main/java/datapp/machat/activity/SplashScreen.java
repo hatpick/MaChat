@@ -41,7 +41,9 @@ public class SplashScreen extends Activity {
         setContentView(R.layout.activity_splash_screen);
 
         if(ParseUser.getCurrentUser() != null) {
-            startActivity(new Intent(SplashScreen.this, MainActivity.class));
+            Intent mainIntent = new Intent(SplashScreen.this, MainActivity.class);
+            mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(mainIntent);
             overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
             finish();
         } else {

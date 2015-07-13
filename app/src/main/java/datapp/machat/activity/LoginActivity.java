@@ -91,7 +91,9 @@ public class LoginActivity extends CustomActivity {
                 public void done(ParseUser parseUser, ParseException e) {
                     dia.dismiss();
                     if(parseUser != null) {
-                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
                         finish();
                     } else {
                         Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show();
@@ -155,7 +157,9 @@ public class LoginActivity extends CustomActivity {
                                                                             if(e != null){
                                                                                 Toast.makeText(LoginActivity.this, "PPFAILED: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                                                             } else {
-                                                                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                                                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                                                startActivity(intent);
                                                                                 finish();
                                                                             }
                                                                         }
@@ -199,7 +203,9 @@ public class LoginActivity extends CustomActivity {
                                 }
                             });
                             dia.dismiss();
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
                             finish();
                         }
                     } else {

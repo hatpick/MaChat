@@ -77,23 +77,12 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
     protected void onPushOpen(Context context, Intent intent) {
         Intent chatIntent = new Intent(context, MainActivity.class);
         chatIntent.putExtras(intent.getExtras());
-        chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NEW_TASK);
+        chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(chatIntent);
     }
 
     @Override
     protected void onPushDismiss(Context context, Intent intent) {
         super.onPushDismiss(context, intent);
-        final SharedPreferences notificationDetails = context.getSharedPreferences("notificationDetails", context.MODE_PRIVATE);
-        final SharedPreferences.Editor editor = notificationDetails.edit();
-
-        try {
-            JSONObject json = new JSONObject(intent.getExtras().getString(PARSE_DATA_KEY));
-            final String sid = json.getString("group");
-            editor.remove(sid);
-            editor.apply();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 }

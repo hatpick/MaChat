@@ -81,33 +81,6 @@ public class MainActivity extends CustomActivity {
                 });
             }
         });
-
-        isFromNotification = getIntent().getBooleanExtra("notification", false);
-        if(isFromNotification) {
-            final String senderFbId = getIntent().getStringExtra("senderFbId");
-            Handler handler = new Handler();
-            final ProgressDialog dia = new ProgressDialog(MainActivity.this);
-            dia.show();
-            dia.setContentView(R.layout.progress_dialog);
-            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
-            diaTitle.setText(getString(R.string.alert_wait_chat));
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    BlurBehind.getInstance().execute(MainActivity.this, new OnBlurCompleteListener() {
-                        @Override
-                        public void onBlurComplete() {
-                            Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
-                            chatIntent.putExtra("receiverFbId", senderFbId);
-                            chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
-                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                            startActivity(chatIntent);
-                            dia.dismiss();
-                        }
-                    });
-                }
-            }, 1000);
-        }
     }
 
     private boolean isFromNotification = false;
@@ -198,6 +171,39 @@ public class MainActivity extends CustomActivity {
         super.onResume();
         ParseUser.getCurrentUser().put("inApp", true);
         ParseUser.getCurrentUser().saveInBackground();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        isFromNotification = intent.getBooleanExtra("notification", false);
+        if(isFromNotification) {
+            final String senderFbId = getIntent().getStringExtra("senderFbId");
+            Handler handler = new Handler();
+            final ProgressDialog dia = new ProgressDialog(MainActivity.this);
+            dia.show();
+            dia.setContentView(R.layout.progress_dialog);
+            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
+            diaTitle.setText(getString(R.string.alert_wait_chat));
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    BlurBehind.getInstance().execute(MainActivity.this, new OnBlurCompleteListener() {
+                        @Override
+                        public void onBlurComplete() {
+                            Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
+                            chatIntent.putExtra("receiverFbId", senderFbId);
+                            chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
+                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(chatIntent);
+                            dia.dismiss();
+                        }
+                    });
+                }
+            }, 1000);
+        }
+
     }
 
     @Override

@@ -348,7 +348,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
             AnimatedGifEncoder encoder = new AnimatedGifEncoder();
             encoder.start(outputStream);
             encoder.setRepeat(100);
-            encoder.setDelay(200);
+            encoder.setDelay(10);
             for (int i = 0; i < mImages.size(); i++) {
                 encoder.addFrame(RotateBitmap(flip(centerCrop(mImages.get(i))), 90));
 
