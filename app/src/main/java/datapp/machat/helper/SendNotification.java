@@ -69,15 +69,20 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
     protected void onPostExecute(Bitmap bitmap) {
         super.onPostExecute(bitmap);
 
-        Intent cIntent = new Intent(NotificationReceiver.ACTION_PUSH_OPEN);
+        Intent oIntent = new Intent(NotificationReceiver.ACTION_PUSH_OPEN);
         Bundle extras = intent.getExtras();
         extras.putBoolean("notification", true);
         extras.putString("receiverFbId", senderId);
         extras.putInt("nid", id);
-        cIntent.putExtras(extras);
-        cIntent.setPackage(context.getPackageName());
+        oIntent.putExtras(extras);
+        oIntent.setPackage(context.getPackageName());
 
-        PendingIntent pContentIntent = PendingIntent.getBroadcast(context, 0, cIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent dIntent = new Intent(NotificationReceiver.ACTION_PUSH_DELETE);
+        dIntent.putExtras(intent.getExtras());
+        dIntent.setPackage(context.getPackageName());
+
+        PendingIntent oContentIntent = PendingIntent.getBroadcast(context, 0, oIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent dContentIntent = PendingIntent.getBroadcast(context, 0, dIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new NotificationCompat.Builder(context)
                 .setContentTitle(title)
@@ -87,7 +92,7 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
                 .setSound(uri)
                 .setCategory(Notification.CATEGORY_SOCIAL)
 
-                .setContentIntent(pContentIntent).setDeleteIntent(pContentIntent)
+                .setContentIntent(oContentIntent).setDeleteIntent(dContentIntent)
                 .build();
         notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
         notificationManager.notify(id, notification);
