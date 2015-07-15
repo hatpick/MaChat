@@ -348,7 +348,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
             AnimatedGifEncoder encoder = new AnimatedGifEncoder();
             encoder.start(outputStream);
             encoder.setRepeat(100);
-            encoder.setDelay(300);
+            encoder.setDelay(150);
             for (int i = 0; i < mImages.size(); i++) {
                 encoder.addFrame(RotateBitmap(flip(centerCrop(mImages.get(i))), 90));
 
@@ -427,12 +427,14 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                                                         activity.finish();
                                                     } else {
                                                         activity.setResult(Activity.RESULT_CANCELED);
+                                                        activity.finish();
                                                         Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                                     }
                                                 }
                                             });
                                         } else {
                                             activity.setResult(Activity.RESULT_CANCELED);
+                                            activity.finish();
                                             dia.dismiss();
                                             Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                         }
@@ -440,6 +442,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                                 });
                             } else {
                                 activity.setResult(Activity.RESULT_CANCELED);
+                                activity.finish();
                                 dia.dismiss();
                                 Toast.makeText(getContext(), TAG + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }

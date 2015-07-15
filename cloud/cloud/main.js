@@ -69,17 +69,20 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
     var suffixMsg;
     switch(msgType){        
         case "selfiecon":
-        suffixMsg = " has sent you a selfiecon!"
+        suffixMsg = " has sent you a selfiecon!";
         break;
         case "media":
-        suffixMsg = " has sent you a photo!"
+        suffixMsg = " has sent you a photo!";
         break;
         case "youtube":
-        suffixMsg = " has sent you a Youtube video!"
+        suffixMsg = " has sent you a Youtube video!";
         break;
     	case "map":
     	suffixMsg = " has shared their location with you!";
     	break;
+        case "giphy":
+        suffixMsg = " has sent you a GIPHY!";
+        break;
     }
 
     var pushQuery = new Parse.Query(Parse.Installation);

@@ -138,16 +138,23 @@
                 android:value="datapp.machat.activity.ChatActivity" />
         </activity>
         <activity
+            android:name=".activity.ShareActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:name=".activity.ShareActivity">
+            android:theme="@style/AppTheme.NoActionBar" >
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data
                     android:host="www.youtube.com"
                     android:mimeType="text/*" />
             </intent-filter>
+        </activity>
+        <activity
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme"
+            android:name=".activity.GiphyActivity">
         </activity>
     </application>
 

@@ -3,6 +3,7 @@
     <string name="parse_first_arg">mwcgXaKRExMiJVNajR3MrAwobjKmQjkhtdAUwQEv</string>
     <string name="parse_second_arg">MsfVMCEDD9gFFDGWQMCub2xOM2xTQP5XxeXmqLB1</string>
     <string name="fb_app_id">481332242021982</string>
+    <string name="giphy_api_key">dc6zaTOxFJmzC</string>
     <string name="forgot_passwor_link">481332242021982</string>
 
     <string name="required_error">Required</string>
@@ -23,5 +24,9 @@
     <string name="youtube_thumbnail">http://img.youtube.com/vi/{video_id}/mqdefault.jpg</string>
     <string name="crittercism_app_id">55a014f64be3830b003a25f4</string>
     <string name="alert_wait_chat">Loading conversations...</string>
-    <string name="title_activity_share">ShareActivity</string>
+
+    <string name="title_activity_giphy">Giphy Search</string>
+    <string name="giphy_search_endpoint">/v1/gifs/search?q={query}&amp;api_key=dc6zaTOxFJmzC&amp;limit=10</string>
+    <string name="giphy_base_url">http://api.giphy.com</string>
+    <string name="no_network_error">Network is not available!</string>
 </resources>

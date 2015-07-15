@@ -1,0 +1,55 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:orientation="vertical"
+    android:gravity="center_horizontal" android:fitsSystemWindows="true"
+    tools:context="datapp.machat.activity.GiphyActivity">
+    <LinearLayout
+        android:background="@drawable/search_input_background"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText
+            android:clickable="true"
+            android:background="@android:color/transparent"
+            android:gravity="left|center_vertical"
+            android:textColor="@color/white"
+            android:textColorHint="#88ffffff"
+            android:id="@+id/gif_search_term"
+            android:inputType="text"
+            android:textSize="@dimen/txt_16sp"
+            android:paddingLeft="@dimen/pad_10dp"
+            android:paddingRight="@dimen/pad_10dp"
+            android:layout_weight="1"
+            android:imeActionId="100"
+            android:imeOptions="actionSend"
+            android:ems="10"
+            android:layout_width="0dp"
+            android:hint="Search for GIFs"
+            android:layout_height="30dp"/>
+        <Button
+            android:gravity="center"
+            android:enabled="false"
+            android:id="@+id/search_gif"
+            android:background="@mipmap/ic_search"
+            android:layout_gravity="right"
+            android:layout_width="30dp"
+            android:layout_height="fill_parent" />
+        </LinearLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ProgressBar
+            android:visibility="gone"
+            android:id="@+id/gif_loading"
+            android:layout_gravity="center"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <android.support.v7.widget.RecyclerView
+            android:background="@android:color/transparent"
+            android:gravity="center"
+            android:id="@+id/gifs_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </FrameLayout>
+</LinearLayout>

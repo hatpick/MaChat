@@ -149,18 +149,37 @@
                 <!--android:layout_width="40dp"-->
                 <!--android:layout_height="25dp" />-->
         <!--</FrameLayout>-->
-        <Button
-            android:id="@+id/create_new_selfiecon_btn"
-            android:background="@drawable/new_selficon_btn_bg"
-            android:text="+"
-            android:textSize="@dimen/txt_20sp"
-            android:fontFamily="san-serif-condensed"
-            android:visibility="visible"
-            android:textColor="@color/white"
-            android:gravity="center"
-            android:layout_gravity="center_horizontal|bottom"
+        <LinearLayout
+            android:layout_gravity="center|bottom"
+            android:orientation="horizontal"
             android:layout_marginBottom="@dimen/pad_10dp"
-            android:layout_width="50dp"
-            android:layout_height="50dp" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/create_new_selfiecon_btn"
+                android:background="@drawable/new_selficon_btn_bg"
+                android:text="+"
+                android:textSize="@dimen/txt_20sp"
+                android:fontFamily="san-serif-condensed"
+                android:visibility="visible"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_width="50dp"
+                android:layout_height="50dp" />
+            <Button
+                android:layout_marginLeft="@dimen/pad_10dp"
+                android:id="@+id/search_giphy_gifs"
+                android:background="@drawable/new_selficon_btn_bg"
+                android:textSize="@dimen/txt_20sp"
+                android:text="+"
+                android:fontFamily="san-serif-condensed"
+                android:visibility="visible"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_width="50dp"
+                android:layout_height="50dp" />
+            </LinearLayout>
     </FrameLayout>
 </LinearLayout>

@@ -16,6 +16,7 @@ import android.provider.MediaStore;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.text.Editable;
+import android.text.Html;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -69,6 +70,7 @@ import datapp.machat.adapter.MessageAdapter;
 import datapp.machat.adapter.SelfieconAdapter;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.dao.GiphyGIF;
 import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.LocationHelper;
 import datapp.machat.helper.SizeHelper;
@@ -87,6 +89,7 @@ public class ChatActivity extends CustomActivity {
     private EditText messageEditText;
     private Button messageSendBtn;
     private Button locationSendBtn;
+    private Button searchGiphyBtn;
     private FrameLayout loading;
     private ArrayList<ParseObject> messageList;
     private ArrayList<Selfiecon> selficonList;
@@ -99,6 +102,7 @@ public class ChatActivity extends CustomActivity {
     private SharedPreferences sessionDetails;
     private final int RESULT_LOAD_IMAGE = 1127;
     private final int RESULT_CREATE_GIF = 1227;
+    private final int RESULT_SEARCH_GIPHY = 1327;
     SwipeRefreshLayout swipeContainer;
     private boolean keyboardVisible = false;
     private LocationHelper myLocation;
@@ -134,6 +138,7 @@ public class ChatActivity extends CustomActivity {
         messageEditText .setInputType(InputType.TYPE_CLASS_TEXT
                 | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         messageSendBtn = (Button)findViewById(R.id.send_new_message_btn);
+        searchGiphyBtn = (Button)findViewById(R.id.search_giphy_gifs);
         locationSendBtn = (Button)findViewById(R.id.add_location_btn);
         selfieconKeyboard = (FrameLayout) findViewById(R.id.selfiecon_keyboard);
         loading = (FrameLayout) findViewById(R.id.loading_chat);
@@ -243,6 +248,7 @@ public class ChatActivity extends CustomActivity {
         setTouchNClick(R.id.create_new_selfiecon_btn);
         setTouchNClick(R.id.add_attachment_btn);
         setTouchNClick(R.id.add_location_btn);
+        setTouchNClick(R.id.search_giphy_gifs);
 
         myLocation.getLocation(this, locationResult);
 
@@ -505,6 +511,17 @@ public class ChatActivity extends CustomActivity {
                 myLocation.getLocation(this, locationResult);
                 Toast.makeText(ChatActivity.this, "Waiting for location, try again in a moment!", Toast.LENGTH_SHORT).show();
             }
+        } else if(v.getId() == R.id.search_giphy_gifs) {
+
+            BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                @Override
+                public void onBlurComplete() {
+                    Intent giphyIntent = new Intent(ChatActivity.this, GiphyActivity.class);
+                    giphyIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    giphyIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivityForResult(giphyIntent, RESULT_SEARCH_GIPHY);
+                }
+            });
         }
     }
 
@@ -602,6 +619,64 @@ public class ChatActivity extends CustomActivity {
                     Selfiecon newSelfiecon = data.getParcelableExtra("newSelficon");
                     selficonList.add(newSelfiecon);
                     selfieconAdapter.notifyDataSetChanged();
+                } else {
+                    //Toast.makeText(ChatActivity.this, "", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case RESULT_SEARCH_GIPHY:
+                if(resultCode == RESULT_OK){
+                    final GiphyGIF newgiphyGIF = data.getParcelableExtra("newgiphyGIF");
+                    receiver.fetchInBackground(new GetCallback<ParseUser>() {
+                        @Override
+                        public void done(ParseUser parseUser, ParseException e) {
+                            if(e == null){
+                                receiver = parseUser;
+                                if(!receiver.getBoolean("inApp")) {
+                                    HashMap<String, Object> params = new HashMap<String, Object>();
+                                    params.put("toId", receiver.getObjectId());
+                                    params.put("msgType", "giphy");
+                                    params.put("msgContent", newgiphyGIF.getSmallSizedUrl());
+                                    params.put("toId", receiver.getObjectId());
+                                    ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                                        @Override
+                                        public void done(String s, ParseException e) {
+                                            if (e != null) {
+                                                Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    });
+                                }
+
+                                final ParseObject message = new ParseObject("Message");
+                                message.put("from", sender);
+                                message.put("to", receiver);
+                                message.put("content", newgiphyGIF.getSmallSizedUrl());
+                                message.put("type", "giphy");
+                                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                                message.put("status", "sent");
+                                messageList.add(message);
+                                messageAdapter.notifyDataSetChanged();
+
+                                message.saveEventually(new SaveCallback() {
+                                    @Override
+                                    public void done(ParseException e) {
+                                        if (e == null) {
+                                            message.put("status", "delivered");
+                                            message.saveEventually(new SaveCallback() {
+                                                @Override
+                                                public void done(ParseException e) {
+                                                    messageAdapter.notifyDataSetChanged();
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+
+                        }
+                    });
+
                 } else {
                     //Toast.makeText(ChatActivity.this, "", Toast.LENGTH_SHORT).show();
                 }

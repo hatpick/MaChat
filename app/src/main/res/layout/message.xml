@@ -104,7 +104,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:visibility="visible"
+            android:visibility="gone"
             android:id="@+id/yt_wrapper"
             android:orientation="vertical"
             android:layout_height="wrap_content"
@@ -134,6 +134,25 @@
             <TextView
                 style="@style/message_date"
                 android:id="@+id/message_date_yt" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/giphy_wrapper"
+            android:orientation="vertical"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content">
+            <ImageView
+                android:clickable="true"
+                android:scaleType="centerCrop"
+                android:background="@drawable/rect_bg"
+                android:padding="@dimen/pad_5dp"
+                android:id="@+id/giphy_content"
+                android:layout_height="125dp"
+                android:layout_width="125dp"/>
+            <TextView
+                style="@style/message_date"
+                android:id="@+id/message_date_giphy" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

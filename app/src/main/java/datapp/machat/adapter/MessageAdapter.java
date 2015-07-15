@@ -5,10 +5,12 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -42,6 +44,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     private final String TAG = "MessageAdapter";
     private CircleTransform transformation;
     private Context mContext;
+    private int imageWidth;
 
     public MessageAdapter(Context context, ArrayList<ParseObject> messages) {
         super(context, 0, messages);
@@ -68,11 +71,13 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder = new MessageHolder();
             messageHolder.avatar = (ImageView) row.findViewById(R.id.avatar);
             messageHolder.gifSelfiecon = (ImageView) row.findViewById(R.id.selfiecon_content_gif);
+            messageHolder.giphyContent = (ImageView) row.findViewById(R.id.giphy_content);
             messageHolder.thumbnailSelfiecon = (ImageView) row.findViewById(R.id.selfiecon_content);
             messageHolder.ytContent = (ImageView) row.findViewById(R.id.yt_content);
             messageHolder.ytPlay = (ImageView) row.findViewById(R.id.yt_play);
             messageHolder.mediaContent = (ImageView) row.findViewById(R.id.media_content);
             messageHolder.mapContent = (ImageView) row.findViewById(R.id.map_content);
+            messageHolder.messageDateGiphy = (TextView) row.findViewById(R.id.message_date_giphy);
             messageHolder.messageDateText = (TextView) row.findViewById(R.id.message_date_text);
             messageHolder.messageDateYT = (TextView) row.findViewById(R.id.message_date_yt);
             messageHolder.messageDateMedia = (TextView) row.findViewById(R.id.message_date_media);
@@ -85,6 +90,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.selfieconWrapper = (LinearLayout) row.findViewById(R.id.selficon_wrapper);
             messageHolder.ytWrapper = (LinearLayout) row.findViewById(R.id.yt_wrapper);
             messageHolder.mediaWrapper= (LinearLayout) row.findViewById(R.id.media_wrapper);
+            messageHolder.giphyWrapper= (LinearLayout) row.findViewById(R.id.giphy_wrapper);
             messageHolder.mapWrapper= (LinearLayout) row.findViewById(R.id.map_wrapper);
 
             row.setTag(messageHolder);
@@ -145,7 +151,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                             view.setVisibility(View.VISIBLE);
                             gifSelfiecon.setVisibility(View.GONE);
                         }
-                    }, 1500);
+                    }, 5000);
 
                 }
             });
@@ -168,6 +174,26 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                 @Override
                 public void onClick(View view) {
                     showImage(message.getString("content"));
+                }
+            });
+        } else if(messageType.equals("giphy")){
+            typeWrapper = messageHolder.giphyWrapper;
+            if(message.getCreatedAt() != null)
+                messageHolder.messageDateGiphy.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
+            else
+                messageHolder.messageDateGiphy.setText("Just now");
+
+            Glide.with(mContext)
+                    .load(message.getString("content"))
+                    .centerCrop()
+                    .crossFade()
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .into(messageHolder.giphyContent);
+
+            messageHolder.giphyContent.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //showGiphy(message.getString("content"));
                 }
             });
         } else if(messageType.equals("map")){
@@ -314,6 +340,10 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         LinearLayout mediaWrapper;
         ImageView mediaContent;
         TextView messageDateMedia;
+
+        LinearLayout giphyWrapper;
+        ImageView giphyContent;
+        TextView messageDateGiphy;
 
         LinearLayout ytWrapper;
         ImageView ytContent;
