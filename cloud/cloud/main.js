@@ -4,7 +4,7 @@
 Parse.Cloud.define("fetchProfilePicture", function(request, response) {
     var Image = require("parse-image");
     var user = request.user;
-    var profilePictureURL = "https://graph.facebook.com/" + user.get("fbId") + "/picture?width=9999";
+    var profilePictureURL = "https://graph.facebook.com/" + user.get("fbId") + "/picture?width=200";
     Parse.Cloud.httpRequest({
         url: profilePictureURL,
         followRedirects: true
@@ -74,9 +74,12 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
         case "media":
         suffixMsg = " has sent you a photo!"
         break;
-	case "map":
-	suffixMsg = " has shared their location with you!";
-	break;
+        case "youtube":
+        suffixMsg = " has sent you a Youtube video!"
+        break;
+    	case "map":
+    	suffixMsg = " has shared their location with you!";
+    	break;
     }
 
     var pushQuery = new Parse.Query(Parse.Installation);

@@ -1,6 +1,7 @@
 package datapp.machat.adapter;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -68,9 +69,12 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.avatar = (ImageView) row.findViewById(R.id.avatar);
             messageHolder.gifSelfiecon = (ImageView) row.findViewById(R.id.selfiecon_content_gif);
             messageHolder.thumbnailSelfiecon = (ImageView) row.findViewById(R.id.selfiecon_content);
+            messageHolder.ytContent = (ImageView) row.findViewById(R.id.yt_content);
+            messageHolder.ytPlay = (ImageView) row.findViewById(R.id.yt_play);
             messageHolder.mediaContent = (ImageView) row.findViewById(R.id.media_content);
             messageHolder.mapContent = (ImageView) row.findViewById(R.id.map_content);
             messageHolder.messageDateText = (TextView) row.findViewById(R.id.message_date_text);
+            messageHolder.messageDateYT = (TextView) row.findViewById(R.id.message_date_yt);
             messageHolder.messageDateMedia = (TextView) row.findViewById(R.id.message_date_media);
             messageHolder.messageDateSelfiecon = (TextView) row.findViewById(R.id.message_date_selficon);
             messageHolder.messageDateMap = (TextView) row.findViewById(R.id.message_date_map);
@@ -79,6 +83,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.iconWrapper = (LinearLayout) row.findViewById(R.id.icon_wrapper);
             messageHolder.messageWrapper = (LinearLayout) row.findViewById(R.id.message_wrapper);
             messageHolder.selfieconWrapper = (LinearLayout) row.findViewById(R.id.selficon_wrapper);
+            messageHolder.ytWrapper = (LinearLayout) row.findViewById(R.id.yt_wrapper);
             messageHolder.mediaWrapper= (LinearLayout) row.findViewById(R.id.media_wrapper);
             messageHolder.mapWrapper= (LinearLayout) row.findViewById(R.id.map_wrapper);
 
@@ -191,6 +196,30 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                     showMap(Uri.parse("geo:" + lat + "," + lng + "?z=15"));
                 }
             });
+        } else if(messageType.equals("youtube")){
+            typeWrapper = messageHolder.ytWrapper;
+            if(message.getCreatedAt() != null)
+                messageHolder.messageDateYT.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
+            else
+                messageHolder.messageDateYT.setText("Just now");
+
+            final String videoId = message.getString("content");
+
+            Glide.with(mContext)
+                    .load(mContext.getString(R.string.youtube_thumbnail).replace("{video_id}", videoId))
+                    .centerCrop().crossFade()
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .into(messageHolder.ytContent);
+
+            View.OnClickListener listener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    watchYoutubeVideo(videoId);
+                }
+            };
+
+            messageHolder.ytContent.setOnClickListener(listener);
+            messageHolder.ytPlay.setOnClickListener(listener);
         }
 
         typeWrapper.setVisibility(View.VISIBLE);
@@ -241,6 +270,17 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
     }
 
+    public void watchYoutubeVideo(String id){
+        try{
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
+            mContext.startActivity(intent);
+        }catch (ActivityNotFoundException ex){
+            Intent intent=new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://www.youtube.com/watch?v="+id));
+            mContext.startActivity(intent);
+        }
+    }
+
     public void showMap(Uri geoLocation) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(geoLocation);
@@ -274,6 +314,11 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         LinearLayout mediaWrapper;
         ImageView mediaContent;
         TextView messageDateMedia;
+
+        LinearLayout ytWrapper;
+        ImageView ytContent;
+        ImageView ytPlay;
+        TextView messageDateYT;
 
         LinearLayout mapWrapper;
         ImageView mapContent;

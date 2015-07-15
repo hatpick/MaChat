@@ -25,8 +25,8 @@ public class CircleTransform extends BitmapTransformation {
         if (source == null) return null;
 
         int size = Math.min(source.getWidth(), source.getHeight());
-        int x = (source.getWidth() - size) / 2;
-        int y = (source.getHeight() - size) / 2;
+        int x = (source.getWidth() - size) / 4;
+        int y = (source.getHeight() - size) / 4;
 
         // TODO this could be acquired from the pool too
         Bitmap squared = Bitmap.createBitmap(source, x, y, size, size);
@@ -44,15 +44,10 @@ public class CircleTransform extends BitmapTransformation {
         canvas.drawCircle(r, r, r, paint);
 
 
-        int borderWidth = 3;
-        int borderColor = 0xffffffff;
-
         final Paint paint2 = new Paint();
         paint2.setAntiAlias(true);
-        paint2.setColor(borderColor);
-        paint2.setStrokeWidth(borderWidth);
         paint2.setStyle(Paint.Style.STROKE);
-        canvas.drawCircle(source.getWidth() / 2, source.getHeight() / 2, (float) (source.getWidth() / 2 - Math.ceil(borderWidth / 2)), paint2);
+        canvas.drawCircle(source.getWidth() / 2, source.getHeight() / 2, (float) (source.getWidth() / 2), paint2);
 
         return result;
     }

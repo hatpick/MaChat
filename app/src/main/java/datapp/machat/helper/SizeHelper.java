@@ -7,6 +7,9 @@ import android.graphics.Point;
 import android.util.DisplayMetrics;
 import android.view.Display;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Created by hat on 7/8/15.
  */
@@ -30,5 +33,15 @@ public class SizeHelper {
         Point size = new Point();
         display.getSize(size);
         return size.x;
+    }
+
+    public static String extractYTId(String ytUrl) {
+        String vId = null;
+        Pattern pattern = Pattern.compile(".*(?:youtu.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=)([^#\\&\\?]*).*");
+        Matcher matcher = pattern.matcher(ytUrl);
+        if (matcher.matches()){
+            vId = matcher.group(1);
+        }
+        return vId;
     }
 }

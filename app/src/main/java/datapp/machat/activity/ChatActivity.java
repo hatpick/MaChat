@@ -61,6 +61,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import datapp.machat.R;
 import datapp.machat.adapter.MessageAdapter;
@@ -361,16 +363,24 @@ public class ChatActivity extends CustomActivity {
             final String messageText = messageEditText.getText().toString();
             messageEditText.setText(null);
 
+            final String videoId = SizeHelper.extractYTId(messageText);
+
             receiver.fetchInBackground(new GetCallback<ParseUser>() {
                 @Override
                 public void done(ParseUser parseUser, ParseException e) {
                     if(e == null){
+                        String type = "text";
+                        String content = messageText;
+                        if(videoId != null) {
+                            type = "youtube";
+                            content = videoId;
+                        }
                         receiver = parseUser;
                         if(!receiver.getBoolean("inApp")) {
                             HashMap<String, Object> params = new HashMap<String, Object>();
                             params.put("toId", receiver.getObjectId());
-                            params.put("msgType", "text");
-                            params.put("msgContent", messageText);
+                            params.put("msgType", type);
+                            params.put("msgContent", content);
                             params.put("toId", receiver.getObjectId());
                             ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
                                 @Override
@@ -386,8 +396,8 @@ public class ChatActivity extends CustomActivity {
                         final ParseObject message = new ParseObject("Message");
                         message.put("from", sender);
                         message.put("to", receiver);
-                        message.put("content", messageText);
-                        message.put("type", "text");
+                        message.put("content", content);
+                        message.put("type", type);
                         message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
                         message.put("status", "sent");
                         messageList.add(message);
@@ -659,7 +669,7 @@ public class ChatActivity extends CustomActivity {
         Glide.with(this)
                 .load(receiver.getParseFile("profilePicture").getUrl())
                 .centerCrop()
-                .centerCrop()
+                .crossFade()
                 .transform(transformation)
                 .into(pp_picture);
         ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams((int)SizeHelper.convertDpToPixel(40, this), (int)SizeHelper.convertDpToPixel(40, this) , Gravity.LEFT
@@ -718,8 +728,7 @@ public class ChatActivity extends CustomActivity {
                 handler.postDelayed(new Runnable() {
 
                     @Override
-                    public void run()
-                    {
+                    public void run() {
                         if (isRunning)
                             _loadConversation();
                     }

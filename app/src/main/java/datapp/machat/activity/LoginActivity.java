@@ -139,35 +139,36 @@ public class LoginActivity extends CustomActivity {
                                                                 ParseUser pUser = ParseUser.getCurrentUser();
                                                                 if(jsonArray.length() > 0){
                                                                     pUser.addAllUnique("friends", Arrays.asList(jsonArray));
-                                                                    parseUser.saveEventually();
-                                                                }
-
-                                                                //TODO: sync friends
-                                                            }
-                                                        }).executeAsync();
-
-                                                        HashMap<String, Object> params = new HashMap<String, Object>();
-                                                        ParseCloud.callFunctionInBackground("fetchProfilePicture", params, new FunctionCallback<String>() {
-                                                            @Override
-                                                            public void done(String s, ParseException e) {
-                                                                if (e == null) {
-                                                                    ParseUser.getCurrentUser().fetchInBackground(new GetCallback<ParseUser>() {
+                                                                    pUser.saveInBackground(new SaveCallback() {
                                                                         @Override
-                                                                        public void done(ParseUser currentUser, ParseException e) {
-                                                                            if(e != null){
-                                                                                Toast.makeText(LoginActivity.this, "PPFAILED: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                                                            } else {
-                                                                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                                                startActivity(intent);
-                                                                                finish();
-                                                                            }
+                                                                        public void done(ParseException e) {
+                                                                            HashMap<String, Object> params = new HashMap<String, Object>();
+                                                                            ParseCloud.callFunctionInBackground("fetchProfilePicture", params, new FunctionCallback<String>() {
+                                                                                @Override
+                                                                                public void done(String s, ParseException e) {
+                                                                                    if (e == null) {
+                                                                                        ParseUser.getCurrentUser().fetchInBackground(new GetCallback<ParseUser>() {
+                                                                                            @Override
+                                                                                            public void done(ParseUser currentUser, ParseException e) {
+                                                                                                if(e != null){
+                                                                                                    Toast.makeText(LoginActivity.this, "PPFAILED: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                                                                } else {
+                                                                                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                                                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                                                                    startActivity(intent);
+                                                                                                    finish();
+                                                                                                }
+                                                                                            }
+                                                                                        });
+                                                                                    }
+                                                                                }
+                                                                            });
                                                                         }
                                                                     });
                                                                 }
+                                                                //TODO: sync friends
                                                             }
-                                                        });
-
+                                                        }).executeAsync();
                                                     } else {
                                                         dia.dismiss();
                                                         Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -202,11 +203,26 @@ public class LoginActivity extends CustomActivity {
                                     }
                                 }
                             });
-                            dia.dismiss();
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                            finish();
+
+                            GraphRequest.newMyFriendsRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONArrayCallback() {
+                                @Override
+                                public void onCompleted(JSONArray jsonArray, GraphResponse graphResponse) {
+                                    ParseUser pUser = ParseUser.getCurrentUser();
+                                    if(jsonArray.length() > 0){
+                                        pUser.put("friends", jsonArray.toString());
+                                        pUser.saveInBackground(new SaveCallback() {
+                                            @Override
+                                            public void done(ParseException e) {
+                                                dia.dismiss();
+                                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                startActivity(intent);
+                                                finish();
+                                            }
+                                        });
+                                    }
+                                }
+                            }).executeAsync();
                         }
                     } else {
                         Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show();

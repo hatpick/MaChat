@@ -15,6 +15,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.faradaj.blurbehind.BlurBehind;
@@ -45,6 +46,7 @@ public class MainActivity extends CustomActivity {
 
     private ArrayList<Friend> friendsArray;
     private FriendListAdapter friendListAdapter;
+    private boolean isFromShare = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +60,6 @@ public class MainActivity extends CustomActivity {
         friendsListView.setAdapter(friendListAdapter);
         _setupActionBar();
         _setupNotification();
-        _setupFriendList();
 
         //setPadding(mainContainer);
 
@@ -86,20 +87,28 @@ public class MainActivity extends CustomActivity {
     private boolean isFromNotification = false;
 
     private void _setupFriendList() {
-        JSONArray friends = ParseUser.getCurrentUser().getJSONArray("friends");
-        if(friends.length() > 0) {
-            try {
-                JSONObject _friend;
-                Friend friend;
-                for (int i = 0; i < friends.length(); i++) {
-                    _friend = (JSONObject) ((JSONArray) (friends.get(i))).get(0);
-                    friend = new Friend(_friend.getString("name"), _friend.getString("id"));
-                    friendsArray.add(friend);
+        friendsArray.clear();
+        JSONArray friends = null;
+        try {
+            friends = new JSONArray(ParseUser.getCurrentUser().getString("friends"));
+            if(friends.length() > 0) {
+                try {
+                    JSONObject _friend;
+                    Friend friend;
+                    for (int i = 0; i < friends.length(); i++) {
+                        _friend = (JSONObject) friends.get(i);
+                        friend = new Friend(_friend.getString("name"), _friend.getString("id"));
+                        friendsArray.add(friend);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
+                friendListAdapter.notifyDataSetChanged();
             }
+        } catch (JSONException e) {
+            Toast.makeText(MainActivity.this, "Loading friends failed!", Toast.LENGTH_SHORT).show();
             friendListAdapter.notifyDataSetChanged();
+            e.printStackTrace();
         }
     }
 
@@ -171,14 +180,16 @@ public class MainActivity extends CustomActivity {
         super.onResume();
         ParseUser.getCurrentUser().put("inApp", true);
         ParseUser.getCurrentUser().saveInBackground();
+        _setupFriendList();
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         isFromNotification = intent.getBooleanExtra("notification", false);
+        isFromShare = intent.getBooleanExtra("shared", false);
         if(isFromNotification) {
-            final String senderFbId = getIntent().getStringExtra("senderFbId");
+            final String senderFbId = intent.getStringExtra("senderFbId");
             Handler handler = new Handler();
             final ProgressDialog dia = new ProgressDialog(MainActivity.this);
             dia.show();
@@ -202,6 +213,31 @@ public class MainActivity extends CustomActivity {
                     });
                 }
             }, 1000);
+        } else if(isFromShare) {
+            final String receiverFbId = intent.getStringExtra("receiverFbId");
+            Handler handler = new Handler();
+            final ProgressDialog dia = new ProgressDialog(MainActivity.this);
+            dia.show();
+            dia.setContentView(R.layout.progress_dialog);
+            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
+            diaTitle.setText(getString(R.string.alert_wait_chat));
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    BlurBehind.getInstance().execute(MainActivity.this, new OnBlurCompleteListener() {
+                        @Override
+                        public void onBlurComplete() {
+                            Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
+                            chatIntent.putExtra("receiverFbId", receiverFbId);
+                            chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
+                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(chatIntent);
+                            dia.dismiss();
+                        }
+                    });
+                }
+            }, 1000);
         }
 
     }
@@ -209,8 +245,10 @@ public class MainActivity extends CustomActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        ParseUser.getCurrentUser().put("inApp", false);
-        ParseUser.getCurrentUser().saveInBackground();
+        if(ParseUser.getCurrentUser() != null) {
+            ParseUser.getCurrentUser().put("inApp", false);
+            ParseUser.getCurrentUser().saveInBackground();
+        }
     }
 
     @Override
@@ -234,9 +272,15 @@ public class MainActivity extends CustomActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_logout) {
-            ParseUser.logOut();
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
-            finish();
+            ParseUser.getCurrentUser().put("inApp", false);
+            ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+                @Override
+                public void done(ParseException e) {
+                    ParseUser.logOut();
+                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                    finish();
+                }
+            });
             return true;
         }
 
