@@ -16,10 +16,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -129,6 +131,20 @@ public class GiphyActivity extends CustomActivity {
             @Override
             public void afterTextChanged(Editable editable) {
 
+            }
+        });
+
+        searchTerm.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if(i == EditorInfo.IME_ACTION_SEARCH){
+                    String keyword = searchTerm.getText().toString();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(searchTerm.getWindowToken(), 0);
+                    _searchGiphy(keyword);
+                    return true;
+                }
+                return false;
             }
         });
     }

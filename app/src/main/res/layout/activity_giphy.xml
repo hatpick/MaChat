@@ -9,6 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <EditText
+            android:imeOptions="actionSearch"
             android:clickable="true"
             android:background="@android:color/transparent"
             android:gravity="left|center_vertical"
@@ -21,7 +22,6 @@
             android:paddingRight="@dimen/pad_10dp"
             android:layout_weight="1"
             android:imeActionId="100"
-            android:imeOptions="actionSend"
             android:ems="10"
             android:layout_width="0dp"
             android:hint="Search for GIFs"
