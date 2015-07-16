@@ -189,7 +189,7 @@ public class MainActivity extends CustomActivity {
         isFromNotification = intent.getBooleanExtra("notification", false);
         isFromShare = intent.getBooleanExtra("shared", false);
         if(isFromNotification) {
-            final String senderFbId = intent.getStringExtra("senderFbId");
+            final String receiverFbId = intent.getStringExtra("receiverFbId");
             Handler handler = new Handler();
             final ProgressDialog dia = new ProgressDialog(MainActivity.this);
             dia.show();
@@ -203,7 +203,7 @@ public class MainActivity extends CustomActivity {
                         @Override
                         public void onBlurComplete() {
                             Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
-                            chatIntent.putExtra("receiverFbId", senderFbId);
+                            chatIntent.putExtra("receiverFbId", receiverFbId);
                             chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
                             chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             chatIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -106,6 +106,7 @@ public class ChatActivity extends CustomActivity {
     SwipeRefreshLayout swipeContainer;
     private boolean keyboardVisible = false;
     private LocationHelper myLocation;
+    private SharedPreferences.Editor sessionEditor;
 
     private Location mLocation;
 
@@ -116,7 +117,7 @@ public class ChatActivity extends CustomActivity {
 
         myLocation = new LocationHelper();
         sessionDetails = this.getSharedPreferences("sessionDetails", MODE_PRIVATE);
-        SharedPreferences.Editor sessionEditor = sessionDetails.edit();
+        sessionEditor = sessionDetails.edit();
 
         BlurBehind.getInstance()
                 .withAlpha(65)
@@ -125,15 +126,6 @@ public class ChatActivity extends CustomActivity {
 
         sender = ParseUser.getCurrentUser();
 
-        receiverFbId = getIntent().getStringExtra("receiverFbId");
-        if(receiverFbId == null) {
-            receiverFbId = sessionDetails.getString("receiverFbId", "");
-        } else {
-            sessionEditor.putString("receiverFbId", receiverFbId);
-            sessionEditor.apply();
-        }
-
-        senderFbId = getIntent().getStringExtra("senderFbId");
         messageEditText = (EditText)findViewById(R.id.new_message_content);
         messageEditText .setInputType(InputType.TYPE_CLASS_TEXT
                 | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
@@ -252,9 +244,6 @@ public class ChatActivity extends CustomActivity {
 
         myLocation.getLocation(this, locationResult);
 
-        _fetchReceiver();
-        _fetchSelficons();
-
         loading.setVisibility(View.VISIBLE);
 
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -322,9 +311,22 @@ public class ChatActivity extends CustomActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        isRunning = true;
         ParseUser.getCurrentUser().put("inApp", true);
         ParseUser.getCurrentUser().saveInBackground();
+
+        receiverFbId = getIntent().getStringExtra("receiverFbId");
+        if(receiverFbId == null) {
+            receiverFbId = sessionDetails.getString("receiverFbId", "");
+        } else {
+            sessionEditor.putString("receiverFbId", receiverFbId);
+            sessionEditor.apply();
+        }
+
+        senderFbId = getIntent().getStringExtra("senderFbId");
+
+        isRunning = true;
+        _fetchReceiver();
+        _fetchSelficons();
     }
 
     private void _fetchSelficons() {
