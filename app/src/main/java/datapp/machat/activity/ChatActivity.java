@@ -554,17 +554,30 @@ public class ChatActivity extends CustomActivity {
         }
     }
 
-    private Bitmap decodeFile(File f, int scale) {
+    private Bitmap decodeFile(File f , int scale) {
         Bitmap b = null;
-        FileInputStream fis = null;
+        FileInputStream fis;
+        int innerScale = 1;
+        final int IMAGE_MAX_SIZE = 200000;
         try {
+            if(scale == -1) {
+                BitmapFactory.Options o = new BitmapFactory.Options();
+                o.inJustDecodeBounds = true;
+                fis = new FileInputStream(f);
+                BitmapFactory.decodeStream(fis, null, o);
+                fis.close();
+
+                while ((o.outWidth * o.outHeight) * (1 / Math.pow(innerScale, 2)) >
+                        IMAGE_MAX_SIZE) {
+                    innerScale++;
+                }
+            }
+
             BitmapFactory.Options o2 = new BitmapFactory.Options();
-            o2.inSampleSize = scale;
+            o2.inSampleSize = (scale == -1 ) ?innerScale : scale;
             fis = new FileInputStream(f);
             b = BitmapFactory.decodeStream(fis, null, o2);
             fis.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -596,7 +609,7 @@ public class ChatActivity extends CustomActivity {
 
                     Bitmap selectedImageBitmap = null;
 
-                    selectedImageBitmap = decodeFile(f, 4);
+                    selectedImageBitmap = decodeFile(f, -1);
                     if(selectedImageBitmap == null){
                         Toast.makeText(ChatActivity.this, "Attaching image failed!", Toast.LENGTH_SHORT).show();
                         return;
