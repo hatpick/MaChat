@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.location.Location;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,6 +20,7 @@ import android.text.Editable;
 import android.text.Html;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
@@ -37,6 +39,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.Transformation;
 import com.faradaj.blurbehind.BlurBehind;
@@ -53,6 +61,9 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -68,6 +79,7 @@ import java.util.regex.Pattern;
 import datapp.machat.R;
 import datapp.machat.adapter.MessageAdapter;
 import datapp.machat.adapter.SelfieconAdapter;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.GiphyGIF;
@@ -299,12 +311,14 @@ public class ChatActivity extends CustomActivity {
         super.onPause();
         //isRunning = false;
         ParseUser.getCurrentUser().put("inApp", false);
-        ParseUser.getCurrentUser().saveInBackground();
+        ParseUser.getCurrentUser().saveEventually();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        ParseUser.getCurrentUser().put("inApp", false);
+        ParseUser.getCurrentUser().saveEventually();
         isRunning = false;
     }
 
@@ -364,6 +378,50 @@ public class ChatActivity extends CustomActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void sendMessage(final ParseUser receiver, final String type, final String content) {
+        if(!receiver.getBoolean("inApp")) {
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("toId", receiver.getObjectId());
+            params.put("msgType", type);
+            params.put("msgContent", content);
+            params.put("toId", receiver.getObjectId());
+            ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                @Override
+                public void done(String s, ParseException e) {
+                    if (e != null) {
+                        Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+
+        final ParseObject message = new ParseObject("Message");
+        message.put("from", sender);
+        message.put("to", receiver);
+        message.put("content", content);
+        message.put("type", type);
+        message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+        message.put("status", "sent");
+        messageList.add(message);
+        messageAdapter.notifyDataSetChanged();
+
+        message.saveEventually(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+                    message.put("status", "delivered");
+                    message.saveEventually(new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            messageAdapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
     @Override
     public void onClick(View v) {
         super.onClick(v);
@@ -372,61 +430,36 @@ public class ChatActivity extends CustomActivity {
             messageEditText.setText(null);
 
             final String videoId = SizeHelper.extractYTId(messageText);
+            final boolean isVine = SizeHelper.isVine(messageText);
 
             receiver.fetchInBackground(new GetCallback<ParseUser>() {
                 @Override
                 public void done(ParseUser parseUser, ParseException e) {
-                    if(e == null){
-                        String type = "text";
-                        String content = messageText;
-                        if(videoId != null) {
-                            type = "youtube";
-                            content = videoId;
-                        }
-                        receiver = parseUser;
-                        if(!receiver.getBoolean("inApp")) {
-                            HashMap<String, Object> params = new HashMap<String, Object>();
-                            params.put("toId", receiver.getObjectId());
-                            params.put("msgType", type);
-                            params.put("msgContent", content);
-                            params.put("toId", receiver.getObjectId());
-                            ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                                @Override
-                                public void done(String s, ParseException e) {
-                                    if (e != null) {
-                                        Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
-                        }
-
-                        final ParseObject message = new ParseObject("Message");
-                        message.put("from", sender);
-                        message.put("to", receiver);
-                        message.put("content", content);
-                        message.put("type", type);
-                        message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                        message.put("status", "sent");
-                        messageList.add(message);
-                        messageAdapter.notifyDataSetChanged();
-
-                        message.saveEventually(new SaveCallback() {
+                if(e == null){
+                    receiver = parseUser;
+                    if(videoId != null) {
+                        sendMessage(receiver, "youtube", videoId);
+                    } else if(isVine){
+                        JsonObjectRequest jor = new JsonObjectRequest(Request.Method.GET, "http://web.engr.oregonstate.edu/~ghorashi/vine/vine.php?url=" + messageText, new Response.Listener<JSONObject>() {
                             @Override
-                            public void done(ParseException e) {
-                                if (e == null) {
-                                    message.put("status", "delivered");
-                                    message.saveEventually(new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
-                                            messageAdapter.notifyDataSetChanged();
-                                        }
-                                    });
+                            public void onResponse(JSONObject response) {
+                                try {
+                                    sendMessage(receiver, "vine", response.getString("video"));
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
                                 }
                             }
-                        });
-                    }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
 
+                            }
+                        });
+                        MaChatApplication.getInstance().getRequestQueue().add(jor);
+                    } else {
+                        sendMessage(receiver, "text", messageText);
+                    }
+                }
                 }
             });
         } else if(v.getId() == R.id.send_new_selfiecon_btn){
@@ -797,8 +830,8 @@ public class ChatActivity extends CustomActivity {
                                 lastMsgDate = messageObj.getCreatedAt();
                         }
                         firstMsgDate = messageList.get(0).getCreatedAt();
+                        messageAdapter.notifyDataSetChanged();
                     }
-                    messageAdapter.notifyDataSetChanged();
                 } else {
                     Toast.makeText(ChatActivity.this, "Network issue!", Toast.LENGTH_SHORT).show();
                 }

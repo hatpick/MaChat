@@ -44,4 +44,10 @@ public class SizeHelper {
         }
         return vId;
     }
+
+    public static boolean isVine(String vineUrl) {
+        Pattern p = Pattern.compile("^https?://[wm.]*vine\\.co/v/[a-zA-Z0-9]+.*$");
+        Matcher m = p.matcher(vineUrl);
+        return m.matches();
+    }
 }

@@ -178,9 +178,11 @@ public class MainActivity extends CustomActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        ParseUser.getCurrentUser().put("inApp", true);
-        ParseUser.getCurrentUser().saveInBackground();
-        _setupFriendList();
+        if(ParseUser.getCurrentUser() != null) {
+            ParseUser.getCurrentUser().put("inApp", true);
+            ParseUser.getCurrentUser().saveInBackground();
+            _setupFriendList();
+        }
     }
 
     @Override
@@ -244,11 +246,20 @@ public class MainActivity extends CustomActivity {
 
     @Override
     protected void onPause() {
-        super.onPause();
         if(ParseUser.getCurrentUser() != null) {
             ParseUser.getCurrentUser().put("inApp", false);
-            ParseUser.getCurrentUser().saveInBackground();
+            ParseUser.getCurrentUser().saveEventually();
         }
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(ParseUser.getCurrentUser() != null) {
+            ParseUser.getCurrentUser().put("inApp", false);
+            ParseUser.getCurrentUser().saveEventually();
+        }
+        super.onDestroy();
     }
 
     @Override

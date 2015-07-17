@@ -13,6 +13,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
@@ -39,6 +40,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.Transformation;
 import com.faradaj.blurbehind.BlurBehind;
+import com.parse.codec.binary.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -152,7 +154,12 @@ public class GiphyActivity extends CustomActivity {
     @Override
     public void onClick(View v) {
         if(v.getId() == R.id.search_gif){
-            String keyword = searchTerm.getText().toString();
+            String tempKeyword = searchTerm.getText().toString();
+            String keyword = tempKeyword;
+            if(tempKeyword.contains(" ")){
+                keyword = TextUtils.join("+", tempKeyword.split("\\s+"));
+            }
+
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(searchTerm.getWindowToken(), 0);
             _searchGiphy(keyword);
