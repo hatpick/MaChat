@@ -45,7 +45,8 @@ public class MaChatApplication extends Application {
 
         String root = Environment.getExternalStorageDirectory().toString();
         File myDir = new File(root + path);
-        myDir.mkdirs();
+        if(!myDir.exists())
+            myDir.mkdirs();
     }
 
     public RequestQueue getRequestQueue() {

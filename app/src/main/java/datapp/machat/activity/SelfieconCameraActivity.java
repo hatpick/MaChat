@@ -1,24 +1,12 @@
 package datapp.machat.activity;
 
-import datapp.machat.R;
-import datapp.machat.custom.CustomActivity;
-import datapp.machat.helper.SizeHelper;
-import datapp.machat.selfiecon.SelfieconCameraPreview;
-
-import android.app.ActionBar;
-import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Display;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,10 +16,12 @@ import com.parse.ParseUser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
+
+import datapp.machat.R;
+import datapp.machat.custom.CustomActivity;
+import datapp.machat.custom.UserStatus;
+import datapp.machat.selfiecon.SelfieconCameraPreview;
 
 /**
  * Created by nfarahma on 7/4/2015.
@@ -126,9 +116,7 @@ public class SelfieconCameraActivity extends CustomActivity  {
         mCamera = getCameraInstance();
         _setupPreview();
         preview.setCamera(mCamera);
-
-        ParseUser.getCurrentUser().put("inApp", true);
-        ParseUser.getCurrentUser().saveInBackground();
+        //UserStatus.setUserOnline();
     }
 
     @Override
@@ -141,9 +129,7 @@ public class SelfieconCameraActivity extends CustomActivity  {
             layout.removeView(preview);
             preview = null;
         }
-
-        ParseUser.getCurrentUser().put("inApp", false);
-        ParseUser.getCurrentUser().saveInBackground();
+        //UserStatus.setUserOffline();
     }
 
     private Camera openFrontFacingCameraGingerbread() {

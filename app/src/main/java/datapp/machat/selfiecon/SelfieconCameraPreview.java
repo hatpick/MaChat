@@ -232,8 +232,9 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
 
     @Override
     public void onPictureTaken(final byte[] data, Camera camera) {
-
-        Bitmap picture = BitmapFactory.decodeByteArray(data, 0, data.length);
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 2;
+        Bitmap picture = BitmapFactory.decodeByteArray(data, 0, data.length, options);
         mImages.add(picture);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         RotateBitmap(flip(centerCrop(picture)), 90).compress(Bitmap.CompressFormat.JPEG, 100, stream);
@@ -348,7 +349,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
             AnimatedGifEncoder encoder = new AnimatedGifEncoder();
             encoder.start(outputStream);
             encoder.setRepeat(100);
-            encoder.setDelay(150);
+            encoder.setDelay(250);
             for (int i = 0; i < mImages.size(); i++) {
                 encoder.addFrame(RotateBitmap(flip(centerCrop(mImages.get(i))), 90));
 

@@ -33,6 +33,7 @@ import datapp.machat.R;
 import datapp.machat.adapter.FriendListAdapter;
 import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.Friend;
 import datapp.machat.helper.SizeHelper;
 
@@ -105,6 +106,18 @@ public class ShareActivity extends CustomActivity{
             Toast.makeText(ShareActivity.this, "Share failed!", Toast.LENGTH_SHORT).show();
             finish();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //UserStatus.setUserOnline();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //UserStatus.setUserOffline();
     }
 
     private void sendOrnotify(final String type, final String content, Friend receiver){

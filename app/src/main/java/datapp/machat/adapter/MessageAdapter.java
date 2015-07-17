@@ -5,13 +5,9 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
-import android.util.Log;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -23,14 +19,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.github.kevinsawicki.timeago.TimeAgo;
@@ -40,7 +31,6 @@ import com.parse.ParseUser;
 import java.util.ArrayList;
 
 import datapp.machat.R;
-import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.helper.SizeHelper;
 
@@ -110,21 +100,23 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             messageHolder.vineContent.setOnTouchListener(new View.OnTouchListener() {
                 @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if(helperHolder.vineContent.isPlaying()){
-                        helperHolder.vineContent.pause();
-                        helperHolder.videoPlay.setBackground(mContext.getResources().getDrawable(R.mipmap.video_play));
-                        Animation fadeIn = AnimationUtils.loadAnimation(mContext, R.anim.fade_in_quick);
-                        fadeIn.setFillAfter(true);
-                        fadeIn.setFillEnabled(true);
-                        helperHolder.videoPlay.startAnimation(fadeIn);
-                    } else {
-                        helperHolder.vineContent.start();
-                        helperHolder.videoPlay.setBackground(mContext.getResources().getDrawable(R.mipmap.video_pause));
-                        Animation fadeOut = AnimationUtils.loadAnimation(mContext, R.anim.fade_out_quick);
-                        fadeOut.setFillAfter(true);
-                        fadeOut.setFillEnabled(true);
-                        helperHolder.videoPlay.startAnimation(fadeOut);
+                public boolean onTouch(View v, MotionEvent motionEvent) {
+                    if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                        if(helperHolder.vineContent.isPlaying()){
+                            helperHolder.vineContent.pause();
+                            helperHolder.videoPlay.setBackground(mContext.getResources().getDrawable(R.mipmap.video_play));
+                            Animation fadeIn = AnimationUtils.loadAnimation(mContext, R.anim.fade_in_quick);
+                            fadeIn.setFillAfter(true);
+                            fadeIn.setFillEnabled(true);
+                            helperHolder.videoPlay.startAnimation(fadeIn);
+                        } else {
+                            helperHolder.vineContent.start();
+                            helperHolder.videoPlay.setBackground(mContext.getResources().getDrawable(R.mipmap.video_pause));
+                            Animation fadeOut = AnimationUtils.loadAnimation(mContext, R.anim.fade_out_quick);
+                            fadeOut.setFillAfter(true);
+                            fadeOut.setFillEnabled(true);
+                            helperHolder.videoPlay.startAnimation(fadeOut);
+                        }
                     }
                     return true;
                 }
@@ -292,7 +284,6 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             String vineUrl = message.getString("content");
             messageHolder.vineContent.setVideoURI(Uri.parse(vineUrl));
-            messageHolder.vineContent.requestFocus();
         }
 
         typeWrapper.setVisibility(View.VISIBLE);

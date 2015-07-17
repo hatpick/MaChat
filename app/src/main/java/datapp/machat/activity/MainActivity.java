@@ -35,6 +35,7 @@ import datapp.machat.R;
 import datapp.machat.adapter.FriendListAdapter;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.Friend;
 import datapp.machat.helper.SizeHelper;
 
@@ -179,8 +180,7 @@ public class MainActivity extends CustomActivity {
     protected void onResume() {
         super.onResume();
         if(ParseUser.getCurrentUser() != null) {
-            ParseUser.getCurrentUser().put("inApp", true);
-            ParseUser.getCurrentUser().saveInBackground();
+            UserStatus.setUserOnline();
             _setupFriendList();
         }
     }
@@ -208,7 +208,7 @@ public class MainActivity extends CustomActivity {
                             chatIntent.putExtra("receiverFbId", receiverFbId);
                             chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
                             chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                             startActivity(chatIntent);
                             dia.dismiss();
                         }
@@ -233,7 +233,7 @@ public class MainActivity extends CustomActivity {
                             chatIntent.putExtra("receiverFbId", receiverFbId);
                             chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
                             chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            chatIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                             startActivity(chatIntent);
                             dia.dismiss();
                         }
@@ -247,18 +247,13 @@ public class MainActivity extends CustomActivity {
     @Override
     protected void onPause() {
         if(ParseUser.getCurrentUser() != null) {
-            ParseUser.getCurrentUser().put("inApp", false);
-            ParseUser.getCurrentUser().saveEventually();
+            UserStatus.setUserOffline();
         }
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
-        if(ParseUser.getCurrentUser() != null) {
-            ParseUser.getCurrentUser().put("inApp", false);
-            ParseUser.getCurrentUser().saveEventually();
-        }
         super.onDestroy();
     }
 

@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.location.Location;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,10 +16,8 @@ import android.provider.MediaStore;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.text.Editable;
-import android.text.Html;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,8 +40,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.JsonRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.Transformation;
 import com.faradaj.blurbehind.BlurBehind;
@@ -65,6 +60,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,8 +72,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import datapp.machat.R;
 import datapp.machat.adapter.MessageAdapter;
@@ -82,6 +79,7 @@ import datapp.machat.adapter.SelfieconAdapter;
 import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.GiphyGIF;
 import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.LocationHelper;
@@ -130,11 +128,6 @@ public class ChatActivity extends CustomActivity {
         myLocation = new LocationHelper();
         sessionDetails = this.getSharedPreferences("sessionDetails", MODE_PRIVATE);
         sessionEditor = sessionDetails.edit();
-
-        BlurBehind.getInstance()
-                .withAlpha(65)
-                .withFilterColor(Color.parseColor("#B5008795"))
-                .setBackground(this);
 
         sender = ParseUser.getCurrentUser();
 
@@ -310,23 +303,24 @@ public class ChatActivity extends CustomActivity {
     protected void onPause() {
         super.onPause();
         //isRunning = false;
-        ParseUser.getCurrentUser().put("inApp", false);
-        ParseUser.getCurrentUser().saveEventually();
+        UserStatus.setUserOffline();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ParseUser.getCurrentUser().put("inApp", false);
-        ParseUser.getCurrentUser().saveEventually();
         isRunning = false;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        ParseUser.getCurrentUser().put("inApp", true);
-        ParseUser.getCurrentUser().saveInBackground();
+        BlurBehind.getInstance()
+                .withAlpha(65)
+                .withFilterColor(Color.parseColor("#B5008795"))
+                .setBackground(this);
+
+        UserStatus.setUserOnline();
 
         receiverFbId = getIntent().getStringExtra("receiverFbId");
         if(receiverFbId == null) {
@@ -560,6 +554,24 @@ public class ChatActivity extends CustomActivity {
         }
     }
 
+    private Bitmap decodeFile(File f, int scale) {
+        Bitmap b = null;
+        FileInputStream fis = null;
+        try {
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inSampleSize = scale;
+            fis = new FileInputStream(f);
+            b = BitmapFactory.decodeStream(fis, null, o2);
+            fis.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            return b;
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
@@ -577,18 +589,22 @@ public class ChatActivity extends CustomActivity {
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                     String filePath = cursor.getString(columnIndex);
                     cursor.close();
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inSampleSize = 8;
 
-                    Bitmap selectedImageBitmap = BitmapFactory.decodeFile(filePath);
-//                    float RESIZE_FACTOR = _getResizeFactor(selectedImageBitmap.getWidth());
-//                    if(RESIZE_FACTOR == 0){
-//                        Toast.makeText(ChatActivity.this, "Too big!", Toast.LENGTH_SHORT).show();
-//                        return;
-//                    }
+                    File f = new File(filePath);
+
+                    Bitmap selectedImageBitmap = null;
+
+                    selectedImageBitmap = decodeFile(f, 4);
+                    if(selectedImageBitmap == null){
+                        Toast.makeText(ChatActivity.this, "Attaching image failed!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     Random generator = new Random();
                     int n = 10000;
                     n = generator.nextInt(n);
 
-                    //Bitmap resizedBitmap = Bitmap.createScaledBitmap(selectedImageBitmap, (int)(selectedImageBitmap.getWidth() * RESIZE_FACTOR), (int)(selectedImageBitmap.getHeight() * RESIZE_FACTOR), true);
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
                     selectedImageBitmap.compress(Bitmap.CompressFormat.JPEG, 75, out);
                     final ParseFile imageFile = new ParseFile("media_" + n + ".jpg", out.toByteArray());
