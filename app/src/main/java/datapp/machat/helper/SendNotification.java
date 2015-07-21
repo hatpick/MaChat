@@ -34,8 +34,13 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
     private int id;
     private String senderId;
     private final static Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-    private NotificationManagerCompat notificationManager;
+    private static NotificationManagerCompat notificationManager;
     private Intent intent;
+
+    public static void cancelNotification(int id) {
+        if(notificationManager != null)
+            notificationManager.cancel(id);
+    }
 
     public SendNotification(Context context, Intent intent, String senderId, String title, String content, String url, int id) {
         this.context = context;

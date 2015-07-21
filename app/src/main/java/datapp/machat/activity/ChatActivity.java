@@ -119,6 +119,7 @@ public class ChatActivity extends CustomActivity {
     private SharedPreferences.Editor sessionEditor;
 
     private Location mLocation;
+    private final int IMAGE_MAX_SIZE = 200000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -558,7 +559,6 @@ public class ChatActivity extends CustomActivity {
         Bitmap b = null;
         FileInputStream fis;
         int innerScale = 1;
-        final int IMAGE_MAX_SIZE = 200000;
         try {
             if(scale == -1) {
                 BitmapFactory.Options o = new BitmapFactory.Options();
