@@ -423,7 +423,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                                                     dia.dismiss();
                                                     if(e == null) {
                                                         Selfiecon selfiecon = new Selfiecon(gifFile.getObjectId(), _gifFile.getUrl(), _thumbnail.getUrl());
-                                                        intent.putExtra("newSelficon", selfiecon);
+                                                        intent.putExtra("newSelfiecon", selfiecon);
                                                         activity.setResult(Activity.RESULT_OK, intent);
                                                         activity.finish();
                                                     } else {

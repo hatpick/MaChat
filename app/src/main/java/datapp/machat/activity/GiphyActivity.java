@@ -138,6 +138,12 @@ public class GiphyActivity extends CustomActivity {
     }
 
     @Override
+    protected void onPause() {
+        finish();
+        super.onPause();
+    }
+
+    @Override
     public void onClick(View v) {
         if(v.getId() == R.id.search_gif){
             String tempKeyword = searchTerm.getText().toString();

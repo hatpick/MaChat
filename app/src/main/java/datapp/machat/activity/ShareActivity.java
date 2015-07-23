@@ -54,7 +54,6 @@ public class ShareActivity extends CustomActivity{
         friendsArray = new ArrayList<>();
         friendListAdapter = new FriendListAdapter(this, R.layout.friend_contact, friendsArray);
         friendsListView.setAdapter(friendListAdapter);
-        _setupFriendList();
 
         //setPadding(mainContainer);
 
@@ -110,6 +109,7 @@ public class ShareActivity extends CustomActivity{
 
     @Override
     protected void onResume() {
+        _setupFriendList();
         super.onResume();
         //UserStatus.setUserOnline();
     }

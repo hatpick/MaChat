@@ -7,7 +7,10 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,6 +26,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.BounceInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -83,6 +90,7 @@ import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.GiphyGIF;
 import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.LocationHelper;
+import datapp.machat.helper.ResizeAnimation;
 import datapp.machat.helper.SizeHelper;
 
 public class ChatActivity extends CustomActivity {
@@ -94,37 +102,58 @@ public class ChatActivity extends CustomActivity {
     private String receiverFbId;
 
     private ListView chatListView;
-    private GridView selficonGridView;
-    private FrameLayout selfieconKeyboard;
     private EditText messageEditText;
     private Button messageSendBtn;
     private Button locationSendBtn;
-    private Button searchGiphyBtn;
     private FrameLayout loading;
+
     private ArrayList<ParseObject> messageList;
-    private ArrayList<Selfiecon> selficonList;
     private MessageAdapter messageAdapter;
-    private SelfieconAdapter selfieconAdapter;
+
     private boolean isRunning;
+
     private Date lastMsgDate;
     private Date firstMsgDate;
+
     private static Handler handler;
+
     private SharedPreferences sessionDetails;
+
     private final int RESULT_LOAD_IMAGE = 1127;
-    private final int RESULT_CREATE_GIF = 1227;
     private final int RESULT_SEARCH_GIPHY = 1327;
+    private final int RESULT_CREATE_GIF = 1227;
+
     SwipeRefreshLayout swipeContainer;
     private boolean keyboardVisible = false;
     private LocationHelper myLocation;
     private SharedPreferences.Editor sessionEditor;
 
+    private FrameLayout moreActions;
+
     private Location mLocation;
-    private final int IMAGE_MAX_SIZE = 200000;
+    private final int IMAGE_MAX_SIZE = 500000;
+    private Button voiceSendBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        BlurBehind.getInstance()
+                .withAlpha(75)
+                .withFilterColor(Color.parseColor("#B5008795"))
+                .setBackground(this);
+
+        if (savedInstanceState != null) {
+            byte[] bitmapData = savedInstanceState.getByteArray("bg");
+            if (bitmapData != null) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
+                BitmapDrawable bd = new BitmapDrawable(bitmap);
+                bd.setAlpha(75);
+                bd.setColorFilter(Color.parseColor("#B5008795"), PorterDuff.Mode.DST_ATOP);
+                getWindow().getDecorView().setBackground(bd);
+            }
+        }
 
         myLocation = new LocationHelper();
         sessionDetails = this.getSharedPreferences("sessionDetails", MODE_PRIVATE);
@@ -132,21 +161,22 @@ public class ChatActivity extends CustomActivity {
 
         sender = ParseUser.getCurrentUser();
 
-        messageEditText = (EditText)findViewById(R.id.new_message_content);
-        messageEditText .setInputType(InputType.TYPE_CLASS_TEXT
+        messageEditText = (EditText) findViewById(R.id.new_message_content);
+        messageEditText.setInputType(InputType.TYPE_CLASS_TEXT
                 | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        messageSendBtn = (Button)findViewById(R.id.send_new_message_btn);
-        searchGiphyBtn = (Button)findViewById(R.id.search_giphy_gifs);
-        locationSendBtn = (Button)findViewById(R.id.add_location_btn);
-        selfieconKeyboard = (FrameLayout) findViewById(R.id.selfiecon_keyboard);
+        messageSendBtn = (Button) findViewById(R.id.send_new_message_btn);
+        voiceSendBtn = (Button) findViewById(R.id.record_void_btn);
         loading = (FrameLayout) findViewById(R.id.loading_chat);
+
+        moreActions = (FrameLayout) findViewById(R.id.more_actions);
+        locationSendBtn = (Button) findViewById(R.id.add_location_btn);
 
         chatListView = (ListView) findViewById(R.id.chatSession);
         chatListView.setDivider(getResources().getDrawable(R.drawable.transparent_divider));
         chatListView.setDividerHeight(10);
         chatListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_NORMAL);
 
-        selficonGridView = (GridView) findViewById(R.id.selfiecon_gridview);
+
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
 
         final View activityRootView = findViewById(R.id.main_container);
@@ -164,78 +194,9 @@ public class ChatActivity extends CustomActivity {
             }
         });
 
-        selficonGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                return false;
-            }
-        });
-
-        selficonGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                final Selfiecon selfie = selfieconAdapter.getItem(i);
-                receiver.fetchInBackground(new GetCallback<ParseUser>() {
-                    @Override
-                    public void done(ParseUser parseUser, ParseException e) {
-                        if(e == null){
-                            receiver = parseUser;
-                            if(!receiver.getBoolean("inApp")) {
-                                HashMap<String, Object> params = new HashMap<String, Object>();
-                                params.put("toId", receiver.getObjectId());
-                                params.put("msgType", "selfiecon");
-                                params.put("msgContent", selfie.getGifUrl());
-                                params.put("toId", receiver.getObjectId());
-                                ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                                    @Override
-                                    public void done(String s, ParseException e) {
-                                        if (e != null) {
-                                            Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
-                            }
-
-                            final ParseObject message = new ParseObject("Message");
-                            message.put("from", sender);
-                            message.put("to", receiver);
-                            message.put("content", selfie.getThumbnailUrl());
-                            message.put("gifUrl", selfie.getGifUrl());
-                            message.put("type", "selfiecon");
-                            message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                            message.put("status", "sent");
-                            messageList.add(message);
-                            messageAdapter.notifyDataSetChanged();
-
-                            message.saveEventually(new SaveCallback() {
-                                @Override
-                                public void done(ParseException e) {
-                                    if (e == null) {
-                                        message.put("status", "delivered");
-                                        message.saveEventually(new SaveCallback() {
-                                            @Override
-                                            public void done(ParseException e) {
-                                                messageAdapter.notifyDataSetChanged();
-                                            }
-                                        });
-                                    }
-                                }
-                            });
-                        }
-
-                    }
-                });
-            }
-        });
-
         messageList = new ArrayList<>();
         messageAdapter = new MessageAdapter(this, messageList);
         chatListView.setAdapter(messageAdapter);
-
-        selficonList = new ArrayList<>();
-        selfieconAdapter = new SelfieconAdapter(this, selficonList);
-        selficonGridView.setAdapter(selfieconAdapter);
 
         //setPadding(mainContainer);
         handler = new Handler();
@@ -243,12 +204,12 @@ public class ChatActivity extends CustomActivity {
         setTouchNClick(R.id.send_new_message_btn);
         setTouchNClick(R.id.send_new_selfiecon_btn);
         setTouchNClick(R.id.new_message_content);
-        setTouchNClick(R.id.create_new_selfiecon_btn);
         setTouchNClick(R.id.add_attachment_btn);
+        setTouchNClick(R.id.record_void_btn);
         setTouchNClick(R.id.add_location_btn);
+        setTouchNClick(R.id.toggle_more_options);
         setTouchNClick(R.id.search_giphy_gifs);
-
-        myLocation.getLocation(this, locationResult);
+        setTouchNClick(R.id.close_more_actions);
 
         loading.setVisibility(View.VISIBLE);
 
@@ -272,10 +233,29 @@ public class ChatActivity extends CustomActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
-                if(charSequence.length() > 0)
+                Animation fadeIn = AnimationUtils.loadAnimation(ChatActivity.this, R.anim.fade_in_quick);
+                Animation fadeOut = AnimationUtils.loadAnimation(ChatActivity.this, R.anim.fade_out_quick);
+                fadeIn.setFillAfter(true);
+                fadeOut.setFillAfter(true);
+                fadeIn.setFillEnabled(true);
+                fadeOut.setFillEnabled(true);
+                fadeIn.setInterpolator(new BounceInterpolator());
+                fadeOut.setInterpolator(new BounceInterpolator());
+                if (charSequence.length() > 0) {
                     messageSendBtn.setEnabled(true);
-                else
+                    voiceSendBtn.setEnabled(false);
+//                    messageSendBtn.startAnimation(fadeIn);
+//                    voiceSendBtn.startAnimation(fadeOut);
+                    voiceSendBtn.setVisibility(View.GONE);
+                    messageSendBtn.setVisibility(View.VISIBLE);
+                } else {
                     messageSendBtn.setEnabled(false);
+                    voiceSendBtn.setEnabled(true);
+//                    messageSendBtn.startAnimation(fadeOut);
+//                    voiceSendBtn.startAnimation(fadeIn);
+                    voiceSendBtn.setVisibility(View.VISIBLE);
+                    messageSendBtn.setVisibility(View.GONE);
+                }
             }
 
             @Override
@@ -288,20 +268,27 @@ public class ChatActivity extends CustomActivity {
     LocationHelper.LocationResult locationResult = new LocationHelper.LocationResult() {
         @Override
         public void gotLocation(Location location) {
-            if(location != null) {
+            if (location != null) {
                 mLocation = location;
             }
         }
     };
 
-    private void _toggleSelfieconKeyboard(){
-        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) selfieconKeyboard.getLayoutParams();
-        params.height = (params.height == 0)?(int)SizeHelper.convertDpToPixel(LinearLayout.LayoutParams.WRAP_CONTENT, this) : 0;
-        selfieconKeyboard.setLayoutParams(params);
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        Drawable d = getWindow().getDecorView().getBackground();
+        Bitmap bitmap = ((BitmapDrawable) d).getBitmap();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        byte[] bitmapdata = stream.toByteArray();
+        outState.putByteArray("bg", bitmapdata);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onPause() {
+        myLocation.stopUpdates();
         super.onPause();
         //isRunning = false;
         UserStatus.setUserOffline();
@@ -316,15 +303,12 @@ public class ChatActivity extends CustomActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        BlurBehind.getInstance()
-                .withAlpha(65)
-                .withFilterColor(Color.parseColor("#B5008795"))
-                .setBackground(this);
+        myLocation.getLocation(this, locationResult);
 
         UserStatus.setUserOnline();
 
         receiverFbId = getIntent().getStringExtra("receiverFbId");
-        if(receiverFbId == null) {
+        if (receiverFbId == null) {
             receiverFbId = sessionDetails.getString("receiverFbId", "");
         } else {
             sessionEditor.putString("receiverFbId", receiverFbId);
@@ -335,46 +319,10 @@ public class ChatActivity extends CustomActivity {
 
         isRunning = true;
         _fetchReceiver();
-        _fetchSelficons();
-    }
-
-    private void _fetchSelficons() {
-        selficonList.clear();
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("GIF");
-        query.whereEqualTo("creator", ParseUser.getCurrentUser());
-        query.setSkip(selficonList.size());
-        query.findInBackground(new FindCallback<ParseObject>() {
-            @Override
-            public void done(List<ParseObject> selficonObjs, ParseException e) {
-                if (e == null) {
-                    if (selficonObjs.size() > 0) {
-                        Selfiecon selfiecon;
-                        for (int i = 0; i < selficonObjs.size(); i++) {
-                            ParseObject po = selficonObjs.get(i);
-                            selfiecon = new Selfiecon(po.getObjectId(), po.getParseFile("gifFile").getUrl(), po.getParseFile("thumbnail").getUrl());
-                            selficonList.add(selfiecon);
-                        }
-                        selfieconAdapter.notifyDataSetChanged();
-                    }
-                } else {
-                    Toast.makeText(ChatActivity.this, "Error loading selfiecons!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        return super.onOptionsItemSelected(item);
     }
 
     private void sendMessage(final ParseUser receiver, final String type, final String content) {
-        if(!receiver.getBoolean("inApp")) {
+        if (!receiver.getBoolean("inApp")) {
             HashMap<String, Object> params = new HashMap<>();
             params.put("toId", receiver.getObjectId());
             params.put("msgType", type);
@@ -420,7 +368,7 @@ public class ChatActivity extends CustomActivity {
     @Override
     public void onClick(View v) {
         super.onClick(v);
-        if(v.getId() == R.id.send_new_message_btn) {
+        if (v.getId() == R.id.send_new_message_btn) {
             final String messageText = messageEditText.getText().toString();
             messageEditText.setText(null);
 
@@ -430,67 +378,68 @@ public class ChatActivity extends CustomActivity {
             receiver.fetchInBackground(new GetCallback<ParseUser>() {
                 @Override
                 public void done(ParseUser parseUser, ParseException e) {
-                if(e == null){
-                    receiver = parseUser;
-                    if(videoId != null) {
-                        sendMessage(receiver, "youtube", videoId);
-                    } else if(isVine){
-                        JsonObjectRequest jor = new JsonObjectRequest(Request.Method.GET, "http://web.engr.oregonstate.edu/~ghorashi/vine/vine.php?url=" + messageText, new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                try {
-                                    sendMessage(receiver, "vine", response.getString("video"));
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
+                    if (e == null) {
+                        receiver = parseUser;
+                        if (videoId != null) {
+                            sendMessage(receiver, "youtube", videoId);
+                        } else if (isVine) {
+                            JsonObjectRequest jor = new JsonObjectRequest(Request.Method.GET, "http://web.engr.oregonstate.edu/~ghorashi/vine/vine.php?url=" + messageText, new Response.Listener<JSONObject>() {
+                                @Override
+                                public void onResponse(JSONObject response) {
+                                    try {
+                                        sendMessage(receiver, "vine", response.getString("video"));
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
+                            }, new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
 
-                            }
-                        });
-                        MaChatApplication.getInstance().getRequestQueue().add(jor);
-                    } else {
-                        sendMessage(receiver, "text", messageText);
+                                }
+                            });
+                            MaChatApplication.getInstance().getRequestQueue().add(jor);
+                        } else {
+                            sendMessage(receiver, "text", messageText);
+                        }
                     }
                 }
-                }
             });
-        } else if(v.getId() == R.id.send_new_selfiecon_btn){
-            if(keyboardVisible){
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(messageEditText.getWindowToken(), 0);
-            }
-            _toggleSelfieconKeyboard();
-        } else if(v.getId() == R.id.new_message_content) {
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) selfieconKeyboard.getLayoutParams();
-            if(params.height == 0) return;
-            params.height = 0;
-            selfieconKeyboard.setLayoutParams(params);
-        } else if(v.getId() == R.id.create_new_selfiecon_btn) {
+        } else if (v.getId() == R.id.send_new_selfiecon_btn) {
             BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
                 @Override
                 public void onBlurComplete() {
-                    Intent selfieconIntent = new Intent(ChatActivity.this, SelfieconCameraActivity.class);
+                    Intent selfieconIntent = new Intent(ChatActivity.this, SelficonActivity.class);
                     selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     startActivityForResult(selfieconIntent, RESULT_CREATE_GIF);
                 }
             });
-        } else if(v.getId() == R.id.add_attachment_btn) {
+            _toggleMoreActions();
+        } else if (v.getId() == R.id.toggle_more_options) {
+            if (keyboardVisible) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(messageEditText.getWindowToken(), 0);
+            }
+            _toggleMoreActions();
+        } else if (v.getId() == R.id.close_more_actions) {
+            _toggleMoreActions();
+        } else if (v.getId() == R.id.record_void_btn) {
+            //TODO: record voice
+        } else if (v.getId() == R.id.add_attachment_btn) {
             Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(pickPhoto , RESULT_LOAD_IMAGE);
-        } else if(v.getId() == R.id.add_location_btn) {
+            startActivityForResult(pickPhoto, RESULT_LOAD_IMAGE);
+            _toggleMoreActions();
+        } else if (v.getId() == R.id.add_location_btn) {
             locationSendBtn.setEnabled(false);
-            if(mLocation != null){
+            if (mLocation != null) {
                 final ParseGeoPoint loc = new ParseGeoPoint(mLocation.getLatitude(), mLocation.getLongitude());
                 receiver.fetchInBackground(new GetCallback<ParseUser>() {
                     @Override
                     public void done(ParseUser parseUser, ParseException e) {
-                        if(e == null){
+                        if (e == null) {
                             receiver = parseUser;
-                            if(!receiver.getBoolean("inApp")) {
+                            if (!receiver.getBoolean("inApp")) {
                                 HashMap<String, Object> params = new HashMap<String, Object>();
                                 params.put("toId", receiver.getObjectId());
                                 params.put("msgType", "map");
@@ -533,6 +482,7 @@ public class ChatActivity extends CustomActivity {
                                 }
                             });
                             locationSendBtn.setEnabled(true);
+                            _toggleMoreActions();
                         }
 
                     }
@@ -541,8 +491,7 @@ public class ChatActivity extends CustomActivity {
                 myLocation.getLocation(this, locationResult);
                 Toast.makeText(ChatActivity.this, "Waiting for location, try again in a moment!", Toast.LENGTH_SHORT).show();
             }
-        } else if(v.getId() == R.id.search_giphy_gifs) {
-
+        } else if (v.getId() == R.id.search_giphy_gifs) {
             BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
                 @Override
                 public void onBlurComplete() {
@@ -552,29 +501,31 @@ public class ChatActivity extends CustomActivity {
                     startActivityForResult(giphyIntent, RESULT_SEARCH_GIPHY);
                 }
             });
+            _toggleMoreActions();
         }
     }
 
-    private Bitmap decodeFile(File f , int scale) {
+    private Bitmap decodeFile(File f, int scale) {
         Bitmap b = null;
         FileInputStream fis;
         int innerScale = 1;
         try {
-            if(scale == -1) {
+            if (scale == -1) {
                 BitmapFactory.Options o = new BitmapFactory.Options();
                 o.inJustDecodeBounds = true;
+
                 fis = new FileInputStream(f);
                 BitmapFactory.decodeStream(fis, null, o);
                 fis.close();
 
-                while ((o.outWidth * o.outHeight) * (1 / Math.pow(innerScale, 2)) >
+                while ((o.outWidth * o.outHeight) * (1 / Math.pow(2, innerScale)) >
                         IMAGE_MAX_SIZE) {
                     innerScale++;
                 }
             }
 
             BitmapFactory.Options o2 = new BitmapFactory.Options();
-            o2.inSampleSize = (scale == -1 ) ?innerScale : scale;
+            o2.inSampleSize = (scale == -1) ? innerScale : 1;
             fis = new FileInputStream(f);
             b = BitmapFactory.decodeStream(fis, null, o2);
             fis.close();
@@ -586,13 +537,68 @@ public class ChatActivity extends CustomActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        switch(requestCode) {
+        switch (requestCode) {
+            case RESULT_CREATE_GIF:
+                if (resultCode == RESULT_OK) {
+                    final Selfiecon selfie = data.getParcelableExtra("newSelfiecon");
+                    receiver.fetchInBackground(new GetCallback<ParseUser>() {
+                        @Override
+                        public void done(ParseUser parseUser, ParseException e) {
+                            if (e == null) {
+                                receiver = parseUser;
+                                if (!receiver.getBoolean("inApp")) {
+                                    HashMap<String, Object> params = new HashMap<String, Object>();
+                                    params.put("toId", receiver.getObjectId());
+                                    params.put("msgType", "selfiecon");
+                                    params.put("msgContent", selfie.getGifUrl());
+                                    params.put("toId", receiver.getObjectId());
+                                    ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                                        @Override
+                                        public void done(String s, ParseException e) {
+                                            if (e != null) {
+                                                Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    });
+                                }
+
+                                final ParseObject message = new ParseObject("Message");
+                                message.put("from", sender);
+                                message.put("to", receiver);
+                                message.put("content", selfie.getThumbnailUrl());
+                                message.put("gifUrl", selfie.getGifUrl());
+                                message.put("type", "selfiecon");
+                                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                                message.put("status", "sent");
+                                messageList.add(message);
+                                messageAdapter.notifyDataSetChanged();
+
+                                message.saveEventually(new SaveCallback() {
+                                    @Override
+                                    public void done(ParseException e) {
+                                        if (e == null) {
+                                            message.put("status", "delivered");
+                                            message.saveEventually(new SaveCallback() {
+                                                @Override
+                                                public void done(ParseException e) {
+                                                    messageAdapter.notifyDataSetChanged();
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+
+                        }
+                    });
+                }
+                break;
             case RESULT_LOAD_IMAGE:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     Uri selectedImage = data.getData();
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
@@ -602,15 +608,13 @@ public class ChatActivity extends CustomActivity {
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                     String filePath = cursor.getString(columnIndex);
                     cursor.close();
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = 8;
 
                     File f = new File(filePath);
 
                     Bitmap selectedImageBitmap = null;
 
                     selectedImageBitmap = decodeFile(f, -1);
-                    if(selectedImageBitmap == null){
+                    if (selectedImageBitmap == null) {
                         Toast.makeText(ChatActivity.this, "Attaching image failed!", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -627,9 +631,9 @@ public class ChatActivity extends CustomActivity {
                             receiver.fetchInBackground(new GetCallback<ParseUser>() {
                                 @Override
                                 public void done(ParseUser parseUser, ParseException e) {
-                                    if(e == null){
+                                    if (e == null) {
                                         receiver = parseUser;
-                                        if(!receiver.getBoolean("inApp")) {
+                                        if (!receiver.getBoolean("inApp")) {
                                             HashMap<String, Object> params = new HashMap<String, Object>();
                                             params.put("toId", receiver.getObjectId());
                                             params.put("msgType", "media");
@@ -678,24 +682,15 @@ public class ChatActivity extends CustomActivity {
                     });
                 }
                 break;
-            case RESULT_CREATE_GIF:
-                if(resultCode == RESULT_OK){
-                    Selfiecon newSelfiecon = data.getParcelableExtra("newSelficon");
-                    selficonList.add(newSelfiecon);
-                    selfieconAdapter.notifyDataSetChanged();
-                } else {
-                    //Toast.makeText(ChatActivity.this, "", Toast.LENGTH_SHORT).show();
-                }
-                break;
             case RESULT_SEARCH_GIPHY:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     final GiphyGIF newgiphyGIF = data.getParcelableExtra("newgiphyGIF");
                     receiver.fetchInBackground(new GetCallback<ParseUser>() {
                         @Override
                         public void done(ParseUser parseUser, ParseException e) {
-                            if(e == null){
+                            if (e == null) {
                                 receiver = parseUser;
-                                if(!receiver.getBoolean("inApp")) {
+                                if (!receiver.getBoolean("inApp")) {
                                     HashMap<String, Object> params = new HashMap<String, Object>();
                                     params.put("toId", receiver.getObjectId());
                                     params.put("msgType", "giphy");
@@ -741,13 +736,11 @@ public class ChatActivity extends CustomActivity {
                         }
                     });
 
-                } else {
-                    //Toast.makeText(ChatActivity.this, "", Toast.LENGTH_SHORT).show();
                 }
                 break;
         }
 
-    };
+    }
 
     private void _fetchReceiver() {
         //fetch chat history
@@ -785,7 +778,7 @@ public class ChatActivity extends CustomActivity {
         user_name.setText(receiver.getString("fName") + " " + receiver.getString("lName"));
         user_name.setPadding(20, 0, 0, 0);
         user_name.setTextSize(16);
-        ActionBar.LayoutParams txtLayoutParams = new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT , Gravity.LEFT
+        ActionBar.LayoutParams txtLayoutParams = new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.LEFT
                 | Gravity.CENTER_VERTICAL);
         txtLayoutParams.leftMargin = 20;
         user_name.setLayoutParams(txtLayoutParams);
@@ -811,7 +804,7 @@ public class ChatActivity extends CustomActivity {
                 .crossFade()
                 .transform(transformation)
                 .into(pp_picture);
-        ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams((int)SizeHelper.convertDpToPixel(40, this), (int)SizeHelper.convertDpToPixel(40, this) , Gravity.LEFT
+        ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams((int) SizeHelper.convertDpToPixel(40, this), (int) SizeHelper.convertDpToPixel(40, this), Gravity.LEFT
                 | Gravity.CENTER_VERTICAL);
         pp_picture.setLayoutParams(imgLayoutParams);
 
@@ -824,16 +817,42 @@ public class ChatActivity extends CustomActivity {
 
     @Override
     public void onBackPressed() {
-        if(selfieconKeyboard.getHeight() > 0) {
-            _toggleSelfieconKeyboard();
+        if (moreActions.getHeight() > 0) {
+            _toggleMoreActions();
         } else {
             super.onBackPressed();
         }
     }
 
+    private void _toggleMoreActions() {
+        final ResizeAnimation anim = new ResizeAnimation(moreActions);
+        anim.setDuration(150);
+        anim.setFillAfter(true);
+        anim.setFillEnabled(true);
+        anim.setInterpolator(new AccelerateInterpolator());
+        if (moreActions.getHeight() > 0) {
+            messageEditText.setFocusableInTouchMode(true);
+            messageEditText.setFocusable(true);
+            messageEditText.requestLayout();
+            anim.setParams((int) SizeHelper.convertDpToPixel(70f, this), 0, SizeHelper.getDisplayWidth(this), 0);
+        } else {
+            messageEditText.setFocusableInTouchMode(false);
+            messageEditText.setFocusable(false);
+            messageEditText.requestLayout();
+            anim.setParams(0, (int) SizeHelper.convertDpToPixel(70f, this), 0, SizeHelper.getDisplayWidth(this));
+        }
+        Handler handler1 = new Handler();
+        handler1.post(new Runnable() {
+            @Override
+            public void run() {
+                moreActions.startAnimation(anim);
+            }
+        });
+    }
+
     private void _loadConversation() {
         ParseQuery<ParseObject> query = new ParseQuery("Message");
-        if(messageList.size() == 0){
+        if (messageList.size() == 0) {
             query.whereContainedIn("sessionId", Arrays.asList(sender.getObjectId() + receiver.getObjectId(), receiver.getObjectId() + sender.getObjectId()));
         } else {
             if (lastMsgDate != null)
@@ -849,9 +868,9 @@ public class ChatActivity extends CustomActivity {
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> list, ParseException e) {
-                if(e == null) {
+                if (e == null) {
                     loading.setVisibility(View.GONE);
-                    if(list.size() > 0) {
+                    if (list.size() > 0) {
                         for (int i = list.size() - 1; i >= 0; i--) {
                             ParseObject messageObj = list.get(i);
                             messageList.add(messageObj);
@@ -881,7 +900,7 @@ public class ChatActivity extends CustomActivity {
         query.whereContainedIn("sessionId", Arrays.asList(sender.getObjectId() + receiver.getObjectId(), receiver.getObjectId() + sender.getObjectId()));
         query.orderByDescending("createdAt");
         query.setLimit(15);
-        if(firstMsgDate != null) {
+        if (firstMsgDate != null) {
             query.whereLessThan("createdAt", firstMsgDate);
         }
         query.include("gif");
@@ -890,17 +909,17 @@ public class ChatActivity extends CustomActivity {
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> list, ParseException e) {
-                if(e == null) {
+                if (e == null) {
                     ArrayList<ParseObject> tempArray = new ArrayList<>();
                     loading.setVisibility(View.GONE);
-                    if(list.size() > 0) {
+                    if (list.size() > 0) {
                         for (int i = list.size() - 1; i >= 0; i--) {
                             ParseObject messageObj = list.get(i);
                             tempArray.add(messageObj);
                             if (firstMsgDate == null || firstMsgDate.after(messageObj.getCreatedAt()))
                                 firstMsgDate = messageObj.getCreatedAt();
                         }
-                        for(ParseObject obj:messageList)
+                        for (ParseObject obj : messageList)
                             tempArray.add(obj);
                         messageList.clear();
                         messageList.addAll(tempArray);

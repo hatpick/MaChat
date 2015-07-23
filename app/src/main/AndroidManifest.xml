@@ -123,7 +123,6 @@
             android:parentActivityName=".activity.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme"
-            android:noHistory="true"
             android:windowSoftInputMode="stateHidden|adjustResize" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -131,7 +130,7 @@
         </activity>
         <activity
             android:name=".activity.SelfieconCameraActivity"
-            android:parentActivityName=".activity.ChatActivity"
+            android:parentActivityName=".activity.SelficonActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" >
             <meta-data
@@ -144,15 +143,34 @@
             android:theme="@style/AppTheme.NoActionBar" >
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
+
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:host="www.youtube.com" android:mimeType="text/*" />
-                <data android:host="www.vine.com" android:mimeType="text/*" />
+
+                <data
+                    android:host="www.youtube.com"
+                    android:mimeType="text/*" />
+                <data
+                    android:host="www.vine.com"
+                    android:mimeType="text/*" />
             </intent-filter>
         </activity>
         <activity
+            android:name=".activity.GiphyActivity"
+            android:parentActivityName=".activity.ChatActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme"
-            android:name=".activity.GiphyActivity">
+            android:theme="@style/AppTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="datapp.machat.activity.ChatActivity" />
+        </activity>
+        <activity
+            android:name=".activity.SelficonActivity"
+            android:parentActivityName=".activity.ChatActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="datapp.machat.activity.ChatActivity" />
         </activity>
     </application>
 

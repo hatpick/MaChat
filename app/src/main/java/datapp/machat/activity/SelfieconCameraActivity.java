@@ -129,6 +129,7 @@ public class SelfieconCameraActivity extends CustomActivity  {
             layout.removeView(preview);
             preview = null;
         }
+        finish();
         //UserStatus.setUserOffline();
     }
 
