@@ -290,14 +290,13 @@ public class ChatActivity extends CustomActivity {
     protected void onPause() {
         myLocation.stopUpdates();
         super.onPause();
-        //isRunning = false;
+        isRunning = false;
         UserStatus.setUserOffline();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        isRunning = false;
     }
 
     @Override
