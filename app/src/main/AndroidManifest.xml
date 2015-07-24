@@ -135,7 +135,7 @@
             android:theme="@style/AppTheme.NoActionBar" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="datapp.machat.activity.ChatActivity" />
+                android:value="datapp.machat.activity.SelficonActivity" />
         </activity>
         <activity
             android:name=".activity.ShareActivity"

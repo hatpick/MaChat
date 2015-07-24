@@ -826,8 +826,6 @@ public class ChatActivity extends CustomActivity {
     private void _toggleMoreActions() {
         final ResizeAnimation anim = new ResizeAnimation(moreActions);
         anim.setDuration(150);
-        anim.setFillAfter(true);
-        anim.setFillEnabled(true);
         anim.setInterpolator(new AccelerateInterpolator());
         if (moreActions.getHeight() > 0) {
             messageEditText.setFocusableInTouchMode(true);
@@ -840,13 +838,7 @@ public class ChatActivity extends CustomActivity {
             messageEditText.requestLayout();
             anim.setParams(0, (int) SizeHelper.convertDpToPixel(70f, this), 0, SizeHelper.getDisplayWidth(this));
         }
-        Handler handler1 = new Handler();
-        handler1.post(new Runnable() {
-            @Override
-            public void run() {
-                moreActions.startAnimation(anim);
-            }
-        });
+        moreActions.startAnimation(anim);
     }
 
     private void _loadConversation() {
@@ -923,7 +915,7 @@ public class ChatActivity extends CustomActivity {
                         messageList.clear();
                         messageList.addAll(tempArray);
                         messageAdapter.notifyDataSetChanged();
-                        chatListView.setSelection(10);
+                        chatListView.setSelection(15);
                     }
                 } else {
                     Toast.makeText(ChatActivity.this, "Network issue!", Toast.LENGTH_SHORT).show();

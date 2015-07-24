@@ -20,7 +20,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
-    <string name="maps_static">https://maps.googleapis.com/maps/api/staticmap?center={lat},{lng}&amp;zoom=15&amp;size=300x300&amp;scale=1&amp;maptype=roadmap&amp;scale=2&amp;markers=color:Red%7C{lat},{lng}</string>
+    <string name="maps_static">https://maps.googleapis.com/maps/api/staticmap?center={lat},{lng}&amp;zoom=15&amp;size=300x300&amp;scale=1&amp;maptype=roadmap&amp;scale=3&amp;markers=color:Red%7C{lat},{lng}</string>
     <string name="youtube_thumbnail">http://img.youtube.com/vi/{video_id}/mqdefault.jpg</string>
     <string name="crittercism_app_id">55a014f64be3830b003a25f4</string>
     <string name="alert_wait_chat">Loading conversations...</string>
