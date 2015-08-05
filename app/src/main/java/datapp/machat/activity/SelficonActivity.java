@@ -43,7 +43,6 @@ import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.SizeHelper;
 
 public class SelficonActivity extends CustomActivity {
-    private final int RESULT_CREATE_GIF = 1227;
     private GridView selficonGridView;
     private ArrayList<Selfiecon> selficonList;
     private SelfieconAdapter selfieconAdapter;
@@ -76,8 +75,6 @@ public class SelficonActivity extends CustomActivity {
         selfieconAdapter = new SelfieconAdapter(this, selficonList);
         selficonGridView.setAdapter(selfieconAdapter);
 
-        setTouchNClick(R.id.create_selfiecon);
-
         _fetchSelficons();
 
         selficonGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -107,6 +104,7 @@ public class SelficonActivity extends CustomActivity {
         selficonList.clear();
         ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("GIF");
         query.whereEqualTo("creator", ParseUser.getCurrentUser());
+        query.orderByDescending("createdAt");
         query.setSkip(selficonList.size());
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
@@ -127,34 +125,6 @@ public class SelficonActivity extends CustomActivity {
                 }
             }
         });
-    }
-
-    @Override
-    public void onClick(View v) {
-        if(v.getId() == R.id.create_selfiecon) {
-            BlurBehind.getInstance().execute(SelficonActivity.this, new OnBlurCompleteListener() {
-                @Override
-                public void onBlurComplete() {
-                    Intent selfieconIntent = new Intent(SelficonActivity.this, SelfieconCameraActivity.class);
-                    selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                    selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivityForResult(selfieconIntent, RESULT_CREATE_GIF);
-                }
-            });
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode){
-            case RESULT_CREATE_GIF:
-                if(resultCode == RESULT_OK){
-                    Selfiecon newSelfiecon = data.getParcelableExtra("newSelfiecon");
-                    selficonList.add(newSelfiecon);
-                    selfieconAdapter.notifyDataSetChanged();
-                }
-            break;
-        }
     }
 
     private void _setupActionBar() {

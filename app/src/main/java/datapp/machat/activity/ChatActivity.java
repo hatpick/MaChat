@@ -91,6 +91,7 @@ import datapp.machat.dao.GiphyGIF;
 import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.LocationHelper;
 import datapp.machat.helper.ResizeAnimation;
+import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
 
 public class ChatActivity extends CustomActivity {
@@ -100,6 +101,8 @@ public class ChatActivity extends CustomActivity {
 
     private String senderFbId;
     private String receiverFbId;
+
+    private String sessionId;
 
     private ListView chatListView;
     private EditText messageEditText;
@@ -122,6 +125,7 @@ public class ChatActivity extends CustomActivity {
     private final int RESULT_LOAD_IMAGE = 1127;
     private final int RESULT_SEARCH_GIPHY = 1327;
     private final int RESULT_CREATE_GIF = 1227;
+    private final int RESULT_CREATE_GIF_NEW = 1247;
 
     SwipeRefreshLayout swipeContainer;
     private boolean keyboardVisible = false;
@@ -134,8 +138,11 @@ public class ChatActivity extends CustomActivity {
     private final int IMAGE_MAX_SIZE = 500000;
     private Button voiceSendBtn;
 
+    private SharedPreferences notificationDetails;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        notificationDetails = getSharedPreferences("notificationDetails", MODE_PRIVATE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
@@ -210,6 +217,7 @@ public class ChatActivity extends CustomActivity {
         setTouchNClick(R.id.toggle_more_options);
         setTouchNClick(R.id.search_giphy_gifs);
         setTouchNClick(R.id.close_more_actions);
+        setTouchNClick(R.id.camera_selfiecon_btn);
 
         loading.setVisibility(View.VISIBLE);
 
@@ -302,9 +310,8 @@ public class ChatActivity extends CustomActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        myLocation.getLocation(this, locationResult);
-
         UserStatus.setUserOnline();
+        myLocation.getLocation(this, locationResult);
 
         receiverFbId = getIntent().getStringExtra("receiverFbId");
         if (receiverFbId == null) {
@@ -415,6 +422,17 @@ public class ChatActivity extends CustomActivity {
                 }
             });
             _toggleMoreActions();
+        } else if (v.getId() == R.id.camera_selfiecon_btn) {
+            BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                @Override
+                public void onBlurComplete() {
+                    Intent selfieconIntent = new Intent(ChatActivity.this, SelfieconCameraActivity.class);
+                    selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivityForResult(selfieconIntent, RESULT_CREATE_GIF_NEW);
+                }
+            });
+            _toggleMoreActions();
         } else if (v.getId() == R.id.toggle_more_options) {
             if (keyboardVisible) {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -443,7 +461,6 @@ public class ChatActivity extends CustomActivity {
                                 params.put("toId", receiver.getObjectId());
                                 params.put("msgType", "map");
                                 params.put("msgContent", "Location");
-                                params.put("toId", receiver.getObjectId());
                                 ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
                                     @Override
                                     public void done(String s, ParseException e) {
@@ -541,6 +558,62 @@ public class ChatActivity extends CustomActivity {
 
         switch (requestCode) {
             case RESULT_CREATE_GIF:
+                if (resultCode == RESULT_OK) {
+                    final Selfiecon selfie = data.getParcelableExtra("newSelfiecon");
+                    receiver.fetchInBackground(new GetCallback<ParseUser>() {
+                        @Override
+                        public void done(ParseUser parseUser, ParseException e) {
+                            if (e == null) {
+                                receiver = parseUser;
+                                if (!receiver.getBoolean("inApp")) {
+                                    HashMap<String, Object> params = new HashMap<String, Object>();
+                                    params.put("toId", receiver.getObjectId());
+                                    params.put("msgType", "selfiecon");
+                                    params.put("msgContent", selfie.getGifUrl());
+                                    params.put("toId", receiver.getObjectId());
+                                    ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                                        @Override
+                                        public void done(String s, ParseException e) {
+                                            if (e != null) {
+                                                Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    });
+                                }
+
+                                final ParseObject message = new ParseObject("Message");
+                                message.put("from", sender);
+                                message.put("to", receiver);
+                                message.put("content", selfie.getThumbnailUrl());
+                                message.put("gifUrl", selfie.getGifUrl());
+                                message.put("type", "selfiecon");
+                                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                                message.put("status", "sent");
+                                messageList.add(message);
+                                messageAdapter.notifyDataSetChanged();
+
+                                message.saveEventually(new SaveCallback() {
+                                    @Override
+                                    public void done(ParseException e) {
+                                        if (e == null) {
+                                            message.put("status", "delivered");
+                                            message.saveEventually(new SaveCallback() {
+                                                @Override
+                                                public void done(ParseException e) {
+                                                    messageAdapter.notifyDataSetChanged();
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+
+                        }
+                    });
+                }
+                break;
+            case RESULT_CREATE_GIF_NEW:
                 if (resultCode == RESULT_OK) {
                     final Selfiecon selfie = data.getParcelableExtra("newSelfiecon");
                     receiver.fetchInBackground(new GetCallback<ParseUser>() {
@@ -751,6 +824,11 @@ public class ChatActivity extends CustomActivity {
                 if (e == null && parseUser != null) {
                     receiver = parseUser;
                     _setupActionBar();
+                    sessionId = sender.getObjectId() + receiver.getObjectId();
+                    int notificationId = notificationDetails.getInt(sessionId, -1);
+                    if(notificationId != -1) {
+                        SendNotification.cancelNotification(notificationId);
+                    }
                     _loadConversation();
                 } else {
                     finish();

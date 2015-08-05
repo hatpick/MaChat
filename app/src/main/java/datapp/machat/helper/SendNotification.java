@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Random;
 
 import datapp.machat.R;
@@ -27,6 +28,7 @@ import datapp.machat.custom.NotificationReceiver;
  * Created by hat on 7/12/15.
  */
 public class SendNotification extends AsyncTask<String, Void, Bitmap> {
+    private String sessionId;
     private Context context;
     private String title;
     private String content;
@@ -37,12 +39,14 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
     private static NotificationManagerCompat notificationManager;
     private Intent intent;
 
+    private HashMap<String, Integer> sessionNotifs;
+
     public static void cancelNotification(int id) {
         if(notificationManager != null)
             notificationManager.cancel(id);
     }
 
-    public SendNotification(Context context, Intent intent, String senderId, String title, String content, String url, int id) {
+    public SendNotification(Context context, Intent intent, String senderId, String title, String content, String url, int id, String sid) {
         this.context = context;
         this.title = title;
         this.content = content;
@@ -50,7 +54,9 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
         this.id = id;
         this.senderId = senderId;
         this.intent = intent;
+        this.sessionId = sid;
         notificationManager = NotificationManagerCompat.from(context);
+        sessionNotifs = new HashMap<>();
     }
 
     @Override
@@ -77,6 +83,7 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
         Intent oIntent = new Intent(NotificationReceiver.ACTION_PUSH_OPEN);
         Bundle extras = intent.getExtras();
         extras.putBoolean("notification", true);
+        extras.putString("sid", sessionId);
         extras.putString("receiverFbId", senderId);
         extras.putInt("nid", id);
         oIntent.putExtras(extras);

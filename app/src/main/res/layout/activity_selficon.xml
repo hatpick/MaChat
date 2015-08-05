@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" android:orientation="vertical" android:id="@+id/main_container"
-    android:background="@drawable/bg" android:gravity="center_horizontal" android:fitsSystemWindows="true"
+    android:gravity="center_horizontal" android:fitsSystemWindows="true"
     tools:context="datapp.machat.activity.ShareActivity">
     <FrameLayout
         android:layout_width="match_parent"
@@ -31,18 +31,5 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </GridView>
-        <Button
-            android:id="@+id/create_selfiecon"
-            android:layout_marginRight="16dp"
-            android:layout_marginBottom="16dp"
-            android:layout_gravity="bottom|right"
-            android:gravity="center"
-            android:text="+"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            android:textSize="32dp"
-            android:background="@drawable/circle_bg"
-            android:layout_width="56dp"
-            android:layout_height="56dp" />
     </FrameLayout>
 </LinearLayout>

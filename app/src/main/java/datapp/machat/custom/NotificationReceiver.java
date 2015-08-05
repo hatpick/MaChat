@@ -66,7 +66,7 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
                 editor.apply();
             }
 
-            new SendNotification(context, intent, senderId, title, alert, imgUrl, id).execute();
+            new SendNotification(context, intent, senderId, title, alert, imgUrl, id, sid).execute();
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -78,6 +78,7 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
         int notificationId = intent.getIntExtra("nid", -1);
         if(notificationId != -1)
             SendNotification.cancelNotification(notificationId);
+
         Intent chatIntent = new Intent(context, MainActivity.class);
         chatIntent.putExtras(intent.getExtras());
         chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);

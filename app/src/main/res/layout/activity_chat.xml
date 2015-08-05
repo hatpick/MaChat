@@ -145,6 +145,15 @@
                 <Button
                     android:layout_marginRight="@dimen/pad_5dp"
                     android:gravity="center"
+                    android:id="@+id/camera_selfiecon_btn"
+                    android:background="@mipmap/ic_camera_selficon"
+                    android:minHeight="1dp"
+                    android:minWidth="1dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp" />
+                <Button
+                    android:layout_marginRight="@dimen/pad_5dp"
+                    android:gravity="center"
                     android:id="@+id/add_location_btn"
                     android:background="@mipmap/ic_location"
                     android:minHeight="1dp"
