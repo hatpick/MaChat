@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:paddingLeft="@dimen/pad_10dp"
@@ -153,6 +153,46 @@
             <TextView
                 style="@style/message_date"
                 android:id="@+id/message_date_giphy" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/recording_wrapper"
+            android:orientation="vertical"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content">
+            <LinearLayout
+                android:layout_gravity="right"
+                android:background="@drawable/message_bg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:id="@+id/recording_content">
+                <Button
+                    android:id="@+id/recording_content_play"
+                    android:background="@android:drawable/ic_media_play"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp" />
+            </LinearLayout>
+            <!--<com.github.lzyzsd.circleprogress.DonutProgress-->
+                <!--android:clickable="true"-->
+                <!--android:id="@+id/recording_content"-->
+                <!--android:background="@android:color/transparent"-->
+                <!--android:layout_width="50dp"-->
+                <!--android:layout_height="50dp"-->
+                <!--android:layout_gravity="center"-->
+                <!--custom:donut_finished_stroke_width="2dp"-->
+                <!--custom:donut_unfinished_stroke_width="2dp"-->
+                <!--custom:donut_unfinished_color="#66000000"-->
+                <!--custom:donut_finished_color="@color/primary"-->
+                <!--custom:donut_progress="0"-->
+                <!--custom:donut_text_size="14sp"-->
+                <!--custom:donut_text_color="@color/primary"-->
+                <!--custom:donut_background_color="@android:color/transparent"-->
+                <!--custom:donut_suffix_text="s"/>-->
+            <TextView
+                style="@style/message_date"
+                android:id="@+id/message_date_recording" />
         </LinearLayout>
 
         <LinearLayout

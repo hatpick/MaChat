@@ -1,6 +1,8 @@
 package datapp.machat.activity;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -12,8 +14,10 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -21,8 +25,11 @@ import android.support.v7.app.ActionBar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -51,6 +58,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.Transformation;
 import com.faradaj.blurbehind.BlurBehind;
 import com.faradaj.blurbehind.OnBlurCompleteListener;
+import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.GetCallback;
@@ -79,6 +87,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import datapp.machat.R;
 import datapp.machat.adapter.MessageAdapter;
@@ -110,6 +120,14 @@ public class ChatActivity extends CustomActivity {
     private Button locationSendBtn;
     private FrameLayout loading;
 
+    private static final String AUDIO_RECORDER_FILE_EXT_MP4 = ".mp4";
+    private static final String AUDIO_RECORDER_FILE_EXT_3GP = ".3gp";
+    private static final String AUDIO_RECORDER_FOLDER = "/saved_recordings";
+    private MediaRecorder recorder = null;
+    private int currentFormat = 0;
+    private int output_formats[] = { MediaRecorder.OutputFormat.MPEG_4, MediaRecorder.OutputFormat.THREE_GPP };
+    private String file_exts[] = { AUDIO_RECORDER_FILE_EXT_MP4, AUDIO_RECORDER_FILE_EXT_3GP };
+
     private ArrayList<ParseObject> messageList;
     private MessageAdapter messageAdapter;
 
@@ -139,6 +157,73 @@ public class ChatActivity extends CustomActivity {
     private Button voiceSendBtn;
 
     private SharedPreferences notificationDetails;
+
+    private String getRecordingFilename(){
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MaChat" + AUDIO_RECORDER_FOLDER;
+        File f = new File(root);
+        if(!f.exists()) f.mkdirs();
+        String fileName = root + "/" + System.currentTimeMillis() + file_exts[currentFormat];
+        Log.v(TAG, fileName);
+        return fileName;
+    }
+
+    private File getLatestFilefromDir(String dirPath){
+        File dir = new File(dirPath);
+        File[] files = dir.listFiles();
+        if (files == null || files.length == 0) {
+            return null;
+        }
+
+        File lastModifiedFile = files[0];
+        for (int i = 1; i < files.length; i++) {
+            if (lastModifiedFile.lastModified() < files[i].lastModified()) {
+                lastModifiedFile = files[i];
+            }
+        }
+        return lastModifiedFile;
+    }
+
+    private void startRecording(){
+        recorder = new MediaRecorder();
+        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        recorder.setOutputFormat(output_formats[currentFormat]);
+        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        recorder.setOutputFile(getRecordingFilename());
+        recorder.setOnErrorListener(errorListener);
+        recorder.setOnInfoListener(infoListener);
+        recorder.setMaxDuration(30000);
+
+        try {
+            recorder.prepare();
+            recorder.start();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private MediaRecorder.OnErrorListener errorListener = new MediaRecorder.OnErrorListener() {
+        @Override
+        public void onError(MediaRecorder mr, int what, int extra) {
+            Log.v(TAG, "Error: " + what + ", " + extra);
+        }
+    };
+
+    private MediaRecorder.OnInfoListener infoListener = new MediaRecorder.OnInfoListener() {
+        @Override
+        public void onInfo(MediaRecorder mr, int what, int extra) {
+            //Log.v(TAG, "Warning: " + what + ", " + extra);
+        }
+    };
+    private void stopRecording(){
+        if(recorder != null){
+            recorder.stop();
+            recorder.reset();
+            recorder.release();
+            recorder = null;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -300,11 +385,18 @@ public class ChatActivity extends CustomActivity {
         super.onPause();
         isRunning = false;
         UserStatus.setUserOffline();
+        if(messageAdapter.getMediaPlayer() != null) {
+            messageAdapter.getMediaPlayer().stop();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(messageAdapter.getMediaPlayer() != null) {
+            messageAdapter.getMediaPlayer().release();
+            messageAdapter.setMediaPlayer(null);
+        }
     }
 
     @Override
@@ -352,6 +444,7 @@ public class ChatActivity extends CustomActivity {
         message.put("type", type);
         message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
         message.put("status", "sent");
+        message.put("isPlaying", false);
         messageList.add(message);
         messageAdapter.notifyDataSetChanged();
 
@@ -442,7 +535,79 @@ public class ChatActivity extends CustomActivity {
         } else if (v.getId() == R.id.close_more_actions) {
             _toggleMoreActions();
         } else if (v.getId() == R.id.record_void_btn) {
-            //TODO: record voice
+            final AlertDialog.Builder alert = new AlertDialog.Builder(ChatActivity.this);
+            LayoutInflater factory = LayoutInflater.from(ChatActivity.this);
+            View innerView = factory.inflate(R.layout.voice_recorder, null);
+            final ArcProgress arcProgress = (ArcProgress) innerView.findViewById(R.id.arc_progress);
+            alert.setView(innerView);
+            alert.setNegativeButton("Dismiss", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                }
+            });
+            final AlertDialog dialog = alert.show();
+            arcProgress.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    Timer timer = new Timer();
+                    TimerTask task = new TimerTask() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    arcProgress.setProgress(arcProgress.getProgress() + 1);
+                                }
+                            });
+                        }
+                    };
+
+                    switch(motionEvent.getAction()){
+                        case MotionEvent.ACTION_DOWN:
+                            startRecording();
+                            timer.schedule(task, 1000, 1000);
+                            return true;
+                        case MotionEvent.ACTION_UP:
+                            Log.v(TAG, "ACTION UP");
+                            task.cancel();
+                            timer.cancel();
+                            timer.purge();
+                            stopRecording();
+
+                            String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MaChat" + AUDIO_RECORDER_FOLDER;
+                            File recording = getLatestFilefromDir(root);
+                            Log.v(TAG, recording.getAbsolutePath());
+                            try{
+                                FileInputStream fis = new FileInputStream(recording);
+                                ByteArrayOutputStream bos= new ByteArrayOutputStream();
+                                byte[] buf = new byte[(int)recording.length()];
+
+                                for (int readNum; (readNum=fis.read(buf)) != -1;){
+                                    bos.write(buf,0,readNum);
+                                }
+
+                                byte[] bytes = bos.toByteArray();
+                                final ParseFile voiceFile = new ParseFile (recording.getName(), bytes);
+                                voiceFile.saveInBackground(new SaveCallback() {
+                                    @Override
+                                    public void done(ParseException e) {
+                                        if(e == null) {
+                                            Log.v(TAG, "Saved recording on Parse.com");
+                                            sendMessage(receiver, "recording", voiceFile.getUrl());
+                                            dialog.dismiss();
+                                        }
+                                    }
+                                });
+                            }
+                            catch (IOException ex) {
+                                Toast.makeText(ChatActivity.this, "Error conerting into byte: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                            return false;
+                    }
+                    return false;
+                }
+            });
         } else if (v.getId() == R.id.add_attachment_btn) {
             Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(pickPhoto, RESULT_LOAD_IMAGE);

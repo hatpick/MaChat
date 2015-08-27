@@ -148,7 +148,7 @@ public class GiphyActivity extends CustomActivity {
         if(v.getId() == R.id.search_gif){
             String tempKeyword = searchTerm.getText().toString();
             String keyword = tempKeyword;
-            if(tempKeyword.contains(" ")){
+            if(tempKeyword.indexOf(' ') > 0){
                 keyword = TextUtils.join("+", tempKeyword.split("\\s+"));
             }
 

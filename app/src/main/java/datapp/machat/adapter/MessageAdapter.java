@@ -5,9 +5,11 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -15,8 +17,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.webkit.URLUtil;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,9 +29,19 @@ import android.widget.VideoView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.github.kevinsawicki.timeago.TimeAgo;
+import com.github.lzyzsd.circleprogress.DonutProgress;
+import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 import datapp.machat.R;
@@ -43,7 +57,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     private final String TAG = "MessageAdapter";
     private CircleTransform transformation;
     private Context mContext;
-    private int imageWidth;
+    private MediaPlayer mediaPlayer;
 
     public MessageAdapter(Context context, ArrayList<ParseObject> messages) {
         super(context, 0, messages);
@@ -51,10 +65,20 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         inflater = ((Activity) context).getLayoutInflater();
         mLastPosition = -1;
         transformation = new CircleTransform(context);
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    }
+
+    public MediaPlayer getMediaPlayer() {
+        return mediaPlayer;
+    }
+
+    public void setMediaPlayer(MediaPlayer mediaPlayer) {
+        this.mediaPlayer = mediaPlayer;
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         View row = convertView;
         final ParseObject message = getItem(position);
         ParseObject prevMessage = null;
@@ -82,6 +106,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.messageDateVine = (TextView) row.findViewById(R.id.message_date_vine);
             messageHolder.messageDateMedia = (TextView) row.findViewById(R.id.message_date_media);
             messageHolder.messageDateSelfiecon = (TextView) row.findViewById(R.id.message_date_selficon);
+            messageHolder.messageDateRecording = (TextView) row.findViewById(R.id.message_date_recording);
             messageHolder.messageDateMap = (TextView) row.findViewById(R.id.message_date_map);
             messageHolder.messageContent = (TextView) row.findViewById(R.id.message_content);
             messageHolder.messageContainer = (LinearLayout) row.findViewById(R.id.message_container);
@@ -95,6 +120,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.vineWrapper = (LinearLayout) row.findViewById(R.id.vine_wrapper);
             messageHolder.vineContent = (VideoView) row.findViewById(R.id.vine_content);
             messageHolder.videoPlay = (Button) row.findViewById(R.id.vine_play);
+            messageHolder.recordingWrapper = (LinearLayout) row.findViewById(R.id.recording_wrapper);
+            messageHolder.recordingContent = (LinearLayout) row.findViewById(R.id.recording_content);
+            messageHolder.recordingPlay = (Button) row.findViewById(R.id.recording_content_play);
 
             final MessageHolder helperHolder = messageHolder;
 
@@ -276,7 +304,6 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.ytPlay.setOnClickListener(listener);
         } else if(messageType.equals("vine")){
             typeWrapper = messageHolder.vineWrapper;
-            final MessageHolder holder = messageHolder;
             if(message.getCreatedAt() != null)
                 messageHolder.messageDateVine.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
             else
@@ -284,23 +311,70 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             String vineUrl = message.getString("content");
             messageHolder.vineContent.setVideoURI(Uri.parse(vineUrl));
+        } else if(messageType.equals("recording")){
+            typeWrapper = messageHolder.recordingWrapper;
+            if(message.getCreatedAt() != null)
+                messageHolder.messageDateRecording.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
+            else
+                messageHolder.messageDateRecording.setText("Just now");
+
+            if(!getItem(position).getBoolean("isPlaying")) {
+                messageHolder.recordingPlay.setBackgroundResource(android.R.drawable.ic_media_play);
+            } else {
+                messageHolder.recordingPlay.setBackgroundResource(android.R.drawable.ic_media_pause);
+            }
+
+            final String recordingUrl = message.getString("content");
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    updateRecordingUI();
+                    mediaPlayer.stop();
+                    mediaPlayer.reset();
+                }
+            });
+
+            messageHolder.recordingPlay.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Button b = (Button)view;
+                    if(!getItem(position).getBoolean("isPlaying")) {
+                        updateRecordingUI();
+                        getItem(position).put("isPlaying", true);
+                        b.setBackgroundResource(android.R.drawable.ic_media_pause);
+                        try {
+                            Runnable r = new Runnable() {
+                                public void run() {
+                                    try {
+                                        setDataSource(recordingUrl);
+                                        mediaPlayer.prepare();
+                                        mediaPlayer.start();
+                                    } catch (IOException e) {
+                                        Log.e(TAG, e.getMessage(), e);
+                                    }
+                                }
+                            };
+                            new Thread(r).start();
+                        } catch (Exception e) {
+                            Log.e(TAG, "error: " + e.getMessage(), e);
+                            if (mediaPlayer != null) {
+                                mediaPlayer.stop();
+                                mediaPlayer.reset();
+                            }
+                        }
+                    } else {
+                        getItem(position).put("isPlaying", false);
+                        b.setBackgroundResource(android.R.drawable.ic_media_play);
+                        mediaPlayer.stop();
+                        mediaPlayer.reset();
+                    }
+                }
+            });
         }
+
 
         typeWrapper.setVisibility(View.VISIBLE);
         boolean avatarFactor = false;
-        /*if(prevMessage != null) {
-            if(message.getString("sessionId").equals(prevMessage.getString("sessionId"))) {
-                messageHolder.avatar.setVisibility(View.GONE);
-                avatarFactor = true;
-            }
-            else {
-                messageHolder.avatar.setVisibility(View.VISIBLE);
-                avatarFactor = false;
-            }
-        } else {
-            messageHolder.avatar.setVisibility(View.VISIBLE);
-            avatarFactor = false;
-        }*/
 
         if(message.getParseUser("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) typeWrapper.getLayoutParams();
@@ -334,6 +408,22 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
     }
 
+    private void updateRecordingUI() {
+        int c = 0;
+        for(int i=0 ; i < getCount() ; i++){
+            if(getItem(i).get("type").equals("recording") && getItem(i).getBoolean("isPlaying")) {
+                getItem(i).put("isPlaying", false);
+                c++;
+            }
+        }
+
+        if(c > 0){
+            mediaPlayer.stop();
+            mediaPlayer.reset();
+            notifyDataSetChanged();
+        }
+    }
+
     public void watchYoutubeVideo(String id){
         try{
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
@@ -358,6 +448,36 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.parse(url), "image/*");
         mContext.startActivity(intent);
+    }
+
+    private void setDataSource(String path) throws IOException {
+        if (!URLUtil.isNetworkUrl(path)) {
+            mediaPlayer.setDataSource(path);
+        } else {
+            URL url = new URL(path);
+            URLConnection cn = url.openConnection();
+            cn.connect();
+            InputStream stream = cn.getInputStream();
+            if (stream == null)
+                throw new RuntimeException("stream is null");
+            File temp = File.createTempFile("mediaplayertmp", ".mp4");
+            String tempPath = temp.getAbsolutePath();
+            FileOutputStream out = new FileOutputStream(temp);
+            byte buf[] = new byte[128];
+            do {
+                int numread = stream.read(buf);
+                if (numread <= 0)
+                    break;
+                out.write(buf, 0, numread);
+            } while (true);
+            mediaPlayer.setDataSource(tempPath);
+            try {
+                stream.close();
+            }
+            catch (IOException ex) {
+                Log.e(TAG, "error: " + ex.getMessage(), ex);
+            }
+        }
     }
 
     static class MessageHolder {
@@ -387,6 +507,11 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         VideoView vineContent;
         TextView messageDateVine;
         Button videoPlay;
+
+        LinearLayout recordingWrapper;
+        LinearLayout recordingContent;
+        Button recordingPlay;
+        TextView messageDateRecording;
 
         LinearLayout ytWrapper;
         ImageView ytContent;

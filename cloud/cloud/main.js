@@ -83,6 +83,9 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
         case "giphy":
         suffixMsg = " has sent you a GIPHY!";
         break;
+        case "recording":
+        suffixMsg = " has sent you a VOICE message!";
+        break;
     }
 
     var pushQuery = new Parse.Query(Parse.Installation);
