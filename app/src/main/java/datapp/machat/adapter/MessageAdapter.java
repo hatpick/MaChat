@@ -386,6 +386,15 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.messageContainer.addView(typeWrapper);
             messageHolder.messageContainer.addView(messageHolder.iconWrapper);
             messageHolder.messageContainer.setGravity(Gravity.RIGHT);
+
+            messageHolder.recordingWrapper.setGravity(Gravity.RIGHT);
+            messageHolder.giphyWrapper.setGravity(Gravity.RIGHT);
+            messageHolder.mapWrapper.setGravity(Gravity.RIGHT);
+            messageHolder.mediaWrapper.setGravity(Gravity.RIGHT);
+            messageHolder.messageWrapper.setGravity(Gravity.RIGHT);
+            messageHolder.selfieconWrapper.setGravity(Gravity.RIGHT);
+            messageHolder.vineWrapper.setGravity(Gravity.RIGHT);
+            messageHolder.ytWrapper.setGravity(Gravity.RIGHT);
         } else {
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) typeWrapper.getLayoutParams();
             int margin = (int) ((avatarFactor)? SizeHelper.convertDpToPixel(5f + 40f, mContext):SizeHelper.convertDpToPixel(5f, mContext));
@@ -396,6 +405,16 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.messageContainer.addView(messageHolder.iconWrapper);
             messageHolder.messageContainer.addView(typeWrapper);
             messageHolder.messageContainer.setGravity(Gravity.LEFT);
+
+
+            messageHolder.recordingWrapper.setGravity(Gravity.LEFT);
+            messageHolder.giphyWrapper.setGravity(Gravity.LEFT);
+            messageHolder.mapWrapper.setGravity(Gravity.LEFT);
+            messageHolder.mediaWrapper.setGravity(Gravity.LEFT);
+            messageHolder.messageWrapper.setGravity(Gravity.LEFT);
+            messageHolder.selfieconWrapper.setGravity(Gravity.LEFT);
+            messageHolder.vineWrapper.setGravity(Gravity.LEFT);
+            messageHolder.ytWrapper.setGravity(Gravity.LEFT);
         }
 
         if (position > mLastPosition) {

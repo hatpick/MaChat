@@ -419,47 +419,60 @@ public class ChatActivity extends CustomActivity {
         _fetchReceiver();
     }
 
-    private void sendMessage(final ParseUser receiver, final String type, final String content) {
-        if (!receiver.getBoolean("inApp")) {
-            HashMap<String, Object> params = new HashMap<>();
-            params.put("toId", receiver.getObjectId());
-            params.put("msgType", type);
-            params.put("msgContent", content);
-            params.put("toId", receiver.getObjectId());
-            ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                @Override
-                public void done(String s, ParseException e) {
-                    if (e != null) {
-                        Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
+    private void sendMessage(final ParseUser receiver, final String type, final String content, final ParseGeoPoint location, final String gifUrl) {
+        ParseQuery<ParseObject> query = new ParseQuery("Session");
+        query.whereEqualTo("user", receiver);
+        query.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> parseObjects, ParseException e) {
+                if (e == null && parseObjects.size() > 0) {
+                    if (!receiver.getBoolean("inApp")) {
+                        HashMap<String, Object> params = new HashMap<>();
+                        params.put("toId", receiver.getObjectId());
+                        params.put("msgType", type);
+                        params.put("msgContent", content);
+                        params.put("toId", receiver.getObjectId());
+                        ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                            @Override
+                            public void done(String s, ParseException e) {
+                                if (e != null) {
+                                    Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
                     }
                 }
-            });
-        }
 
-        final ParseObject message = new ParseObject("Message");
-        message.put("from", sender);
-        message.put("to", receiver);
-        message.put("content", content);
-        message.put("type", type);
-        message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-        message.put("status", "sent");
-        message.put("isPlaying", false);
-        messageList.add(message);
-        messageAdapter.notifyDataSetChanged();
+                final ParseObject message = new ParseObject("Message");
+                message.put("from", sender);
+                message.put("to", receiver);
+                message.put("content", content);
+                message.put("type", type);
+                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
+                message.put("status", "sent");
+                message.put("isPlaying", false);
+                if (type.equals("Location") && location != null)
+                    message.put("location", location);
+                if(type.equals("selfiecon") && gifUrl != null)
+                    message.put("gifUrl", gifUrl);
+                messageList.add(message);
+                messageAdapter.notifyDataSetChanged();
 
-        message.saveEventually(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e == null) {
-                    message.put("status", "delivered");
-                    message.saveEventually(new SaveCallback() {
-                        @Override
-                        public void done(ParseException e) {
-                            messageAdapter.notifyDataSetChanged();
+                message.saveEventually(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        if (e == null) {
+                            message.put("status", "delivered");
+                            message.saveEventually(new SaveCallback() {
+                                @Override
+                                public void done(ParseException e) {
+                                    messageAdapter.notifyDataSetChanged();
+                                }
+                            });
                         }
-                    });
-                }
+                    }
+                });
             }
         });
     }
@@ -480,13 +493,13 @@ public class ChatActivity extends CustomActivity {
                     if (e == null) {
                         receiver = parseUser;
                         if (videoId != null) {
-                            sendMessage(receiver, "youtube", videoId);
+                            sendMessage(receiver, "youtube", videoId, null, null);
                         } else if (isVine) {
                             JsonObjectRequest jor = new JsonObjectRequest(Request.Method.GET, "http://web.engr.oregonstate.edu/~ghorashi/vine/vine.php?url=" + messageText, new Response.Listener<JSONObject>() {
                                 @Override
                                 public void onResponse(JSONObject response) {
                                     try {
-                                        sendMessage(receiver, "vine", response.getString("video"));
+                                        sendMessage(receiver, "vine", response.getString("video"), null, null);
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }
@@ -499,7 +512,7 @@ public class ChatActivity extends CustomActivity {
                             });
                             MaChatApplication.getInstance().getRequestQueue().add(jor);
                         } else {
-                            sendMessage(receiver, "text", messageText);
+                            sendMessage(receiver, "text", messageText, null, null);
                         }
                     }
                 }
@@ -566,7 +579,7 @@ public class ChatActivity extends CustomActivity {
                     switch(motionEvent.getAction()){
                         case MotionEvent.ACTION_DOWN:
                             startRecording();
-                            timer.schedule(task, 1000, 1000);
+                            timer.schedule(task, 100, 1000);
                             return true;
                         case MotionEvent.ACTION_UP:
                             Log.v(TAG, "ACTION UP");
@@ -594,7 +607,7 @@ public class ChatActivity extends CustomActivity {
                                     public void done(ParseException e) {
                                         if(e == null) {
                                             Log.v(TAG, "Saved recording on Parse.com");
-                                            sendMessage(receiver, "recording", voiceFile.getUrl());
+                                            sendMessage(receiver, "recording", voiceFile.getUrl(), null, null);
                                             dialog.dismiss();
                                         }
                                     }
@@ -621,47 +634,7 @@ public class ChatActivity extends CustomActivity {
                     public void done(ParseUser parseUser, ParseException e) {
                         if (e == null) {
                             receiver = parseUser;
-                            if (!receiver.getBoolean("inApp")) {
-                                HashMap<String, Object> params = new HashMap<String, Object>();
-                                params.put("toId", receiver.getObjectId());
-                                params.put("msgType", "map");
-                                params.put("msgContent", "Location");
-                                ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                                    @Override
-                                    public void done(String s, ParseException e) {
-                                        if (e != null) {
-                                            Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
-                            }
-
-                            final ParseObject message = new ParseObject("Message");
-                            message.put("from", sender);
-                            message.put("to", receiver);
-                            message.put("content", "Location");
-                            message.put("location", loc);
-                            message.put("type", "map");
-                            message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                            message.put("status", "sent");
-                            messageList.add(message);
-                            messageAdapter.notifyDataSetChanged();
-
-                            message.saveEventually(new SaveCallback() {
-                                @Override
-                                public void done(ParseException e) {
-                                    if (e == null) {
-                                        message.put("status", "delivered");
-                                        message.saveEventually(new SaveCallback() {
-                                            @Override
-                                            public void done(ParseException e) {
-                                                messageAdapter.notifyDataSetChanged();
-                                            }
-                                        });
-                                    }
-                                }
-                            });
+                            sendMessage(receiver, "map", "Location", loc, null);
                             locationSendBtn.setEnabled(true);
                             _toggleMoreActions();
                         }
@@ -730,48 +703,8 @@ public class ChatActivity extends CustomActivity {
                         public void done(ParseUser parseUser, ParseException e) {
                             if (e == null) {
                                 receiver = parseUser;
-                                if (!receiver.getBoolean("inApp")) {
-                                    HashMap<String, Object> params = new HashMap<String, Object>();
-                                    params.put("toId", receiver.getObjectId());
-                                    params.put("msgType", "selfiecon");
-                                    params.put("msgContent", selfie.getGifUrl());
-                                    params.put("toId", receiver.getObjectId());
-                                    ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                                        @Override
-                                        public void done(String s, ParseException e) {
-                                            if (e != null) {
-                                                Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    });
-                                }
 
-                                final ParseObject message = new ParseObject("Message");
-                                message.put("from", sender);
-                                message.put("to", receiver);
-                                message.put("content", selfie.getThumbnailUrl());
-                                message.put("gifUrl", selfie.getGifUrl());
-                                message.put("type", "selfiecon");
-                                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                                message.put("status", "sent");
-                                messageList.add(message);
-                                messageAdapter.notifyDataSetChanged();
-
-                                message.saveEventually(new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        if (e == null) {
-                                            message.put("status", "delivered");
-                                            message.saveEventually(new SaveCallback() {
-                                                @Override
-                                                public void done(ParseException e) {
-                                                    messageAdapter.notifyDataSetChanged();
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
+                                sendMessage(receiver, "selfiecon", selfie.getThumbnailUrl(), null, selfie.getGifUrl());
                             }
 
                         }
@@ -786,48 +719,7 @@ public class ChatActivity extends CustomActivity {
                         public void done(ParseUser parseUser, ParseException e) {
                             if (e == null) {
                                 receiver = parseUser;
-                                if (!receiver.getBoolean("inApp")) {
-                                    HashMap<String, Object> params = new HashMap<String, Object>();
-                                    params.put("toId", receiver.getObjectId());
-                                    params.put("msgType", "selfiecon");
-                                    params.put("msgContent", selfie.getGifUrl());
-                                    params.put("toId", receiver.getObjectId());
-                                    ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                                        @Override
-                                        public void done(String s, ParseException e) {
-                                            if (e != null) {
-                                                Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    });
-                                }
-
-                                final ParseObject message = new ParseObject("Message");
-                                message.put("from", sender);
-                                message.put("to", receiver);
-                                message.put("content", selfie.getThumbnailUrl());
-                                message.put("gifUrl", selfie.getGifUrl());
-                                message.put("type", "selfiecon");
-                                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                                message.put("status", "sent");
-                                messageList.add(message);
-                                messageAdapter.notifyDataSetChanged();
-
-                                message.saveEventually(new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        if (e == null) {
-                                            message.put("status", "delivered");
-                                            message.saveEventually(new SaveCallback() {
-                                                @Override
-                                                public void done(ParseException e) {
-                                                    messageAdapter.notifyDataSetChanged();
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
+                                sendMessage(receiver, "selfiecon", selfie.getThumbnailUrl(), null, selfie.getGifUrl());
                             }
 
                         }
@@ -870,47 +762,7 @@ public class ChatActivity extends CustomActivity {
                                 public void done(ParseUser parseUser, ParseException e) {
                                     if (e == null) {
                                         receiver = parseUser;
-                                        if (!receiver.getBoolean("inApp")) {
-                                            HashMap<String, Object> params = new HashMap<String, Object>();
-                                            params.put("toId", receiver.getObjectId());
-                                            params.put("msgType", "media");
-                                            params.put("msgContent", imageFile.getUrl());
-                                            params.put("toId", receiver.getObjectId());
-                                            ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                                                @Override
-                                                public void done(String s, ParseException e) {
-                                                    if (e != null) {
-                                                        Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                                        e.printStackTrace();
-                                                    }
-                                                }
-                                            });
-                                        }
-
-                                        final ParseObject message = new ParseObject("Message");
-                                        message.put("from", sender);
-                                        message.put("to", receiver);
-                                        message.put("content", imageFile.getUrl());
-                                        message.put("type", "media");
-                                        message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                                        message.put("status", "sent");
-                                        messageList.add(message);
-                                        messageAdapter.notifyDataSetChanged();
-
-                                        message.saveEventually(new SaveCallback() {
-                                            @Override
-                                            public void done(ParseException e) {
-                                                if (e == null) {
-                                                    message.put("status", "delivered");
-                                                    message.saveEventually(new SaveCallback() {
-                                                        @Override
-                                                        public void done(ParseException e) {
-                                                            messageAdapter.notifyDataSetChanged();
-                                                        }
-                                                    });
-                                                }
-                                            }
-                                        });
+                                        sendMessage(receiver, "media", imageFile.getUrl(), null, null);
                                     }
 
                                 }
@@ -927,47 +779,7 @@ public class ChatActivity extends CustomActivity {
                         public void done(ParseUser parseUser, ParseException e) {
                             if (e == null) {
                                 receiver = parseUser;
-                                if (!receiver.getBoolean("inApp")) {
-                                    HashMap<String, Object> params = new HashMap<String, Object>();
-                                    params.put("toId", receiver.getObjectId());
-                                    params.put("msgType", "giphy");
-                                    params.put("msgContent", newgiphyGIF.getSmallSizedUrl());
-                                    params.put("toId", receiver.getObjectId());
-                                    ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                                        @Override
-                                        public void done(String s, ParseException e) {
-                                            if (e != null) {
-                                                Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    });
-                                }
-
-                                final ParseObject message = new ParseObject("Message");
-                                message.put("from", sender);
-                                message.put("to", receiver);
-                                message.put("content", newgiphyGIF.getSmallSizedUrl());
-                                message.put("type", "giphy");
-                                message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
-                                message.put("status", "sent");
-                                messageList.add(message);
-                                messageAdapter.notifyDataSetChanged();
-
-                                message.saveEventually(new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        if (e == null) {
-                                            message.put("status", "delivered");
-                                            message.saveEventually(new SaveCallback() {
-                                                @Override
-                                                public void done(ParseException e) {
-                                                    messageAdapter.notifyDataSetChanged();
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
+                                sendMessage(receiver, "giphy", newgiphyGIF.getSmallSizedUrl(), null, null);
                             }
 
                         }
