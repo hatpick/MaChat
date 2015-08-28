@@ -6,6 +6,10 @@
     <string name="giphy_api_key">dc6zaTOxFJmzC</string>
     <string name="forgot_passwor_link">481332242021982</string>
 
+    <string name="sinch_app_key">5ebe28d7-e4f2-476b-930f-835b41b52b12</string>
+    <string name="sinch_app_secret">UyXQzlBKN02bjVCwO4qR+Q==</string>
+    <string name="sinch_app_server">sandbox.sinch.com</string>
+
     <string name="required_error">Required</string>
     <string name="email_error">Invalid email!</string>
     <string name="pass_length_error">Password length must be at least 6!</string>

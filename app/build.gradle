@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 22
+    compileSdkVersion 23
     buildToolsVersion "21.1.2"
 
     defaultConfig {
         applicationId "datapp.machat"
         minSdkVersion 19
-        targetSdkVersion 22
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
@@ -17,6 +17,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    sourceSets { main { jni.srcDirs = ['src/main/jni', 'src/main/jni/'] } }
 }
 
 repositories {
@@ -27,7 +28,7 @@ repositories {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:22.0.0'
+    compile 'com.android.support:appcompat-v7:23.0.0'
     compile 'com.facebook.android:facebook-android-sdk:4.1.0'
     compile 'com.google.android.gms:play-services:6.5.87'
     compile 'com.github.kevinsawicki:timeago:1.0.1'
@@ -36,6 +37,8 @@ dependencies {
     compile 'com.makeramen:roundedimageview:2.0.0'
     compile 'com.crittercism:crittercism-android-agent:5.0.6'
     compile 'com.mcxiaoke.volley:library:1.0.17'
-    compile 'com.android.support:recyclerview-v7:21.0.+'
-    compile (name:'blur-behind', ext:'aar')
+    compile(name: 'blur-behind', ext: 'aar')
+    compile 'com.android.support:recyclerview-v7:23.0.0'
+    compile files('libs/sinch-android-rtc-3.3.5.jar')
+    compile 'com.github.fengdai:alertdialogpro-theme-material:0.2.4'
 }

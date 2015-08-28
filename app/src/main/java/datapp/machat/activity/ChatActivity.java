@@ -1,6 +1,6 @@
 package datapp.machat.activity;
 
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,14 +12,19 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.text.Editable;
@@ -27,12 +32,15 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -50,6 +58,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alertdialogpro.AlertDialogPro;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -68,8 +77,16 @@ import com.parse.ParseFile;
 import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseSession;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.sinch.android.rtc.PushPair;
+import com.sinch.android.rtc.Sinch;
+import com.sinch.android.rtc.SinchClient;
+import com.sinch.android.rtc.calling.Call;
+import com.sinch.android.rtc.calling.CallClient;
+import com.sinch.android.rtc.calling.CallClientListener;
+import com.sinch.android.rtc.calling.CallListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -113,12 +130,15 @@ public class ChatActivity extends CustomActivity {
     private String receiverFbId;
 
     private String sessionId;
+    private Vibrator myVib;
 
     private ListView chatListView;
     private EditText messageEditText;
     private Button messageSendBtn;
-    private Button locationSendBtn;
     private FrameLayout loading;
+
+    private SinchClient sinchClient;
+    private Call call;
 
     private static final String AUDIO_RECORDER_FILE_EXT_MP4 = ".mp4";
     private static final String AUDIO_RECORDER_FILE_EXT_3GP = ".3gp";
@@ -149,6 +169,8 @@ public class ChatActivity extends CustomActivity {
     private boolean keyboardVisible = false;
     private LocationHelper myLocation;
     private SharedPreferences.Editor sessionEditor;
+
+    private MediaPlayer player;
 
     private FrameLayout moreActions;
 
@@ -247,6 +269,9 @@ public class ChatActivity extends CustomActivity {
             }
         }
 
+        myVib = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
+        player = MediaPlayer.create(this, Settings.System.DEFAULT_RINGTONE_URI);
+
         myLocation = new LocationHelper();
         sessionDetails = this.getSharedPreferences("sessionDetails", MODE_PRIVATE);
         sessionEditor = sessionDetails.edit();
@@ -259,9 +284,6 @@ public class ChatActivity extends CustomActivity {
         messageSendBtn = (Button) findViewById(R.id.send_new_message_btn);
         voiceSendBtn = (Button) findViewById(R.id.record_void_btn);
         loading = (FrameLayout) findViewById(R.id.loading_chat);
-
-        moreActions = (FrameLayout) findViewById(R.id.more_actions);
-        locationSendBtn = (Button) findViewById(R.id.add_location_btn);
 
         chatListView = (ListView) findViewById(R.id.chatSession);
         chatListView.setDivider(getResources().getDrawable(R.drawable.transparent_divider));
@@ -294,17 +316,27 @@ public class ChatActivity extends CustomActivity {
         handler = new Handler();
 
         setTouchNClick(R.id.send_new_message_btn);
-        setTouchNClick(R.id.send_new_selfiecon_btn);
         setTouchNClick(R.id.new_message_content);
-        setTouchNClick(R.id.add_attachment_btn);
         setTouchNClick(R.id.record_void_btn);
-        setTouchNClick(R.id.add_location_btn);
         setTouchNClick(R.id.toggle_more_options);
-        setTouchNClick(R.id.search_giphy_gifs);
-        setTouchNClick(R.id.close_more_actions);
-        setTouchNClick(R.id.camera_selfiecon_btn);
 
         loading.setVisibility(View.VISIBLE);
+
+        if(sinchClient == null) {
+            sinchClient = Sinch.getSinchClientBuilder()
+                    .context(ChatActivity.this)
+                    .userId(sender.getObjectId())
+                    .applicationKey(getString(R.string.sinch_app_key))
+                    .applicationSecret(getString(R.string.sinch_app_secret))
+                    .environmentHost(getString(R.string.sinch_app_server))
+                    .build();
+        }
+
+        sinchClient.setSupportCalling(true);
+        sinchClient.startListeningOnActiveConnection();
+        sinchClient.start();
+
+        sinchClient.getCallClient().addCallClientListener(new SinchCallClientListener());
 
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -397,6 +429,9 @@ public class ChatActivity extends CustomActivity {
             messageAdapter.getMediaPlayer().release();
             messageAdapter.setMediaPlayer(null);
         }
+
+        if(moreActionDialog != null && moreActionDialog.isShowing())
+            moreActionDialog.dismiss();
     }
 
     @Override
@@ -420,12 +455,12 @@ public class ChatActivity extends CustomActivity {
     }
 
     private void sendMessage(final ParseUser receiver, final String type, final String content, final ParseGeoPoint location, final String gifUrl) {
-        ParseQuery<ParseObject> query = new ParseQuery("Session");
+        ParseQuery<ParseSession> query = ParseSession.getQuery();
         query.whereEqualTo("user", receiver);
-        query.findInBackground(new FindCallback<ParseObject>() {
+        query.findInBackground(new FindCallback<ParseSession>() {
             @Override
-            public void done(List<ParseObject> parseObjects, ParseException e) {
-                if (e == null && parseObjects.size() > 0) {
+            public void done(List<ParseSession> parseSessions, ParseException e) {
+                if (e == null) {
                     if (!receiver.getBoolean("inApp")) {
                         HashMap<String, Object> params = new HashMap<>();
                         params.put("toId", receiver.getObjectId());
@@ -452,7 +487,7 @@ public class ChatActivity extends CustomActivity {
                 message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
                 message.put("status", "sent");
                 message.put("isPlaying", false);
-                if (type.equals("Location") && location != null)
+                if (type.equals("map") && location != null)
                     message.put("location", location);
                 if(type.equals("selfiecon") && gifUrl != null)
                     message.put("gifUrl", gifUrl);
@@ -517,38 +552,10 @@ public class ChatActivity extends CustomActivity {
                     }
                 }
             });
-        } else if (v.getId() == R.id.send_new_selfiecon_btn) {
-            BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
-                @Override
-                public void onBlurComplete() {
-                    Intent selfieconIntent = new Intent(ChatActivity.this, SelficonActivity.class);
-                    selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                    selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivityForResult(selfieconIntent, RESULT_CREATE_GIF);
-                }
-            });
-            _toggleMoreActions();
-        } else if (v.getId() == R.id.camera_selfiecon_btn) {
-            BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
-                @Override
-                public void onBlurComplete() {
-                    Intent selfieconIntent = new Intent(ChatActivity.this, SelfieconCameraActivity.class);
-                    selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                    selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivityForResult(selfieconIntent, RESULT_CREATE_GIF_NEW);
-                }
-            });
-            _toggleMoreActions();
         } else if (v.getId() == R.id.toggle_more_options) {
-            if (keyboardVisible) {
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(messageEditText.getWindowToken(), 0);
-            }
-            _toggleMoreActions();
-        } else if (v.getId() == R.id.close_more_actions) {
             _toggleMoreActions();
         } else if (v.getId() == R.id.record_void_btn) {
-            final AlertDialog.Builder alert = new AlertDialog.Builder(ChatActivity.this);
+            final AlertDialogPro.Builder alert = new AlertDialogPro.Builder(ChatActivity.this);
             LayoutInflater factory = LayoutInflater.from(ChatActivity.this);
             View innerView = factory.inflate(R.layout.voice_recorder, null);
             final ArcProgress arcProgress = (ArcProgress) innerView.findViewById(R.id.arc_progress);
@@ -559,7 +566,7 @@ public class ChatActivity extends CustomActivity {
                     dialog.dismiss();
                 }
             });
-            final AlertDialog dialog = alert.show();
+            final AlertDialogPro dialog = alert.show();
             arcProgress.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -576,8 +583,9 @@ public class ChatActivity extends CustomActivity {
                         }
                     };
 
-                    switch(motionEvent.getAction()){
+                    switch (motionEvent.getAction()) {
                         case MotionEvent.ACTION_DOWN:
+                            myVib.vibrate(80);
                             startRecording();
                             timer.schedule(task, 100, 1000);
                             return true;
@@ -591,29 +599,28 @@ public class ChatActivity extends CustomActivity {
                             String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MaChat" + AUDIO_RECORDER_FOLDER;
                             File recording = getLatestFilefromDir(root);
                             Log.v(TAG, recording.getAbsolutePath());
-                            try{
+                            try {
                                 FileInputStream fis = new FileInputStream(recording);
-                                ByteArrayOutputStream bos= new ByteArrayOutputStream();
-                                byte[] buf = new byte[(int)recording.length()];
+                                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                byte[] buf = new byte[(int) recording.length()];
 
-                                for (int readNum; (readNum=fis.read(buf)) != -1;){
-                                    bos.write(buf,0,readNum);
+                                for (int readNum; (readNum = fis.read(buf)) != -1; ) {
+                                    bos.write(buf, 0, readNum);
                                 }
 
                                 byte[] bytes = bos.toByteArray();
-                                final ParseFile voiceFile = new ParseFile (recording.getName(), bytes);
+                                final ParseFile voiceFile = new ParseFile(recording.getName(), bytes);
                                 voiceFile.saveInBackground(new SaveCallback() {
                                     @Override
                                     public void done(ParseException e) {
-                                        if(e == null) {
+                                        if (e == null) {
                                             Log.v(TAG, "Saved recording on Parse.com");
                                             sendMessage(receiver, "recording", voiceFile.getUrl(), null, null);
                                             dialog.dismiss();
                                         }
                                     }
                                 });
-                            }
-                            catch (IOException ex) {
+                            } catch (IOException ex) {
                                 Toast.makeText(ChatActivity.this, "Error conerting into byte: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
                             }
                             return false;
@@ -621,41 +628,6 @@ public class ChatActivity extends CustomActivity {
                     return false;
                 }
             });
-        } else if (v.getId() == R.id.add_attachment_btn) {
-            Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(pickPhoto, RESULT_LOAD_IMAGE);
-            _toggleMoreActions();
-        } else if (v.getId() == R.id.add_location_btn) {
-            locationSendBtn.setEnabled(false);
-            if (mLocation != null) {
-                final ParseGeoPoint loc = new ParseGeoPoint(mLocation.getLatitude(), mLocation.getLongitude());
-                receiver.fetchInBackground(new GetCallback<ParseUser>() {
-                    @Override
-                    public void done(ParseUser parseUser, ParseException e) {
-                        if (e == null) {
-                            receiver = parseUser;
-                            sendMessage(receiver, "map", "Location", loc, null);
-                            locationSendBtn.setEnabled(true);
-                            _toggleMoreActions();
-                        }
-
-                    }
-                });
-            } else {
-                myLocation.getLocation(this, locationResult);
-                Toast.makeText(ChatActivity.this, "Waiting for location, try again in a moment!", Toast.LENGTH_SHORT).show();
-            }
-        } else if (v.getId() == R.id.search_giphy_gifs) {
-            BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
-                @Override
-                public void onBlurComplete() {
-                    Intent giphyIntent = new Intent(ChatActivity.this, GiphyActivity.class);
-                    giphyIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                    giphyIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivityForResult(giphyIntent, RESULT_SEARCH_GIPHY);
-                }
-            });
-            _toggleMoreActions();
         }
     }
 
@@ -819,54 +791,87 @@ public class ChatActivity extends CustomActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        LinearLayout linearLayout = new LinearLayout(actionBar.getThemedContext());
-        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
-        linearLayout.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
 
-        //App name textview
-        LinearLayout textLinearLayout = new LinearLayout(actionBar.getThemedContext());
-        textLinearLayout.setOrientation(LinearLayout.VERTICAL);
-        linearLayout.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-
-        TextView user_name = new TextView(actionBar.getThemedContext());
-        user_name.setText(receiver.getString("fName") + " " + receiver.getString("lName"));
-        user_name.setPadding(20, 0, 0, 0);
-        user_name.setTextSize(16);
-        ActionBar.LayoutParams txtLayoutParams = new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.LEFT
-                | Gravity.CENTER_VERTICAL);
-        txtLayoutParams.leftMargin = 20;
-        user_name.setLayoutParams(txtLayoutParams);
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM yyyy");
-        dateFormat.setTimeZone(TimeZone.getDefault());
-
-        TextView user_membership = new TextView(actionBar.getThemedContext());
-        user_membership.setText("Member since " + dateFormat.format(receiver.getCreatedAt()));
-        user_membership.setPadding(20, 0, 0, 0);
-        user_membership.setTextSize(12);
-        user_membership.setLayoutParams(txtLayoutParams);
-
-        textLinearLayout.addView(user_name);
-        textLinearLayout.addView(user_membership);
-
-        ImageView pp_picture = new ImageView(actionBar.getThemedContext());
+        LayoutInflater mInflater = LayoutInflater.from(actionBar.getThemedContext());
+        View mCustomView = mInflater.inflate(R.layout.chat_activity_actionbar, null);
+        ImageView receiverProfilePicture = (ImageView) mCustomView.findViewById(R.id.receiver_profile_picture);
+        Button voipBtn = (Button)mCustomView.findViewById(R.id.voip_btn);
+        TextView receiverName = (TextView)mCustomView.findViewById(R.id.receiver_name);
+        TextView receiverMembershipDate = (TextView)mCustomView.findViewById(R.id.receiver_membership_date);
         Transformation transformation = new CircleTransform(this);
+
+        voipBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                _makeVoipCall();
+            }
+        });
 
         Glide.with(this)
                 .load(receiver.getParseFile("profilePicture").getUrl())
                 .centerCrop()
                 .crossFade()
                 .transform(transformation)
-                .into(pp_picture);
-        ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams((int) SizeHelper.convertDpToPixel(40, this), (int) SizeHelper.convertDpToPixel(40, this), Gravity.LEFT
-                | Gravity.CENTER_VERTICAL);
-        pp_picture.setLayoutParams(imgLayoutParams);
+                .into(receiverProfilePicture);
 
-        linearLayout.addView(pp_picture);
-        linearLayout.addView(textLinearLayout);
+        receiverName.setText(receiver.getString("fName") + " " + receiver.getString("lName"));
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM yyyy");
+        dateFormat.setTimeZone(TimeZone.getDefault());
+        receiverMembershipDate.setText("Member since " + dateFormat.format(receiver.getCreatedAt()));
 
 
-        actionBar.setCustomView(linearLayout);
+        actionBar.setCustomView(mCustomView);
+    }
+
+    private void _makeVoipCall() {
+        ParseQuery<ParseSession> query = ParseSession.getQuery();
+        query.whereEqualTo("user", receiver);
+        query.findInBackground(new FindCallback<ParseSession>() {
+            @Override
+            public void done(List<ParseSession> parseSessions, ParseException e) {
+                if (e == null) {
+                    call = sinchClient.getCallClient().callUser(receiver.getObjectId());
+                    final AlertDialogPro.Builder callSend = new AlertDialogPro.Builder(ChatActivity.this);
+                    LayoutInflater factory = LayoutInflater.from(ChatActivity.this);
+                    final View innerView = factory.inflate(R.layout.outgoing_call, null);
+
+                    Button hangupBtn = (Button) innerView.findViewById(R.id.hangup_call);
+                    ImageView receiverImageView = (ImageView) innerView.findViewById(R.id.receiver_imageview);
+                    TextView callDuration = (TextView) innerView.findViewById(R.id.call_duration);
+
+                    callSend.setTitle("Calling " + receiver.get("fName"));
+
+                    Transformation transformation = new CircleTransform(ChatActivity.this);
+                    Glide.with(ChatActivity.this)
+                            .load(receiver.getParseFile("profilePicture").getUrl())
+                            .centerCrop()
+                            .crossFade()
+                            .transform(transformation)
+                            .into(receiverImageView);
+
+                    callSend.setView(innerView);
+                    final AlertDialogPro dialog = callSend.show();
+
+                    SinchCallListener sinchCallListener = new SinchCallListener();
+                    sinchCallListener.setDialog(dialog);
+                    call.addCallListener(sinchCallListener);
+
+                    hangupBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            if(call != null) {
+                                call.hangup();
+                                call = null;
+                            }
+                            dialog.dismiss();
+                        }
+                    });
+                } else {
+                    Toast.makeText(ChatActivity.this, receiver.get("fName") + " is offline!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     @Override
@@ -878,22 +883,132 @@ public class ChatActivity extends CustomActivity {
         }
     }
 
+    private Dialog moreActionDialog = null;
+
     private void _toggleMoreActions() {
-        final ResizeAnimation anim = new ResizeAnimation(moreActions);
-        anim.setDuration(150);
-        anim.setInterpolator(new AccelerateInterpolator());
-        if (moreActions.getHeight() > 0) {
-            messageEditText.setFocusableInTouchMode(true);
-            messageEditText.setFocusable(true);
-            messageEditText.requestLayout();
-            anim.setParams((int) SizeHelper.convertDpToPixel(70f, this), 0, SizeHelper.getDisplayWidth(this), 0);
-        } else {
-            messageEditText.setFocusableInTouchMode(false);
-            messageEditText.setFocusable(false);
-            messageEditText.requestLayout();
-            anim.setParams(0, (int) SizeHelper.convertDpToPixel(70f, this), 0, SizeHelper.getDisplayWidth(this));
+        if(moreActionDialog == null || !moreActionDialog.isShowing()) {
+            moreActionDialog = new Dialog(this, R.style.PopupDialog);
+            LayoutInflater factory = LayoutInflater.from(ChatActivity.this);
+            final View innerView = factory.inflate(R.layout.activity_chat_more, null);
+
+            Button sendSelfieconBtn = (Button) innerView.findViewById(R.id.send_new_selfiecon_btn);
+            Button createSelfieconBtn = (Button) innerView.findViewById(R.id.camera_selfiecon_btn);
+            Button sendPhotoBtn = (Button) innerView.findViewById(R.id.add_attachment_btn);
+            final Button sendLocationBtn = (Button) innerView.findViewById(R.id.add_location_btn);
+            Button sendGiphyBtn = (Button) innerView.findViewById(R.id.search_giphy_gifs);
+            Button closeAlertBtn = (Button) innerView.findViewById(R.id.close_more_actions);
+
+            sendSelfieconBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                        @Override
+                        public void onBlurComplete() {
+                            Intent selfieconIntent = new Intent(ChatActivity.this, SelficonActivity.class);
+                            selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            startActivityForResult(selfieconIntent, RESULT_CREATE_GIF);
+                        }
+                    });
+
+                    if(moreActionDialog != null)
+                        moreActionDialog.dismiss();
+                }
+            });
+
+            createSelfieconBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                        @Override
+                        public void onBlurComplete() {
+                            Intent selfieconIntent = new Intent(ChatActivity.this, SelfieconCameraActivity.class);
+                            selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            startActivityForResult(selfieconIntent, RESULT_CREATE_GIF_NEW);
+                        }
+                    });
+
+                    if(moreActionDialog != null)
+                        moreActionDialog.dismiss();
+                }
+            });
+
+            sendPhotoBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(pickPhoto, RESULT_LOAD_IMAGE);
+                    if(moreActionDialog != null)
+                        moreActionDialog.dismiss();
+                }
+            });
+
+            sendLocationBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    sendLocationBtn.setEnabled(false);
+                    if (mLocation != null) {
+                        final ParseGeoPoint loc = new ParseGeoPoint(mLocation.getLatitude(), mLocation.getLongitude());
+                        receiver.fetchInBackground(new GetCallback<ParseUser>() {
+                            @Override
+                            public void done(ParseUser parseUser, ParseException e) {
+                                if (e == null) {
+                                    receiver = parseUser;
+                                    sendMessage(receiver, "map", "Location", loc, null);
+                                    sendLocationBtn.setEnabled(true);
+                                    if(moreActionDialog != null)
+                                        moreActionDialog.dismiss();
+                                }
+
+                            }
+                        });
+                    } else {
+                        myLocation.getLocation(ChatActivity.this, locationResult);
+                        Toast.makeText(ChatActivity.this, "Waiting for location, try again in a moment!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+            sendGiphyBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                        @Override
+                        public void onBlurComplete() {
+                            Intent giphyIntent = new Intent(ChatActivity.this, GiphyActivity.class);
+                            giphyIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            giphyIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            startActivityForResult(giphyIntent, RESULT_SEARCH_GIPHY);
+                        }
+                    });
+                    if(moreActionDialog != null)
+                        moreActionDialog.dismiss();
+                }
+            });
+
+            closeAlertBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(moreActionDialog != null)
+                        moreActionDialog.dismiss();
+                }
+            });
+
+            sendSelfieconBtn.setOnTouchListener(TOUCH);
+            createSelfieconBtn.setOnTouchListener(TOUCH);
+            sendPhotoBtn.setOnTouchListener(TOUCH);
+            sendLocationBtn.setOnTouchListener(TOUCH);
+            sendGiphyBtn.setOnTouchListener(TOUCH);
+            closeAlertBtn.setOnTouchListener(TOUCH);
+
+            moreActionDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            moreActionDialog.setContentView(innerView);
+            moreActionDialog.setCanceledOnTouchOutside(false);
+            moreActionDialog.getWindow().setLayout(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            moreActionDialog.getWindow().setGravity(Gravity.BOTTOM);
+            moreActionDialog.show();
         }
-        moreActions.startAnimation(anim);
     }
 
     private void _loadConversation() {
@@ -979,5 +1094,110 @@ public class ChatActivity extends CustomActivity {
                 swipeContainer.setRefreshing(false);
             }
         });
+    }
+
+    private class SinchCallClientListener implements CallClientListener {
+        @Override
+        public void onIncomingCall(CallClient callClient, Call incomingCall) {
+            player.start();
+            call = incomingCall;
+            final AlertDialogPro.Builder callReceive = new AlertDialogPro.Builder(ChatActivity.this);
+            LayoutInflater factory = LayoutInflater.from(ChatActivity.this);
+            final View innerView = factory.inflate(R.layout.incoming_call, null);
+
+            Button accBtn = (Button) innerView.findViewById(R.id.accept_voip_call);
+            Button rejBtn = (Button) innerView.findViewById(R.id.reject_voip_call);
+            Button hangupBtn = (Button) innerView.findViewById(R.id.hangup_voip_call);
+            ImageView calleeImageView = (ImageView) innerView.findViewById(R.id.callee_image);
+            TextView callDurationText = (TextView) innerView.findViewById(R.id.call_duration_text);
+
+            final LinearLayout btns = (LinearLayout) innerView.findViewById(R.id.call_btns);
+            final LinearLayout other = (LinearLayout) innerView.findViewById(R.id.call_duration_view);
+
+            Transformation transformation = new CircleTransform(ChatActivity.this);
+            Glide.with(ChatActivity.this)
+                    .load(receiver.getParseFile("profilePicture").getUrl())
+                    .centerCrop()
+                    .crossFade()
+                    .transform(transformation)
+                    .into(calleeImageView);
+            callReceive.setTitle("Call from " + receiver.get("fName"));
+            callReceive.setView(innerView);
+            final AlertDialogPro dialog = callReceive.show();
+            rejBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    call.hangup();
+                    dialog.dismiss();
+                    //send message to caller
+                }
+            });
+
+            hangupBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(call != null) {
+                        call.hangup();
+                        call = null;
+                    }
+                    dialog.dismiss();
+                    //play sound
+                }
+            });
+
+            accBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    player.stop();
+                    player.reset();
+                    other.setVisibility(View.VISIBLE);
+                    btns.setVisibility(View.GONE);
+
+                    SinchCallListener sinchCallListener = new SinchCallListener();
+                    sinchCallListener.setDialog(dialog);
+
+                    //set timer
+                    call.answer();
+                    call.addCallListener(sinchCallListener);
+                }
+            });
+
+        }
+    }
+
+    private class SinchCallListener implements CallListener {
+        private AlertDialogPro dialog;
+
+        public void setDialog(AlertDialogPro dialog) {
+            this.dialog = dialog;
+        }
+
+        @Override
+        public void onCallProgressing(Call progressingCall) {
+            player.start();
+        }
+
+        @Override
+        public void onCallEstablished(Call establishedCall) {
+            myVib.cancel();
+            setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+            player.stop();
+            player.reset();
+            Button cancelBtn = (Button)dialog.findViewById(R.id.hangup_call);
+            if(cancelBtn != null)
+                cancelBtn.setText("Hang Up");
+        }
+
+        @Override
+        public void onCallEnded(Call endedCall) {
+            call = null;
+            setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
+            dialog.dismiss();
+        }
+
+        @Override
+        public void onShouldSendPushNotification(Call call, List<PushPair> pushPairs) {
+
+        }
     }
 }
