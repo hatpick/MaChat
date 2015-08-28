@@ -800,6 +800,7 @@ public class ChatActivity extends CustomActivity {
         View mCustomView = mInflater.inflate(R.layout.chat_activity_actionbar, null);
         ImageView receiverProfilePicture = (ImageView) mCustomView.findViewById(R.id.receiver_profile_picture);
         Button voipBtn = (Button)mCustomView.findViewById(R.id.voip_btn);
+        voipBtn.setOnTouchListener(TOUCH);
         TextView receiverName = (TextView)mCustomView.findViewById(R.id.receiver_name);
         TextView receiverMembershipDate = (TextView)mCustomView.findViewById(R.id.receiver_membership_date);
         Transformation transformation = new CircleTransform(this);
