@@ -6,58 +6,75 @@
     <ImageView
         android:layout_gravity="center"
         android:id="@+id/callee_image"
+        android:background="@drawable/circle_bg_light"
         android:layout_width="100dp"
         android:layout_height="100dp" />
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <LinearLayout
+            android:layout_margin="@dimen/pad_10dp"
             android:id="@+id/call_btns"
             android:gravity="center"
+            android:visibility="visible"
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <Button
-                android:fontFamily="san-serif-light"
-                android:id="@+id/reject_voip_call"
-                android:textColor="@color/primary"
-                android:text="Reject"
-                android:background="@color/color4"
-                android:layout_width="120dp"
-                android:layout_height="60dp" />
-            <Button
-                android:layout_marginLeft="10dp"
-                android:fontFamily="san-serif-light"
-                android:id="@+id/accept_voip_call"
-                android:textColor="@color/primary"
-                android:text="Answer"
-                android:background="@color/color3"
-                android:layout_width="120dp"
-                android:layout_height="60dp" />
+            <FrameLayout
+                android:background="@drawable/circle_bg_light"
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <Button
+                    android:layout_gravity="center"
+                    android:id="@+id/reject_voip_call"
+                    android:background="@mipmap/ic_voip_reject"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp" />
+            </FrameLayout>
+            <FrameLayout
+                android:layout_marginLeft="@dimen/pad_40dp"
+                android:background="@drawable/circle_bg_light"
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <Button
+                    android:layout_gravity="center"
+                    android:id="@+id/accept_voip_call"
+                    android:background="@mipmap/ic_voip_accept"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp" />
+            </FrameLayout>
         </LinearLayout>
         <LinearLayout
             android:id="@+id/call_duration_view"
             android:visibility="gone"
             android:gravity="center"
-            android:padding="@dimen/pad_15dp"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
             <TextView
+                android:text="00:00:00"
                 android:fontFamily="san-serif-light"
                 android:textColor="@color/color2"
+                android:padding="@dimen/pad_15dp"
                 android:textSize="@dimen/txt_20sp"
                 android:id="@+id/call_duration_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-            <Button
-                android:fontFamily="san-serif-light"
-                android:id="@+id/hangup_voip_call"
-                android:textColor="@color/primary"
-                android:text="Hang Up"
-                android:background="@color/color4"
-                android:layout_width="120dp"
-                android:layout_height="60dp" />
+            <FrameLayout
+                android:layout_margin="@dimen/pad_10dp"
+                android:background="@drawable/circle_bg_light"
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <Button
+                    android:layout_gravity="center"
+                    android:id="@+id/hangup_voip_call"
+                    android:background="@mipmap/ic_voip_reject"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp" />
+            </FrameLayout>
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>

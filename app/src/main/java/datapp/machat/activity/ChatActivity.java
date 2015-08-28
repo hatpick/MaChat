@@ -65,6 +65,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.Transformation;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.faradaj.blurbehind.BlurBehind;
 import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.github.lzyzsd.circleprogress.ArcProgress;
@@ -129,6 +130,8 @@ public class ChatActivity extends CustomActivity {
     private String senderFbId;
     private String receiverFbId;
 
+    private AudioManager myAudioManager;
+
     private String sessionId;
     private Vibrator myVib;
 
@@ -171,8 +174,6 @@ public class ChatActivity extends CustomActivity {
     private SharedPreferences.Editor sessionEditor;
 
     private MediaPlayer player;
-
-    private FrameLayout moreActions;
 
     private Location mLocation;
     private final int IMAGE_MAX_SIZE = 500000;
@@ -271,6 +272,9 @@ public class ChatActivity extends CustomActivity {
 
         myVib = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
         player = MediaPlayer.create(this, Settings.System.DEFAULT_RINGTONE_URI);
+        player.setLooping(true);
+
+        myAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 
         myLocation = new LocationHelper();
         sessionDetails = this.getSharedPreferences("sessionDetails", MODE_PRIVATE);
@@ -812,6 +816,7 @@ public class ChatActivity extends CustomActivity {
                 .centerCrop()
                 .crossFade()
                 .transform(transformation)
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .into(receiverProfilePicture);
 
         receiverName.setText(receiver.getString("fName") + " " + receiver.getString("lName"));
@@ -840,6 +845,8 @@ public class ChatActivity extends CustomActivity {
                     ImageView receiverImageView = (ImageView) innerView.findViewById(R.id.receiver_imageview);
                     TextView callDuration = (TextView) innerView.findViewById(R.id.call_duration);
 
+                    hangupBtn.setOnTouchListener(TOUCH);
+
                     callSend.setTitle("Calling " + receiver.get("fName"));
 
                     Transformation transformation = new CircleTransform(ChatActivity.this);
@@ -848,10 +855,14 @@ public class ChatActivity extends CustomActivity {
                             .centerCrop()
                             .crossFade()
                             .transform(transformation)
+                            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                             .into(receiverImageView);
+                    Log.v(TAG, "SAT IMAGE");
 
                     callSend.setView(innerView);
-                    final AlertDialogPro dialog = callSend.show();
+                    final AlertDialogPro dialog = callSend.create();
+                    //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#607D8B")));
+                    dialog.show();
 
                     SinchCallListener sinchCallListener = new SinchCallListener();
                     sinchCallListener.setDialog(dialog);
@@ -860,11 +871,11 @@ public class ChatActivity extends CustomActivity {
                     hangupBtn.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            if(call != null) {
-                                call.hangup();
-                                call = null;
-                            }
-                            dialog.dismiss();
+                        if(call != null) {
+                            call.hangup();
+                            call = null;
+                        }
+                        dialog.dismiss();
                         }
                     });
                 } else {
@@ -872,15 +883,6 @@ public class ChatActivity extends CustomActivity {
                 }
             }
         });
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (moreActions.getHeight() > 0) {
-            _toggleMoreActions();
-        } else {
-            super.onBackPressed();
-        }
     }
 
     private Dialog moreActionDialog = null;
@@ -1099,6 +1101,7 @@ public class ChatActivity extends CustomActivity {
     private class SinchCallClientListener implements CallClientListener {
         @Override
         public void onIncomingCall(CallClient callClient, Call incomingCall) {
+            player.reset();
             player.start();
             call = incomingCall;
             final AlertDialogPro.Builder callReceive = new AlertDialogPro.Builder(ChatActivity.this);
@@ -1111,6 +1114,10 @@ public class ChatActivity extends CustomActivity {
             ImageView calleeImageView = (ImageView) innerView.findViewById(R.id.callee_image);
             TextView callDurationText = (TextView) innerView.findViewById(R.id.call_duration_text);
 
+            accBtn.setOnTouchListener(TOUCH);
+            rejBtn.setOnTouchListener(TOUCH);
+            hangupBtn.setOnTouchListener(TOUCH);
+
             final LinearLayout btns = (LinearLayout) innerView.findViewById(R.id.call_btns);
             final LinearLayout other = (LinearLayout) innerView.findViewById(R.id.call_duration_view);
 
@@ -1120,15 +1127,20 @@ public class ChatActivity extends CustomActivity {
                     .centerCrop()
                     .crossFade()
                     .transform(transformation)
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(calleeImageView);
             callReceive.setTitle("Call from " + receiver.get("fName"));
             callReceive.setView(innerView);
-            final AlertDialogPro dialog = callReceive.show();
+            final AlertDialogPro dialog = callReceive.create();
+            //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#607D8B")));
+            dialog.show();
             rejBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     call.hangup();
                     dialog.dismiss();
+                    player.stop();
+                    player.reset();
                     //send message to caller
                 }
             });
@@ -1141,6 +1153,8 @@ public class ChatActivity extends CustomActivity {
                         call = null;
                     }
                     dialog.dismiss();
+                    player.stop();
+                    player.reset();
                     //play sound
                 }
             });
@@ -1174,18 +1188,16 @@ public class ChatActivity extends CustomActivity {
 
         @Override
         public void onCallProgressing(Call progressingCall) {
+            player.reset();
             player.start();
         }
 
         @Override
         public void onCallEstablished(Call establishedCall) {
-            myVib.cancel();
+            myAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
             setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
             player.stop();
             player.reset();
-            Button cancelBtn = (Button)dialog.findViewById(R.id.hangup_call);
-            if(cancelBtn != null)
-                cancelBtn.setText("Hang Up");
         }
 
         @Override
@@ -1193,6 +1205,8 @@ public class ChatActivity extends CustomActivity {
             call = null;
             setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
             dialog.dismiss();
+            player.stop();
+            player.reset();
         }
 
         @Override
