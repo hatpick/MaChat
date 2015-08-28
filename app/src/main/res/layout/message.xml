@@ -8,172 +8,173 @@
     android:paddingTop="@dimen/pad_5dp"
     android:layout_height="wrap_content">
     <LinearLayout
-        android:id="@+id/message_container"
-        android:orientation="horizontal"
+        android:id="@+id/message_main_container"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <LinearLayout
-            android:gravity="center"
-            android:layout_gravity="center"
-            android:id="@+id/icon_wrapper"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent">
-            <ImageView
-                android:layout_gravity="top"
-                android:id="@+id/avatar"
-                android:layout_width="40dp"
-                android:layout_height="40dp" />
-        </LinearLayout>
-        <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/message_wrapper"
-            android:orientation="vertical"
-            style="@style/message_wrapper">
-            <TextView
-                android:background="@drawable/message_bg"
-                android:autoLink="web"
-                style="@style/message_content"
-                android:id="@+id/message_content" />
-            <TextView
-                style="@style/message_date"
-                android:id="@+id/message_date_text" />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:visibility="visible"
-            android:id="@+id/selficon_wrapper"
-            android:orientation="vertical">
-            <FrameLayout
-                android:layout_width="100dp"
-                android:layout_height="100dp">
-                <ImageView
-                    android:background="@drawable/circle_bg"
-                    android:padding="@dimen/pad_5dp"
-                    android:id="@+id/selfiecon_content"
-                    android:layout_height="100dp"
-                    android:layout_width="100dp"/>
-                <ImageView
-                    android:visibility="gone"
-                    android:background="@drawable/circle_bg"
-                    android:padding="@dimen/pad_5dp"
-                    android:id="@+id/selfiecon_content_gif"
-                    android:layout_height="100dp"
-                    android:layout_width="100dp"/>
-            </FrameLayout>
-            <TextView
+            android:id="@+id/message_container"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:gravity="center"
                 android:layout_gravity="center"
-                style="@style/message_date"
-                android:id="@+id/message_date_selficon" />
-        </LinearLayout>
-        <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/media_wrapper"
-            android:orientation="vertical"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content">
-            <ImageView
-                android:clickable="true"
-                android:scaleType="centerCrop"
-                android:background="@drawable/rect_bg"
-                android:padding="@dimen/pad_5dp"
-                android:id="@+id/media_content"
-                android:layout_height="200dp"
-                android:layout_width="200dp"/>
-            <TextView
-                style="@style/message_date"
-                android:id="@+id/message_date_media" />
-        </LinearLayout>
-        <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/map_wrapper"
-            android:orientation="vertical"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content">
-            <ImageView
-                android:clickable="true"
-                android:scaleType="centerCrop"
-                android:background="@drawable/rect_bg"
-                android:padding="@dimen/pad_5dp"
-                android:id="@+id/map_content"
-                android:layout_height="150dp"
-                android:layout_width="250dp"/>
-            <TextView
-                style="@style/message_date"
-                android:id="@+id/message_date_map" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/yt_wrapper"
-            android:orientation="vertical"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content">
-            <FrameLayout
+                android:id="@+id/icon_wrapper"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_height="fill_parent">
+                <ImageView
+                    android:layout_gravity="top"
+                    android:id="@+id/avatar"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/message_wrapper"
+                android:orientation="vertical"
+                style="@style/message_wrapper">
+                <TextView
+                    android:background="@drawable/message_bg"
+                    android:autoLink="web"
+                    style="@style/message_content"
+                    android:id="@+id/message_content" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:visibility="visible"
+                android:id="@+id/selficon_wrapper"
+                android:orientation="vertical">
+                <FrameLayout
+                    android:layout_width="100dp"
+                    android:layout_height="100dp">
+                    <ImageView
+                        android:background="@drawable/circle_bg"
+                        android:padding="@dimen/pad_5dp"
+                        android:id="@+id/selfiecon_content"
+                        android:layout_height="100dp"
+                        android:layout_width="100dp"/>
+                    <ImageView
+                        android:visibility="gone"
+                        android:background="@drawable/circle_bg"
+                        android:padding="@dimen/pad_5dp"
+                        android:id="@+id/selfiecon_content_gif"
+                        android:layout_height="100dp"
+                        android:layout_width="100dp"/>
+                </FrameLayout>
+                <!--<TextView-->
+                <!--style="@style/message_date"-->
+                <!--android:id="@+id/message_date_selficon" />-->
+            </LinearLayout>
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/media_wrapper"
+                android:orientation="vertical"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
                 <ImageView
                     android:clickable="true"
                     android:scaleType="centerCrop"
                     android:background="@drawable/rect_bg"
                     android:padding="@dimen/pad_5dp"
-                    android:id="@+id/yt_content"
-                    android:layout_height="140.6dp"
-                    android:layout_width="250dp"/>
-                <FrameLayout
-                    android:background="#8c000000"
-                    android:layout_width="250dp"
-                    android:layout_height="140.6dp"/>
-                <ImageView
-                    android:id="@+id/yt_play"
-                    android:layout_gravity="center"
-                    android:background="@mipmap/yt_play"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </FrameLayout>
-            <TextView
-                style="@style/message_date"
-                android:id="@+id/message_date_yt" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/giphy_wrapper"
-            android:orientation="vertical"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content">
-            <ImageView
-                android:clickable="true"
-                android:scaleType="centerCrop"
-                android:background="@drawable/rect_bg"
-                android:padding="@dimen/pad_5dp"
-                android:id="@+id/giphy_content"
-                android:layout_height="125dp"
-                android:layout_width="125dp"/>
-            <TextView
-                style="@style/message_date"
-                android:id="@+id/message_date_giphy" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/recording_wrapper"
-            android:orientation="vertical"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content">
-            <LinearLayout
-                android:background="@drawable/message_bg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:id="@+id/recording_content">
-                <Button
-                    android:id="@+id/recording_content_play"
-                    android:background="@android:drawable/ic_media_play"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp" />
+                    android:id="@+id/media_content"
+                    android:layout_height="200dp"
+                    android:layout_width="200dp"/>
+                <!--<TextView-->
+                <!--style="@style/message_date"-->
+                <!--android:id="@+id/message_date_media" />-->
             </LinearLayout>
-            <!--<com.github.lzyzsd.circleprogress.DonutProgress-->
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/map_wrapper"
+                android:orientation="vertical"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+                <ImageView
+                    android:clickable="true"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/rect_bg"
+                    android:padding="@dimen/pad_5dp"
+                    android:id="@+id/map_content"
+                    android:layout_height="150dp"
+                    android:layout_width="250dp"/>
+                <!--<TextView-->
+                <!--style="@style/message_date"-->
+                <!--android:id="@+id/message_date_map" />-->
+            </LinearLayout>
+
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/yt_wrapper"
+                android:orientation="vertical"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:clickable="true"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/rect_bg"
+                        android:padding="@dimen/pad_5dp"
+                        android:id="@+id/yt_content"
+                        android:layout_height="140.6dp"
+                        android:layout_width="250dp"/>
+                    <FrameLayout
+                        android:background="#8c000000"
+                        android:layout_width="250dp"
+                        android:layout_height="140.6dp"/>
+                    <ImageView
+                        android:id="@+id/yt_play"
+                        android:layout_gravity="center"
+                        android:background="@mipmap/yt_play"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </FrameLayout>
+                <!--<TextView-->
+                <!--style="@style/message_date"-->
+                <!--android:id="@+id/message_date_yt" />-->
+            </LinearLayout>
+
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/giphy_wrapper"
+                android:orientation="vertical"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+                <ImageView
+                    android:clickable="true"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/rect_bg"
+                    android:padding="@dimen/pad_5dp"
+                    android:id="@+id/giphy_content"
+                    android:layout_height="125dp"
+                    android:layout_width="125dp"/>
+                <!--<TextView-->
+                <!--style="@style/message_date"-->
+                <!--android:id="@+id/message_date_giphy" />-->
+            </LinearLayout>
+
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/recording_wrapper"
+                android:orientation="vertical"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+                <LinearLayout
+                    android:background="@drawable/message_bg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:id="@+id/recording_content">
+                    <Button
+                        android:id="@+id/recording_content_play"
+                        android:background="@android:drawable/ic_media_play"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp" />
+                </LinearLayout>
+                <!--<com.github.lzyzsd.circleprogress.DonutProgress-->
                 <!--android:clickable="true"-->
                 <!--android:id="@+id/recording_content"-->
                 <!--android:background="@android:color/transparent"-->
@@ -189,40 +190,68 @@
                 <!--custom:donut_text_color="@color/primary"-->
                 <!--custom:donut_background_color="@android:color/transparent"-->
                 <!--custom:donut_suffix_text="s"/>-->
-            <TextView
-                style="@style/message_date"
-                android:id="@+id/message_date_recording" />
-        </LinearLayout>
+                <!--<TextView-->
+                <!--style="@style/message_date"-->
+                <!--android:id="@+id/message_date_recording" />-->
+            </LinearLayout>
 
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/vine_wrapper"
+                android:orientation="vertical"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+                <FrameLayout
+                    android:background="@drawable/rect_bg"
+                    android:padding="@dimen/pad_5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <VideoView
+                        android:clickable="true"
+                        android:background="@android:color/transparent"
+                        android:id="@+id/vine_content"
+                        android:layout_height="200dp"
+                        android:layout_width="200dp"/>
+                    <Button
+                        android:id="@+id/vine_play"
+                        android:visibility="visible"
+                        android:background="@mipmap/video_play"
+                        android:layout_gravity="center"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp" />
+                </FrameLayout>
+            </LinearLayout>
+        </LinearLayout>
         <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/vine_wrapper"
-            android:orientation="vertical"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content">
+            android:id="@+id/date_wrapper"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:gravity="center_vertical"
+                style="@style/message_date"
+                android:id="@+id/message_date_text" />
             <FrameLayout
-                android:background="@drawable/rect_bg"
-                android:padding="@dimen/pad_5dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/pad_5dp"
+                android:id="@+id/status_wrapper"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
-                <VideoView
-                    android:clickable="true"
-                    android:background="@android:color/transparent"
-                    android:id="@+id/vine_content"
-                    android:layout_height="200dp"
-                    android:layout_width="200dp"/>
-                <Button
-                    android:id="@+id/vine_play"
-                    android:visibility="visible"
-                    android:background="@mipmap/video_play"
+                <ImageView
                     android:layout_gravity="center"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp" />
+                    android:visibility="gone"
+                    android:id="@+id/msg_status_delivered"
+                    android:src="@mipmap/ic_delivered"
+                    android:layout_width="20dp"
+                    android:layout_height="10dp" />
+                <ImageView
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    android:id="@+id/msg_status_seen"
+                    android:src="@mipmap/ic_seen"
+                    android:layout_width="20dp"
+                    android:layout_height="10dp" />
             </FrameLayout>
-            <TextView
-                style="@style/message_date"
-                android:id="@+id/message_date_vine" />
         </LinearLayout>
-
     </LinearLayout>
 </LinearLayout>

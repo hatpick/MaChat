@@ -29,17 +29,13 @@ import android.widget.VideoView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.github.kevinsawicki.timeago.TimeAgo;
-import com.github.lzyzsd.circleprogress.DonutProgress;
-import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -48,9 +44,7 @@ import datapp.machat.R;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.helper.SizeHelper;
 
-/**
- * Created by hat on 7/7/15.
- */
+
 public class MessageAdapter extends ArrayAdapter<ParseObject> {
     private int mLastPosition;
     private LayoutInflater inflater;
@@ -81,15 +75,10 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     public View getView(final int position, View convertView, ViewGroup parent) {
         View row = convertView;
         final ParseObject message = getItem(position);
-        ParseObject prevMessage = null;
-        if(position - 1 > 0)
-            prevMessage = getItem(position - 1);
-
-        //Log.v(TAG, "id: " + position + " sessionId: " + message.getString("sessionId"));
 
         MessageHolder messageHolder = null;
 
-        if(row == null) {
+        if (row == null) {
             row = inflater.inflate(R.layout.message, parent, false);
             messageHolder = new MessageHolder();
             messageHolder.avatar = (ImageView) row.findViewById(R.id.avatar);
@@ -100,16 +89,11 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.ytPlay = (ImageView) row.findViewById(R.id.yt_play);
             messageHolder.mediaContent = (ImageView) row.findViewById(R.id.media_content);
             messageHolder.mapContent = (ImageView) row.findViewById(R.id.map_content);
-            messageHolder.messageDateGiphy = (TextView) row.findViewById(R.id.message_date_giphy);
             messageHolder.messageDateText = (TextView) row.findViewById(R.id.message_date_text);
-            messageHolder.messageDateYT = (TextView) row.findViewById(R.id.message_date_yt);
-            messageHolder.messageDateVine = (TextView) row.findViewById(R.id.message_date_vine);
-            messageHolder.messageDateMedia = (TextView) row.findViewById(R.id.message_date_media);
-            messageHolder.messageDateSelfiecon = (TextView) row.findViewById(R.id.message_date_selficon);
-            messageHolder.messageDateRecording = (TextView) row.findViewById(R.id.message_date_recording);
-            messageHolder.messageDateMap = (TextView) row.findViewById(R.id.message_date_map);
+            messageHolder.dateWrapper = (LinearLayout) row.findViewById(R.id.date_wrapper);
             messageHolder.messageContent = (TextView) row.findViewById(R.id.message_content);
             messageHolder.messageContainer = (LinearLayout) row.findViewById(R.id.message_container);
+            messageHolder.messageMainContainer = (LinearLayout) row.findViewById(R.id.message_main_container);
             messageHolder.iconWrapper = (LinearLayout) row.findViewById(R.id.icon_wrapper);
             messageHolder.messageWrapper = (LinearLayout) row.findViewById(R.id.message_wrapper);
             messageHolder.selfieconWrapper = (LinearLayout) row.findViewById(R.id.selficon_wrapper);
@@ -124,13 +108,17 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.recordingContent = (LinearLayout) row.findViewById(R.id.recording_content);
             messageHolder.recordingPlay = (Button) row.findViewById(R.id.recording_content_play);
 
+            messageHolder.statusDelivered = (ImageView) row.findViewById(R.id.msg_status_delivered);
+            messageHolder.statusSeen = (ImageView) row.findViewById(R.id.msg_status_seen);
+            messageHolder.statusWrapper = (FrameLayout) row.findViewById(R.id.status_wrapper);
+
             final MessageHolder helperHolder = messageHolder;
 
             messageHolder.vineContent.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent motionEvent) {
                     if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                        if(helperHolder.vineContent.isPlaying()){
+                        if (helperHolder.vineContent.isPlaying()) {
                             helperHolder.vineContent.pause();
                             helperHolder.videoPlay.setBackground(mContext.getResources().getDrawable(R.mipmap.video_play));
                             Animation fadeIn = AnimationUtils.loadAnimation(mContext, R.anim.fade_in_quick);
@@ -166,20 +154,19 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                 .into(messageHolder.avatar);
 
         LinearLayout typeWrapper = null;
+        if (message.getCreatedAt() != null)
+            messageHolder.messageDateText.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
+        else
+            messageHolder.messageDateText.setText("Just now");
 
-        if(messageType.equals("text")){
+        if (messageType.equals("text")) {
             typeWrapper = messageHolder.messageWrapper;
-            if(message.getCreatedAt() != null)
-                messageHolder.messageDateText.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
-            else
-                messageHolder.messageDateText.setText("Just now");
+
+
             messageHolder.messageContent.setText(message.getString("content"));
-        } else if(messageType.equals("selfiecon")) {
+        } else if (messageType.equals("selfiecon")) {
             typeWrapper = messageHolder.selfieconWrapper;
-            if(message.getCreatedAt() != null)
-                messageHolder.messageDateSelfiecon.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
-            else
-                messageHolder.messageDateSelfiecon.setText("Just now");
+
 
             Glide.with(mContext)
                     .load(message.getString("content"))
@@ -213,12 +200,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                 }
             });
             messageHolder.messageContainer.setBackgroundColor(Color.TRANSPARENT);
-        } else if(messageType.equals("media")){
+        } else if (messageType.equals("media")) {
             typeWrapper = messageHolder.mediaWrapper;
-            if(message.getCreatedAt() != null)
-                messageHolder.messageDateMedia.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
-            else
-                messageHolder.messageDateMedia.setText("Just now");
+
 
             Glide.with(mContext)
                     .load(message.getString("content"))
@@ -233,12 +217,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                     showImage(message.getString("content"));
                 }
             });
-        } else if(messageType.equals("giphy")){
+        } else if (messageType.equals("giphy")) {
             typeWrapper = messageHolder.giphyWrapper;
-            if(message.getCreatedAt() != null)
-                messageHolder.messageDateGiphy.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
-            else
-                messageHolder.messageDateGiphy.setText("Just now");
+
 
             Glide.with(mContext)
                     .load(message.getString("content"))
@@ -249,15 +230,12 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.giphyContent.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    //showGiphy(message.getString("content"));
+
                 }
             });
-        } else if(messageType.equals("map")){
+        } else if (messageType.equals("map")) {
             typeWrapper = messageHolder.mapWrapper;
-            if(message.getCreatedAt() != null)
-                messageHolder.messageDateMap.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
-            else
-                messageHolder.messageDateMap.setText("Just now");
+
 
             final Double lat = new Double(message.getParseGeoPoint("location").getLatitude());
             final Double lng = new Double(message.getParseGeoPoint("location").getLongitude());
@@ -278,12 +256,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                     showMap(Uri.parse("geo:" + lat + "," + lng + "?z=15"));
                 }
             });
-        } else if(messageType.equals("youtube")){
+        } else if (messageType.equals("youtube")) {
             typeWrapper = messageHolder.ytWrapper;
-            if(message.getCreatedAt() != null)
-                messageHolder.messageDateYT.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
-            else
-                messageHolder.messageDateYT.setText("Just now");
+
 
             final String videoId = message.getString("content");
 
@@ -302,23 +277,17 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             messageHolder.ytContent.setOnClickListener(listener);
             messageHolder.ytPlay.setOnClickListener(listener);
-        } else if(messageType.equals("vine")){
+        } else if (messageType.equals("vine")) {
             typeWrapper = messageHolder.vineWrapper;
-            if(message.getCreatedAt() != null)
-                messageHolder.messageDateVine.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
-            else
-                messageHolder.messageDateVine.setText("Just now");
+
 
             String vineUrl = message.getString("content");
             messageHolder.vineContent.setVideoURI(Uri.parse(vineUrl));
-        } else if(messageType.equals("recording")){
+        } else if (messageType.equals("recording")) {
             typeWrapper = messageHolder.recordingWrapper;
-            if(message.getCreatedAt() != null)
-                messageHolder.messageDateRecording.setText(new TimeAgo().timeAgo(message.getCreatedAt()));
-            else
-                messageHolder.messageDateRecording.setText("Just now");
 
-            if(!getItem(position).getBoolean("isPlaying")) {
+
+            if (!getItem(position).getBoolean("isPlaying")) {
                 messageHolder.recordingPlay.setBackgroundResource(android.R.drawable.ic_media_play);
             } else {
                 messageHolder.recordingPlay.setBackgroundResource(android.R.drawable.ic_media_pause);
@@ -337,8 +306,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.recordingPlay.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Button b = (Button)view;
-                    if(!getItem(position).getBoolean("isPlaying")) {
+                    Button b = (Button) view;
+                    if (!getItem(position).getBoolean("isPlaying")) {
                         updateRecordingUI();
                         getItem(position).put("isPlaying", true);
                         b.setBackgroundResource(android.R.drawable.ic_media_pause);
@@ -374,47 +343,62 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
 
         typeWrapper.setVisibility(View.VISIBLE);
-        boolean avatarFactor = false;
 
-        if(message.getParseUser("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
+        if (message.getParseUser("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
+            int margin = (int) SizeHelper.convertDpToPixel(5f, mContext);
+            int dateWrapperMargin = (int) SizeHelper.convertDpToPixel(45f, mContext);
+            int dateWrapperMarginTop = (int) SizeHelper.convertDpToPixel(2f, mContext);
+
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) typeWrapper.getLayoutParams();
-            int margin = (int) ((avatarFactor)? SizeHelper.convertDpToPixel(5f + 40f, mContext):SizeHelper.convertDpToPixel(5f, mContext));
-            lp.setMargins(0, 0, margin , 0);
+            lp.setMargins(0, 0, margin, 0);
             typeWrapper.setLayoutParams(lp);
+
+            LinearLayout.LayoutParams llp = (LinearLayout.LayoutParams) messageHolder.dateWrapper.getLayoutParams();
+            llp.setMargins(0, dateWrapperMarginTop, dateWrapperMargin, 0);
+            messageHolder.dateWrapper.setLayoutParams(llp);
 
             messageHolder.messageContainer.removeAllViews();
             messageHolder.messageContainer.addView(typeWrapper);
             messageHolder.messageContainer.addView(messageHolder.iconWrapper);
-            messageHolder.messageContainer.setGravity(Gravity.RIGHT);
 
-            messageHolder.recordingWrapper.setGravity(Gravity.RIGHT);
-            messageHolder.giphyWrapper.setGravity(Gravity.RIGHT);
-            messageHolder.mapWrapper.setGravity(Gravity.RIGHT);
-            messageHolder.mediaWrapper.setGravity(Gravity.RIGHT);
-            messageHolder.messageWrapper.setGravity(Gravity.RIGHT);
-            messageHolder.selfieconWrapper.setGravity(Gravity.RIGHT);
-            messageHolder.vineWrapper.setGravity(Gravity.RIGHT);
-            messageHolder.ytWrapper.setGravity(Gravity.RIGHT);
+            messageHolder.messageContainer.setGravity(Gravity.RIGHT);
+            messageHolder.dateWrapper.setGravity(Gravity.RIGHT);
+
+            messageHolder.statusWrapper.setVisibility(View.VISIBLE);
+            String msgStatus = message.getString("status");
+            if (msgStatus != null) {
+                if (msgStatus.equals("delivered")) {
+                    messageHolder.statusDelivered.setVisibility(View.VISIBLE);
+                    messageHolder.statusSeen.setVisibility(View.GONE);
+                } else if (msgStatus.equals("seen")) {
+                    messageHolder.statusDelivered.setVisibility(View.GONE);
+                    messageHolder.statusSeen.setVisibility(View.VISIBLE);
+                } else {
+                    messageHolder.statusDelivered.setVisibility(View.GONE);
+                    messageHolder.statusSeen.setVisibility(View.GONE);
+                }
+            }
         } else {
+            int margin = (int) SizeHelper.convertDpToPixel(5f, mContext);
+            int dateWrapperMargin = (int) SizeHelper.convertDpToPixel(45f, mContext);
+            int dateWrapperMarginTop = (int) SizeHelper.convertDpToPixel(2f, mContext);
+
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) typeWrapper.getLayoutParams();
-            int margin = (int) ((avatarFactor)? SizeHelper.convertDpToPixel(5f + 40f, mContext):SizeHelper.convertDpToPixel(5f, mContext));
             lp.setMargins(margin, 0, 0, 0);
             typeWrapper.setLayoutParams(lp);
 
+            LinearLayout.LayoutParams llp = (LinearLayout.LayoutParams) messageHolder.dateWrapper.getLayoutParams();
+            llp.setMargins(dateWrapperMargin, dateWrapperMarginTop, 0, 0);
+            messageHolder.dateWrapper.setLayoutParams(llp);
+
             messageHolder.messageContainer.removeAllViews();
             messageHolder.messageContainer.addView(messageHolder.iconWrapper);
             messageHolder.messageContainer.addView(typeWrapper);
+
             messageHolder.messageContainer.setGravity(Gravity.LEFT);
+            messageHolder.dateWrapper.setGravity(Gravity.LEFT);
 
-
-            messageHolder.recordingWrapper.setGravity(Gravity.LEFT);
-            messageHolder.giphyWrapper.setGravity(Gravity.LEFT);
-            messageHolder.mapWrapper.setGravity(Gravity.LEFT);
-            messageHolder.mediaWrapper.setGravity(Gravity.LEFT);
-            messageHolder.messageWrapper.setGravity(Gravity.LEFT);
-            messageHolder.selfieconWrapper.setGravity(Gravity.LEFT);
-            messageHolder.vineWrapper.setGravity(Gravity.LEFT);
-            messageHolder.ytWrapper.setGravity(Gravity.LEFT);
+            messageHolder.statusWrapper.setVisibility(View.GONE);
         }
 
         if (position > mLastPosition) {
@@ -429,27 +413,27 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
     private void updateRecordingUI() {
         int c = 0;
-        for(int i=0 ; i < getCount() ; i++){
-            if(getItem(i).get("type").equals("recording") && getItem(i).getBoolean("isPlaying")) {
+        for (int i = 0; i < getCount(); i++) {
+            if (getItem(i).get("type").equals("recording") && getItem(i).getBoolean("isPlaying")) {
                 getItem(i).put("isPlaying", false);
                 c++;
             }
         }
 
-        if(c > 0){
+        if (c > 0) {
             mediaPlayer.stop();
             mediaPlayer.reset();
             notifyDataSetChanged();
         }
     }
 
-    public void watchYoutubeVideo(String id){
-        try{
+    public void watchYoutubeVideo(String id) {
+        try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
             mContext.startActivity(intent);
-        }catch (ActivityNotFoundException ex){
-            Intent intent=new Intent(Intent.ACTION_VIEW,
-                    Uri.parse("http://www.youtube.com/watch?v="+id));
+        } catch (ActivityNotFoundException ex) {
+            Intent intent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://www.youtube.com/watch?v=" + id));
             mContext.startActivity(intent);
         }
     }
@@ -492,14 +476,14 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             mediaPlayer.setDataSource(tempPath);
             try {
                 stream.close();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 Log.e(TAG, "error: " + ex.getMessage(), ex);
             }
         }
     }
 
     static class MessageHolder {
+        LinearLayout messageMainContainer;
         LinearLayout messageContainer;
 
         LinearLayout iconWrapper;
@@ -512,33 +496,32 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         LinearLayout selfieconWrapper;
         ImageView thumbnailSelfiecon;
         ImageView gifSelfiecon;
-        TextView messageDateSelfiecon;
 
         LinearLayout mediaWrapper;
         ImageView mediaContent;
-        TextView messageDateMedia;
 
         LinearLayout giphyWrapper;
         ImageView giphyContent;
-        TextView messageDateGiphy;
 
         LinearLayout vineWrapper;
         VideoView vineContent;
-        TextView messageDateVine;
         Button videoPlay;
 
         LinearLayout recordingWrapper;
         LinearLayout recordingContent;
         Button recordingPlay;
-        TextView messageDateRecording;
 
         LinearLayout ytWrapper;
         ImageView ytContent;
         ImageView ytPlay;
-        TextView messageDateYT;
+
+        ImageView statusDelivered;
+        ImageView statusSeen;
+        FrameLayout statusWrapper;
+
+        LinearLayout dateWrapper;
 
         LinearLayout mapWrapper;
         ImageView mapContent;
-        TextView messageDateMap;
     }
 }

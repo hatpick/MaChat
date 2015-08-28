@@ -1035,6 +1035,10 @@ public class ChatActivity extends CustomActivity {
                     if (list.size() > 0) {
                         for (int i = list.size() - 1; i >= 0; i--) {
                             ParseObject messageObj = list.get(i);
+                            if(messageObj.getString("status") != null && !messageObj.getString("status").equals("seen") && !messageObj.getParseObject("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
+                                messageObj.put("status", "seen");
+                                messageObj.saveInBackground();
+                            }
                             messageList.add(messageObj);
                             if (lastMsgDate == null || lastMsgDate.before(messageObj.getCreatedAt()))
                                 lastMsgDate = messageObj.getCreatedAt();
@@ -1077,6 +1081,10 @@ public class ChatActivity extends CustomActivity {
                     if (list.size() > 0) {
                         for (int i = list.size() - 1; i >= 0; i--) {
                             ParseObject messageObj = list.get(i);
+                            if(messageObj.getString("status") != null && !messageObj.getString("status").equals("seen") && !messageObj.getParseObject("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
+                                messageObj.put("status", "seen");
+                                messageObj.saveInBackground();
+                            }
                             tempArray.add(messageObj);
                             if (firstMsgDate == null || firstMsgDate.after(messageObj.getCreatedAt()))
                                 firstMsgDate = messageObj.getCreatedAt();
