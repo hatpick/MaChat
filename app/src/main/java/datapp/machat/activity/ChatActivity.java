@@ -817,7 +817,6 @@ public class ChatActivity extends CustomActivity {
                 .centerCrop()
                 .crossFade()
                 .transform(transformation)
-                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .into(receiverProfilePicture);
 
         receiverName.setText(receiver.getString("fName") + " " + receiver.getString("lName"));
@@ -856,7 +855,6 @@ public class ChatActivity extends CustomActivity {
                             .centerCrop()
                             .crossFade()
                             .transform(transformation)
-                            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                             .into(receiverImageView);
                     Log.v(TAG, "SAT IMAGE");
 
@@ -1128,7 +1126,6 @@ public class ChatActivity extends CustomActivity {
                     .centerCrop()
                     .crossFade()
                     .transform(transformation)
-                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(calleeImageView);
             callReceive.setTitle("Call from " + receiver.get("fName"));
             callReceive.setView(innerView);
