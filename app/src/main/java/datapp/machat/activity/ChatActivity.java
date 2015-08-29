@@ -98,11 +98,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.Timer;
@@ -274,6 +276,8 @@ public class ChatActivity extends CustomActivity {
         player = MediaPlayer.create(this, Settings.System.DEFAULT_RINGTONE_URI);
         player.setLooping(true);
 
+        statusHandelr = new Handler();
+
         myAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 
         myLocation = new LocationHelper();
@@ -421,6 +425,10 @@ public class ChatActivity extends CustomActivity {
         super.onPause();
         isRunning = false;
         UserStatus.setUserOffline();
+        if(statusHandelr != null && statusUpdater != null) {
+            statusHandelr.removeCallbacks(statusUpdater);
+            statusUpdater = null;
+        }
         if(messageAdapter.getMediaPlayer() != null) {
             messageAdapter.getMediaPlayer().stop();
         }
@@ -436,6 +444,8 @@ public class ChatActivity extends CustomActivity {
 
         if(moreActionDialog != null && moreActionDialog.isShowing())
             moreActionDialog.dismiss();
+
+        statusHandelr = null;
     }
 
     @Override
@@ -506,7 +516,8 @@ public class ChatActivity extends CustomActivity {
                             message.saveEventually(new SaveCallback() {
                                 @Override
                                 public void done(ParseException e) {
-                                    messageAdapter.notifyDataSetChanged();
+                                updateMessageStatus(message, message.getString("status"));
+                                messageAdapter.notifyDataSetChanged();
                                 }
                             });
                         }
@@ -514,6 +525,36 @@ public class ChatActivity extends CustomActivity {
                 });
             }
         });
+    }
+
+    private Handler statusHandelr;
+    private Runnable statusUpdater;
+
+    private void updateMessageStatus(final ParseObject msg, final String status) {
+        if(status.equals(msg.getString("status"))) {
+            msg.fetchInBackground(new GetCallback<ParseObject>() {
+                @Override
+                public void done(ParseObject parseObject, ParseException e) {
+                    if(statusUpdater == null) {
+                        statusUpdater = new Runnable() {
+                            @Override
+                            public void run() {
+                                updateMessageStatus(msg, status);
+                            }
+                        };
+                    }
+                    statusHandelr.postDelayed(statusUpdater, 100);
+                }
+            });
+        } else {
+            messageAdapter.notifyDataSetChanged();
+            if(statusUpdater != null) {
+                statusHandelr.removeCallbacks(statusUpdater);
+                statusUpdater = null;
+            }
+            else
+                statusHandelr.removeCallbacksAndMessages(null);
+        }
     }
 
     @Override
@@ -782,7 +823,8 @@ public class ChatActivity extends CustomActivity {
                     if(notificationId != -1) {
                         SendNotification.cancelNotification(notificationId);
                     }
-                    _loadConversation();
+                    _loadConversation(true);
+
                 } else {
                     finish();
                     Toast.makeText(ChatActivity.this, "Error loading chat history!", Toast.LENGTH_SHORT).show();
@@ -1012,7 +1054,24 @@ public class ChatActivity extends CustomActivity {
         }
     }
 
-    private void _loadConversation() {
+    private void _updateMsgsStatus() {
+        if(messageList.size() > 0) {
+            for(ParseObject msg: messageList) {
+                if(!msg.getString("status").equals("seen")) {
+                    msg.fetchInBackground(new GetCallback<ParseObject>() {
+                        @Override
+                        public void done(ParseObject parseObject, ParseException e) {
+                            messageAdapter.notifyDataSetChanged();
+                        }
+                    });
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    private void _loadConversation(final boolean background) {
         ParseQuery<ParseObject> query = new ParseQuery("Message");
         if (messageList.size() == 0) {
             query.whereContainedIn("sessionId", Arrays.asList(sender.getObjectId() + receiver.getObjectId(), receiver.getObjectId() + sender.getObjectId()));
@@ -1046,6 +1105,9 @@ public class ChatActivity extends CustomActivity {
                         firstMsgDate = messageList.get(0).getCreatedAt();
                         messageAdapter.notifyDataSetChanged();
                     }
+                    else if(background) {
+                        _updateMsgsStatus();
+                    }
                 } else {
                     Toast.makeText(ChatActivity.this, "Network issue!", Toast.LENGTH_SHORT).show();
                 }
@@ -1054,7 +1116,7 @@ public class ChatActivity extends CustomActivity {
                     @Override
                     public void run() {
                         if (isRunning)
-                            _loadConversation();
+                            _loadConversation(false);
                     }
                 }, 1000);
             }

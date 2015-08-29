@@ -9,26 +9,27 @@
     android:layout_height="wrap_content">
     <LinearLayout
         android:id="@+id/message_main_container"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <LinearLayout
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:id="@+id/icon_wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent">
+            <ImageView
+                android:layout_gravity="top"
+                android:id="@+id/avatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_weight="1"
             android:id="@+id/message_container"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <LinearLayout
-                android:gravity="center"
-                android:layout_gravity="center"
-                android:id="@+id/icon_wrapper"
-                android:layout_width="wrap_content"
-                android:layout_height="fill_parent">
-                <ImageView
-                    android:layout_gravity="top"
-                    android:id="@+id/avatar"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp" />
-            </LinearLayout>
             <LinearLayout
                 android:visibility="gone"
                 android:id="@+id/message_wrapper"
@@ -221,37 +222,37 @@
                         android:layout_height="40dp" />
                 </FrameLayout>
             </LinearLayout>
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/date_wrapper"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <TextView
-                android:gravity="center_vertical"
-                style="@style/message_date"
-                android:id="@+id/message_date_text" />
-            <FrameLayout
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="@dimen/pad_5dp"
-                android:id="@+id/status_wrapper"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/date_wrapper"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                <ImageView
-                    android:layout_gravity="center"
-                    android:visibility="gone"
-                    android:id="@+id/msg_status_delivered"
-                    android:src="@mipmap/ic_delivered"
-                    android:layout_width="20dp"
-                    android:layout_height="10dp" />
-                <ImageView
-                    android:layout_gravity="center"
-                    android:visibility="gone"
-                    android:id="@+id/msg_status_seen"
-                    android:src="@mipmap/ic_seen"
-                    android:layout_width="20dp"
-                    android:layout_height="10dp" />
-            </FrameLayout>
+                <TextView
+                    android:gravity="center_vertical"
+                    style="@style/message_date"
+                    android:id="@+id/message_date_text" />
+                <FrameLayout
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="@dimen/pad_5dp"
+                    android:id="@+id/status_wrapper"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        android:id="@+id/msg_status_delivered"
+                        android:src="@mipmap/ic_delivered"
+                        android:layout_width="20dp"
+                        android:layout_height="10dp" />
+                    <ImageView
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        android:id="@+id/msg_status_seen"
+                        android:src="@mipmap/ic_seen"
+                        android:layout_width="20dp"
+                        android:layout_height="10dp" />
+                </FrameLayout>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

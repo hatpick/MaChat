@@ -346,20 +346,19 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
         if (message.getParseUser("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
             int margin = (int) SizeHelper.convertDpToPixel(5f, mContext);
-            int dateWrapperMargin = (int) SizeHelper.convertDpToPixel(45f, mContext);
-            int dateWrapperMarginTop = (int) SizeHelper.convertDpToPixel(2f, mContext);
 
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) typeWrapper.getLayoutParams();
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) messageHolder.messageContainer.getLayoutParams();
             lp.setMargins(0, 0, margin, 0);
-            typeWrapper.setLayoutParams(lp);
-
-            LinearLayout.LayoutParams llp = (LinearLayout.LayoutParams) messageHolder.dateWrapper.getLayoutParams();
-            llp.setMargins(0, dateWrapperMarginTop, dateWrapperMargin, 0);
-            messageHolder.dateWrapper.setLayoutParams(llp);
+            messageHolder.messageContainer.setLayoutParams(lp);
 
             messageHolder.messageContainer.removeAllViews();
             messageHolder.messageContainer.addView(typeWrapper);
-            messageHolder.messageContainer.addView(messageHolder.iconWrapper);
+            messageHolder.messageContainer.addView(messageHolder.dateWrapper);
+
+
+            messageHolder.messageMainContainer.removeAllViews();
+            messageHolder.messageMainContainer.addView(messageHolder.messageContainer);
+            messageHolder.messageMainContainer.addView(messageHolder.iconWrapper);
 
             messageHolder.messageContainer.setGravity(Gravity.RIGHT);
             messageHolder.dateWrapper.setGravity(Gravity.RIGHT);
@@ -380,20 +379,17 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             }
         } else {
             int margin = (int) SizeHelper.convertDpToPixel(5f, mContext);
-            int dateWrapperMargin = (int) SizeHelper.convertDpToPixel(45f, mContext);
-            int dateWrapperMarginTop = (int) SizeHelper.convertDpToPixel(2f, mContext);
-
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) typeWrapper.getLayoutParams();
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) messageHolder.messageContainer.getLayoutParams();
             lp.setMargins(margin, 0, 0, 0);
-            typeWrapper.setLayoutParams(lp);
-
-            LinearLayout.LayoutParams llp = (LinearLayout.LayoutParams) messageHolder.dateWrapper.getLayoutParams();
-            llp.setMargins(dateWrapperMargin, dateWrapperMarginTop, 0, 0);
-            messageHolder.dateWrapper.setLayoutParams(llp);
+            messageHolder.messageContainer.setLayoutParams(lp);
 
             messageHolder.messageContainer.removeAllViews();
-            messageHolder.messageContainer.addView(messageHolder.iconWrapper);
             messageHolder.messageContainer.addView(typeWrapper);
+            messageHolder.messageContainer.addView(messageHolder.dateWrapper);
+
+            messageHolder.messageMainContainer.removeAllViews();
+            messageHolder.messageMainContainer.addView(messageHolder.iconWrapper);
+            messageHolder.messageMainContainer.addView(messageHolder.messageContainer);
 
             messageHolder.messageContainer.setGravity(Gravity.LEFT);
             messageHolder.dateWrapper.setGravity(Gravity.LEFT);
