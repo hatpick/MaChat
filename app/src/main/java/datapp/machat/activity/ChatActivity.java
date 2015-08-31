@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.media.AudioManager;
@@ -32,26 +31,18 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
-import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.BounceInterpolator;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -65,7 +56,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.Transformation;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.faradaj.blurbehind.BlurBehind;
 import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.github.lzyzsd.circleprogress.ArcProgress;
@@ -95,16 +85,15 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.Timer;
@@ -112,7 +101,6 @@ import java.util.TimerTask;
 
 import datapp.machat.R;
 import datapp.machat.adapter.MessageAdapter;
-import datapp.machat.adapter.SelfieconAdapter;
 import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
@@ -120,7 +108,6 @@ import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.GiphyGIF;
 import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.LocationHelper;
-import datapp.machat.helper.ResizeAnimation;
 import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
 
@@ -276,7 +263,7 @@ public class ChatActivity extends CustomActivity {
         player = MediaPlayer.create(this, Settings.System.DEFAULT_RINGTONE_URI);
         player.setLooping(true);
 
-        statusHandelr = new Handler();
+        statusHandler = new Handler();
 
         myAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 
@@ -425,8 +412,8 @@ public class ChatActivity extends CustomActivity {
         super.onPause();
         isRunning = false;
         UserStatus.setUserOffline();
-        if(statusHandelr != null && statusUpdater != null) {
-            statusHandelr.removeCallbacks(statusUpdater);
+        if(statusHandler != null && statusUpdater != null) {
+            statusHandler.removeCallbacks(statusUpdater);
             statusUpdater = null;
         }
         if(messageAdapter.getMediaPlayer() != null) {
@@ -445,7 +432,7 @@ public class ChatActivity extends CustomActivity {
         if(moreActionDialog != null && moreActionDialog.isShowing())
             moreActionDialog.dismiss();
 
-        statusHandelr = null;
+        statusHandler = null;
     }
 
     @Override
@@ -527,7 +514,7 @@ public class ChatActivity extends CustomActivity {
         });
     }
 
-    private Handler statusHandelr;
+    private Handler statusHandler;
     private Runnable statusUpdater;
 
     private void updateMessageStatus(final ParseObject msg, final String status) {
@@ -543,17 +530,24 @@ public class ChatActivity extends CustomActivity {
                             }
                         };
                     }
-                    statusHandelr.postDelayed(statusUpdater, 100);
+
+                    statusHandler.postDelayed(statusUpdater, 500);
                 }
             });
         } else {
+            for (int i = messageList.size() - 1; i >= 0; i--) {
+                if(messageList.get(i).getString("status").equals("seen"))
+                    break;
+                else
+                    messageList.get(i).put("status", "seen");
+            }
             messageAdapter.notifyDataSetChanged();
             if(statusUpdater != null) {
-                statusHandelr.removeCallbacks(statusUpdater);
+                statusHandler.removeCallbacks(statusUpdater);
                 statusUpdater = null;
             }
             else
-                statusHandelr.removeCallbacksAndMessages(null);
+                statusHandler.removeCallbacksAndMessages(null);
         }
     }
 
