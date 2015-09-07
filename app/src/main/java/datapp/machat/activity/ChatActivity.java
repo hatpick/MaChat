@@ -13,6 +13,10 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -21,6 +25,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -111,7 +116,7 @@ import datapp.machat.helper.LocationHelper;
 import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
 
-public class ChatActivity extends CustomActivity {
+public class ChatActivity extends CustomActivity implements SensorEventListener {
     private final String TAG = "ChatActivity";
     private ParseUser sender;
     private ParseUser receiver;
@@ -131,6 +136,11 @@ public class ChatActivity extends CustomActivity {
 
     private SinchClient sinchClient;
     private Call call;
+
+    private SensorManager sensorManager;
+    private Sensor proximitySensor;
+    private PowerManager powerManager;
+    private PowerManager.WakeLock wakeLock;
 
     private static final String AUDIO_RECORDER_FILE_EXT_MP4 = ".mp4";
     private static final String AUDIO_RECORDER_FILE_EXT_3GP = ".3gp";
@@ -237,6 +247,8 @@ public class ChatActivity extends CustomActivity {
         }
     }
 
+    private int field = 0x00000020;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         notificationDetails = getSharedPreferences("notificationDetails", MODE_PRIVATE);
@@ -285,6 +297,16 @@ public class ChatActivity extends CustomActivity {
         chatListView.setDividerHeight(10);
         chatListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_NORMAL);
 
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+
+        try {
+            field = PowerManager.class.getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null);
+        } catch (Throwable ignored) {
+
+        }
+        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(field, getLocalClassName());
 
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
 
@@ -419,6 +441,7 @@ public class ChatActivity extends CustomActivity {
         if(messageAdapter.getMediaPlayer() != null) {
             messageAdapter.getMediaPlayer().stop();
         }
+        sensorManager.unregisterListener(this);
     }
 
     @Override
@@ -440,6 +463,8 @@ public class ChatActivity extends CustomActivity {
         super.onResume();
         UserStatus.setUserOnline();
         myLocation.getLocation(this, locationResult);
+
+        sensorManager.registerListener(this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         receiverFbId = getIntent().getStringExtra("receiverFbId");
         if (receiverFbId == null) {
@@ -1159,6 +1184,24 @@ public class ChatActivity extends CustomActivity {
                 swipeContainer.setRefreshing(false);
             }
         });
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if(sensorEvent.values[0] < 30) {
+            if(!wakeLock.isHeld()) {
+                wakeLock.acquire();
+            }
+        } else {
+            if(wakeLock.isHeld()) {
+                wakeLock.release();
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
     }
 
     private class SinchCallClientListener implements CallClientListener {
