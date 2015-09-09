@@ -114,19 +114,45 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             final MessageHolder helperHolder = messageHolder;
 
-            messageHolder.vineContent.setOnTouchListener(new View.OnTouchListener() {
+            messageHolder.videoPlay.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent motionEvent) {
+                    Button playBtn = (Button) v;
                     if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                         if (helperHolder.vineContent.isPlaying()) {
                             helperHolder.vineContent.pause();
+                            playBtn.setBackground(mContext.getResources().getDrawable(R.mipmap.video_play));
+                            Animation fadeIn = AnimationUtils.loadAnimation(mContext, R.anim.fade_in_quick);
+                            fadeIn.setFillAfter(true);
+                            fadeIn.setFillEnabled(true);
+                            playBtn.startAnimation(fadeIn);
+                        } else {
+                            helperHolder.vineContent.start();
+                            playBtn.setBackground(mContext.getResources().getDrawable(R.mipmap.video_pause));
+                            Animation fadeOut = AnimationUtils.loadAnimation(mContext, R.anim.fade_out_quick);
+                            fadeOut.setFillAfter(true);
+                            fadeOut.setFillEnabled(true);
+                            playBtn.startAnimation(fadeOut);
+                        }
+                    }
+                    return true;
+                }
+            });
+
+            messageHolder.vineContent.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent motionEvent) {
+                    VideoView videoView = (VideoView) v;
+                    if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                        if (videoView.isPlaying()) {
+                            videoView.pause();
                             helperHolder.videoPlay.setBackground(mContext.getResources().getDrawable(R.mipmap.video_play));
                             Animation fadeIn = AnimationUtils.loadAnimation(mContext, R.anim.fade_in_quick);
                             fadeIn.setFillAfter(true);
                             fadeIn.setFillEnabled(true);
                             helperHolder.videoPlay.startAnimation(fadeIn);
                         } else {
-                            helperHolder.vineContent.start();
+                            videoView.start();
                             helperHolder.videoPlay.setBackground(mContext.getResources().getDrawable(R.mipmap.video_pause));
                             Animation fadeOut = AnimationUtils.loadAnimation(mContext, R.anim.fade_out_quick);
                             fadeOut.setFillAfter(true);
@@ -358,10 +384,14 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             messageHolder.messageMainContainer.removeAllViews();
             messageHolder.messageMainContainer.addView(messageHolder.messageContainer);
-            messageHolder.messageMainContainer.addView(messageHolder.iconWrapper);
+            //messageHolder.messageMainContainer.addView(messageHolder.iconWrapper);
 
             messageHolder.messageContainer.setGravity(Gravity.RIGHT);
             messageHolder.dateWrapper.setGravity(Gravity.RIGHT);
+
+            if(messageType.equals("text")) {
+                messageHolder.messageContent.setBackgroundResource(R.drawable.message_bg_sender);
+            }
 
             messageHolder.statusWrapper.setVisibility(View.VISIBLE);
             String msgStatus = message.getString("status");
@@ -393,6 +423,10 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             messageHolder.messageContainer.setGravity(Gravity.LEFT);
             messageHolder.dateWrapper.setGravity(Gravity.LEFT);
+
+            if(messageType.equals("text")) {
+                messageHolder.messageContent.setBackgroundResource(R.drawable.message_bg);
+            }
 
             messageHolder.statusWrapper.setVisibility(View.GONE);
         }

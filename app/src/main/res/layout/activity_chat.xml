@@ -77,7 +77,7 @@
                             android:textColor="@color/white"
                             android:textColorHint="#88ffffff"
                             android:id="@+id/new_message_content"
-                            android:inputType="text"
+                            android:inputType="textAutoComplete|textLongMessage"
                             android:textSize="@dimen/txt_16sp"
                             android:paddingLeft="@dimen/pad_10dp"
                             android:paddingRight="@dimen/pad_10dp"

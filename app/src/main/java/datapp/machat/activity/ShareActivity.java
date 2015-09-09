@@ -75,9 +75,9 @@ public class ShareActivity extends CustomActivity{
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             String url = intent.getStringExtra(Intent.EXTRA_TEXT);
             if(url.contains("vine")){
-                vineUrl = url.split("\n")[1];
+                vineUrl = url;
             } else {
-                youtubeUrl = intent.getStringExtra(Intent.EXTRA_TEXT);
+                youtubeUrl = url;
             }
         }
     }

@@ -441,7 +441,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         if(messageAdapter.getMediaPlayer() != null) {
             messageAdapter.getMediaPlayer().stop();
         }
-        sensorManager.unregisterListener(this);
     }
 
     @Override
@@ -464,8 +463,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         UserStatus.setUserOnline();
         myLocation.getLocation(this, locationResult);
 
-        sensorManager.registerListener(this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
-
         receiverFbId = getIntent().getStringExtra("receiverFbId");
         if (receiverFbId == null) {
             receiverFbId = sessionDetails.getString("receiverFbId", "");
@@ -475,6 +472,18 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         }
 
         senderFbId = getIntent().getStringExtra("senderFbId");
+        if(sensorManager == null || powerManager == null) {
+            sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+            proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+
+            try {
+                field = PowerManager.class.getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null);
+            } catch (Throwable ignored) {
+
+            }
+            powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            wakeLock = powerManager.newWakeLock(field, getLocalClassName());
+        }
 
         isRunning = true;
         _fetchReceiver();
@@ -583,17 +592,15 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             final String messageText = messageEditText.getText().toString();
             messageEditText.setText(null);
 
-            final String videoId = SizeHelper.extractYTId(messageText);
             final boolean isVine = SizeHelper.isVine(messageText);
+            final String videoId = SizeHelper.extractYTId(messageText);
 
             receiver.fetchInBackground(new GetCallback<ParseUser>() {
                 @Override
                 public void done(ParseUser parseUser, ParseException e) {
                     if (e == null) {
                         receiver = parseUser;
-                        if (videoId != null) {
-                            sendMessage(receiver, "youtube", videoId, null, null);
-                        } else if (isVine) {
+                        if (isVine) {
                             JsonObjectRequest jor = new JsonObjectRequest(Request.Method.GET, "http://web.engr.oregonstate.edu/~ghorashi/vine/vine.php?url=" + messageText, new Response.Listener<JSONObject>() {
                                 @Override
                                 public void onResponse(JSONObject response) {
@@ -610,6 +617,8 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                                 }
                             });
                             MaChatApplication.getInstance().getRequestQueue().add(jor);
+                        } else if (videoId != null) {
+                            sendMessage(receiver, "youtube", videoId, null, null);
                         } else {
                             sendMessage(receiver, "text", messageText, null, null);
                         }
@@ -924,6 +933,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                     //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#607D8B")));
                     dialog.show();
 
+                    sensorManager.registerListener(ChatActivity.this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
                     SinchCallListener sinchCallListener = new SinchCallListener();
                     sinchCallListener.setDialog(dialog);
                     call.addCallListener(sinchCallListener);
@@ -934,6 +944,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                         if(call != null) {
                             call.hangup();
                             call = null;
+                            sensorManager.unregisterListener(ChatActivity.this);
                         }
                         dialog.dismiss();
                         }
@@ -1188,7 +1199,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if(sensorEvent.values[0] < 30) {
+        if(sensorEvent.values[0] < 20) {
             if(!wakeLock.isHeld()) {
                 wakeLock.acquire();
             }
@@ -1267,6 +1278,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             accBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    sensorManager.registerListener(ChatActivity.this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
                     player.stop();
                     player.reset();
                     other.setVisibility(View.VISIBLE);
@@ -1312,6 +1324,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             dialog.dismiss();
             player.stop();
             player.reset();
+            sensorManager.unregisterListener(ChatActivity.this);
         }
 
         @Override
