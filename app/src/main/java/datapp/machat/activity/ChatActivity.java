@@ -463,6 +463,9 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         UserStatus.setUserOnline();
         myLocation.getLocation(this, locationResult);
 
+        if(statusHandler == null)
+            statusHandler = new Handler();
+
         receiverFbId = getIntent().getStringExtra("receiverFbId");
         if (receiverFbId == null) {
             receiverFbId = sessionDetails.getString("receiverFbId", "");
@@ -1091,7 +1094,8 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                     msg.fetchInBackground(new GetCallback<ParseObject>() {
                         @Override
                         public void done(ParseObject parseObject, ParseException e) {
-                            messageAdapter.notifyDataSetChanged();
+                            if(e == null)
+                                messageAdapter.notifyDataSetChanged();
                         }
                     });
                 } else {
@@ -1307,7 +1311,10 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         public void onCallProgressing(Call progressingCall) {
             player.reset();
             player.start();
+            Log.v(TAG, progressingCall.getState().toString());
         }
+
+
 
         @Override
         public void onCallEstablished(Call establishedCall) {
@@ -1325,6 +1332,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             player.stop();
             player.reset();
             sensorManager.unregisterListener(ChatActivity.this);
+            Log.v(TAG, endedCall.getState().toString());
         }
 
         @Override

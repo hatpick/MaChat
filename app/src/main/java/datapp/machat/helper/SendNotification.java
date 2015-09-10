@@ -99,7 +99,7 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
         Notification notification = new NotificationCompat.Builder(context)
                 .setContentTitle(title)
                 .setContentText(content)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.mipmap.ic_notif)
                 .setLargeIcon(bitmap)
                 .setSound(uri)
                 .setCategory(Notification.CATEGORY_SOCIAL)
