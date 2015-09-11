@@ -933,6 +933,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
 
                     callSend.setView(innerView);
                     final AlertDialogPro dialog = callSend.create();
+                    dialog.setCanceledOnTouchOutside(false);
                     //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#607D8B")));
                     dialog.show();
 
@@ -1252,6 +1253,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             callReceive.setTitle("Call from " + receiver.get("fName"));
             callReceive.setView(innerView);
             final AlertDialogPro dialog = callReceive.create();
+            dialog.setCanceledOnTouchOutside(false);
             //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#607D8B")));
             dialog.show();
             rejBtn.setOnClickListener(new View.OnClickListener() {
