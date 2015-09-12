@@ -339,22 +339,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
 
         loading.setVisibility(View.VISIBLE);
 
-        if(sinchClient == null) {
-            sinchClient = Sinch.getSinchClientBuilder()
-                    .context(ChatActivity.this)
-                    .userId(sender.getObjectId())
-                    .applicationKey(getString(R.string.sinch_app_key))
-                    .applicationSecret(getString(R.string.sinch_app_secret))
-                    .environmentHost(getString(R.string.sinch_app_server))
-                    .build();
-        }
-
-        sinchClient.setSupportCalling(true);
-        sinchClient.startListeningOnActiveConnection();
-        sinchClient.start();
-
-        sinchClient.getCallClient().addCallClientListener(new SinchCallClientListener());
-
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -460,6 +444,22 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
     @Override
     protected void onResume() {
         super.onResume();
+
+        if(sinchClient == null) {
+            sinchClient = Sinch.getSinchClientBuilder()
+                    .context(ChatActivity.this)
+                    .userId(sender.getObjectId())
+                    .applicationKey(getString(R.string.sinch_app_key))
+                    .applicationSecret(getString(R.string.sinch_app_secret))
+                    .environmentHost(getString(R.string.sinch_app_server))
+                    .build();
+            sinchClient.setSupportCalling(true);
+            sinchClient.startListeningOnActiveConnection();
+            sinchClient.setSupportActiveConnectionInBackground(false);
+            sinchClient.start();
+            sinchClient.getCallClient().addCallClientListener(new SinchCallClientListener());
+        }
+
         UserStatus.setUserOnline();
         myLocation.getLocation(this, locationResult);
 
@@ -922,13 +922,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
 
                     callSend.setTitle("Calling " + receiver.get("fName"));
 
-                    Transformation transformation = new CircleTransform(ChatActivity.this);
-                    Glide.with(ChatActivity.this)
-                            .load(receiver.getParseFile("profilePicture").getUrl())
-                            .centerCrop()
-                            .crossFade()
-                            .transform(transformation)
-                            .into(receiverImageView);
                     Log.v(TAG, "SAT IMAGE");
 
                     callSend.setView(innerView);
@@ -936,6 +929,13 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                     dialog.setCanceledOnTouchOutside(false);
                     //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#607D8B")));
                     dialog.show();
+                    Transformation transformation = new CircleTransform(dialog.getContext());
+                    Glide.with(dialog.getContext())
+                            .load(receiver.getParseFile("profilePicture").getUrl())
+                            .centerCrop()
+                            .crossFade()
+                            .transform(transformation)
+                            .into(receiverImageView);
 
                     sensorManager.registerListener(ChatActivity.this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
                     SinchCallListener sinchCallListener = new SinchCallListener();
@@ -1243,19 +1243,22 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             final LinearLayout btns = (LinearLayout) innerView.findViewById(R.id.call_btns);
             final LinearLayout other = (LinearLayout) innerView.findViewById(R.id.call_duration_view);
 
-            Transformation transformation = new CircleTransform(ChatActivity.this);
-            Glide.with(ChatActivity.this)
+            callReceive.setTitle("Call from " + receiver.get("fName"));
+            callReceive.setView(innerView);
+            final AlertDialogPro dialog = callReceive.create();
+            dialog.setCanceledOnTouchOutside(false);
+            SinchCallListener sinchCallListener = new SinchCallListener();
+            sinchCallListener.setDialog(dialog);
+            call.addCallListener(sinchCallListener);
+            //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#607D8B")));
+            dialog.show();
+            Transformation transformation = new CircleTransform(dialog.getContext());
+            Glide.with(dialog.getContext())
                     .load(receiver.getParseFile("profilePicture").getUrl())
                     .centerCrop()
                     .crossFade()
                     .transform(transformation)
                     .into(calleeImageView);
-            callReceive.setTitle("Call from " + receiver.get("fName"));
-            callReceive.setView(innerView);
-            final AlertDialogPro dialog = callReceive.create();
-            dialog.setCanceledOnTouchOutside(false);
-            //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#607D8B")));
-            dialog.show();
             rejBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -1289,13 +1292,8 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                     player.reset();
                     other.setVisibility(View.VISIBLE);
                     btns.setVisibility(View.GONE);
-
-                    SinchCallListener sinchCallListener = new SinchCallListener();
-                    sinchCallListener.setDialog(dialog);
-
                     //set timer
                     call.answer();
-                    call.addCallListener(sinchCallListener);
                 }
             });
 
