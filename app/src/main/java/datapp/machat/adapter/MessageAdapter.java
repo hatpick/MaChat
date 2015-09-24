@@ -41,6 +41,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 
 import datapp.machat.R;
+import datapp.machat.activity.ChatActivity;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.helper.SizeHelper;
 
@@ -89,6 +90,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.ytPlay = (ImageView) row.findViewById(R.id.yt_play);
             messageHolder.mediaContent = (ImageView) row.findViewById(R.id.media_content);
             messageHolder.mapContent = (ImageView) row.findViewById(R.id.map_content);
+            messageHolder.openMapsBtn = (Button) row.findViewById(R.id.open_maps_btn);
+            messageHolder.navigateBtn = (Button) row.findViewById(R.id.navigate_to_btn);
             messageHolder.messageDateText = (TextView) row.findViewById(R.id.message_date_text);
             messageHolder.dateWrapper = (LinearLayout) row.findViewById(R.id.date_wrapper);
             messageHolder.messageContent = (TextView) row.findViewById(R.id.message_content);
@@ -267,7 +270,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             final Double lng = new Double(message.getParseGeoPoint("location").getLongitude());
 
             String url = mContext.getResources().getString(R.string.maps_static)
-                    .replace("{lat}", lat.toString()).replace("{lng}", lng.toString());
+                    .replace("{lat}", lat.toString()).replace("{lng}", lng.toString()).replace("{label}", message.getParseUser("from").getString("fName").toUpperCase().charAt(0) + "");
 
             Glide.with(mContext)
                     .load(url)
@@ -276,10 +279,20 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(messageHolder.mapContent);
 
-            messageHolder.mapContent.setOnClickListener(new View.OnClickListener() {
+            messageHolder.openMapsBtn.setOnTouchListener(ChatActivity.TOUCH);
+            messageHolder.navigateBtn.setOnTouchListener(ChatActivity.TOUCH);
+
+            messageHolder.openMapsBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     showMap(Uri.parse("geo:" + lat + "," + lng + "?z=15"));
+                }
+            });
+
+            messageHolder.navigateBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showMap(Uri.parse("google.navigation:q=" + lat + "," + lng + "&mode=d"));
                 }
             });
         } else if (messageType.equals("youtube")) {
@@ -469,11 +482,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     }
 
     public void showMap(Uri geoLocation) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(geoLocation);
-        if (intent.resolveActivity(mContext.getPackageManager()) != null) {
-            mContext.startActivity(intent);
-        }
+        Intent intent = new Intent(Intent.ACTION_VIEW, geoLocation);
+        intent.setPackage("com.google.android.apps.maps");
+        mContext.startActivity(intent);
     }
 
     public void showImage(String url) {
@@ -552,6 +563,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         LinearLayout dateWrapper;
 
         LinearLayout mapWrapper;
+        Button openMapsBtn;
+        Button navigateBtn;
         ImageView mapContent;
     }
 }

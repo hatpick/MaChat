@@ -172,8 +172,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
     private LocationHelper myLocation;
     private SharedPreferences.Editor sessionEditor;
 
-    private MediaPlayer player;
-
     private Location mLocation;
     private final int IMAGE_MAX_SIZE = 500000;
     private Button voiceSendBtn;
@@ -272,8 +270,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         }
 
         myVib = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
-        player = MediaPlayer.create(this, Settings.System.DEFAULT_RINGTONE_URI);
-        player.setLooping(true);
 
         statusHandler = new Handler();
 
@@ -1223,8 +1219,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
     private class SinchCallClientListener implements CallClientListener {
         @Override
         public void onIncomingCall(CallClient callClient, Call incomingCall) {
-            player.reset();
-            player.start();
             call = incomingCall;
             final AlertDialogPro.Builder callReceive = new AlertDialogPro.Builder(ChatActivity.this);
             LayoutInflater factory = LayoutInflater.from(ChatActivity.this);
@@ -1264,9 +1258,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                 public void onClick(View view) {
                     call.hangup();
                     dialog.dismiss();
-                    player.stop();
-                    player.reset();
-                    //send message to caller
                 }
             });
 
@@ -1278,9 +1269,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                         call = null;
                     }
                     dialog.dismiss();
-                    player.stop();
-                    player.reset();
-                    //play sound
                 }
             });
 
@@ -1288,8 +1276,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                 @Override
                 public void onClick(View view) {
                     sensorManager.registerListener(ChatActivity.this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
-                    player.stop();
-                    player.reset();
                     other.setVisibility(View.VISIBLE);
                     btns.setVisibility(View.GONE);
                     //set timer
@@ -1309,8 +1295,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
 
         @Override
         public void onCallProgressing(Call progressingCall) {
-            player.reset();
-            player.start();
             Log.v(TAG, progressingCall.getState().toString());
         }
 
@@ -1320,8 +1304,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         public void onCallEstablished(Call establishedCall) {
             myAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
             setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
-            player.stop();
-            player.reset();
         }
 
         @Override
@@ -1329,8 +1311,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             call = null;
             setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
             dialog.dismiss();
-            player.stop();
-            player.reset();
             sensorManager.unregisterListener(ChatActivity.this);
             Log.v(TAG, endedCall.getState().toString());
         }
