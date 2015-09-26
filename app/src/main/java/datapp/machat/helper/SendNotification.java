@@ -6,12 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+
+import com.parse.ParseObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,9 +36,11 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
     private String title;
     private String content;
     private String url;
+    private String msgId;
     private int id;
+    private Boolean buzzable;
     private String senderId;
-    private final static Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+    private Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private static NotificationManagerCompat notificationManager;
     private Intent intent;
 
@@ -46,7 +51,7 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
             notificationManager.cancel(id);
     }
 
-    public SendNotification(Context context, Intent intent, String senderId, String title, String content, String url, int id, String sid) {
+    public SendNotification(Context context, Intent intent, String senderId, String title, String content, String url, int id, String sid, String msgId, Boolean buzzable) {
         this.context = context;
         this.title = title;
         this.content = content;
@@ -54,6 +59,8 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
         this.id = id;
         this.senderId = senderId;
         this.intent = intent;
+        this.msgId = msgId;
+        this.buzzable = buzzable;
         this.sessionId = sid;
         notificationManager = NotificationManagerCompat.from(context);
         sessionNotifs = new HashMap<>();
@@ -96,6 +103,13 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
         PendingIntent oContentIntent = PendingIntent.getBroadcast(context, 0, oIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent dContentIntent = PendingIntent.getBroadcast(context, 0, dIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        if(buzzable) {
+            uri = Uri.parse("android.resource://datapp.machat/raw/buzz");
+            ParseObject msg = ParseObject.createWithoutData("Message", msgId);
+            msg.put("buzzed", true);
+            msg.saveInBackground();
+        }
+
         Notification notification = new NotificationCompat.Builder(context)
                 .setContentTitle(title)
                 .setContentText(content)
@@ -103,7 +117,6 @@ public class SendNotification extends AsyncTask<String, Void, Bitmap> {
                 .setLargeIcon(bitmap)
                 .setSound(uri)
                 .setCategory(Notification.CATEGORY_SOCIAL)
-
                 .setContentIntent(oContentIntent).setDeleteIntent(dContentIntent)
                 .build();
         notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;

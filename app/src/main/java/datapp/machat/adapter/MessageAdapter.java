@@ -103,6 +103,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.ytWrapper = (LinearLayout) row.findViewById(R.id.yt_wrapper);
             messageHolder.mediaWrapper = (LinearLayout) row.findViewById(R.id.media_wrapper);
             messageHolder.giphyWrapper = (LinearLayout) row.findViewById(R.id.giphy_wrapper);
+            messageHolder.buzzWrapper = (LinearLayout) row.findViewById(R.id.buzz_wrapper);
             messageHolder.mapWrapper = (LinearLayout) row.findViewById(R.id.map_wrapper);
             messageHolder.vineWrapper = (LinearLayout) row.findViewById(R.id.vine_wrapper);
             messageHolder.vineContent = (VideoView) row.findViewById(R.id.vine_content);
@@ -322,6 +323,21 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             String vineUrl = message.getString("content");
             messageHolder.vineContent.setVideoURI(Uri.parse(vineUrl));
+        } else if (messageType.equals("buzz")) {
+            typeWrapper = messageHolder.buzzWrapper;
+            if(!message.getParseUser("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId()) && !message.getBoolean("buzzed")) {
+                MediaPlayer mPlayer;
+                mPlayer = MediaPlayer.create(mContext, R.raw.buzz);
+                mPlayer.start();
+                message.put("buzzed", true);
+                message.saveInBackground();
+            }
+
+            Animation shake = AnimationUtils.loadAnimation(mContext, R.anim.shake);
+            shake.setFillAfter(true);
+            shake.setFillEnabled(true);
+            messageHolder.buzzWrapper.startAnimation(shake);
+
         } else if (messageType.equals("recording")) {
             typeWrapper = messageHolder.recordingWrapper;
 
@@ -555,6 +571,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         LinearLayout ytWrapper;
         ImageView ytContent;
         ImageView ytPlay;
+
+        LinearLayout buzzWrapper;
 
         ImageView statusDelivered;
         ImageView statusSeen;

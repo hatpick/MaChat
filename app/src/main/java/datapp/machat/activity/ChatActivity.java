@@ -253,11 +253,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        BlurBehind.getInstance()
-                .withAlpha(75)
-                .withFilterColor(Color.parseColor("#B5008795"))
-                .setBackground(this);
-
         if (savedInstanceState != null) {
             byte[] bitmapData = savedInstanceState.getByteArray("bg");
             if (bitmapData != null) {
@@ -267,6 +262,11 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                 bd.setColorFilter(Color.parseColor("#B5008795"), PorterDuff.Mode.DST_ATOP);
                 getWindow().getDecorView().setBackground(bd);
             }
+        } else {
+            BlurBehind.getInstance()
+                    .withAlpha(75)
+                    .withFilterColor(Color.parseColor("#B5008795"))
+                    .setBackground(this);
         }
 
         myVib = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
@@ -329,6 +329,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         handler = new Handler();
 
         setTouchNClick(R.id.send_new_message_btn);
+        setTouchNClick(R.id.buzz_btn);
         setTouchNClick(R.id.new_message_content);
         setTouchNClick(R.id.record_void_btn);
         setTouchNClick(R.id.toggle_more_options);
@@ -494,25 +495,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         query.findInBackground(new FindCallback<ParseSession>() {
             @Override
             public void done(List<ParseSession> parseSessions, ParseException e) {
-                if (e == null) {
-                    if (!receiver.getBoolean("inApp")) {
-                        HashMap<String, Object> params = new HashMap<>();
-                        params.put("toId", receiver.getObjectId());
-                        params.put("msgType", type);
-                        params.put("msgContent", content);
-                        params.put("toId", receiver.getObjectId());
-                        ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
-                            @Override
-                            public void done(String s, ParseException e) {
-                                if (e != null) {
-                                    Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-                    }
-                }
-
                 final ParseObject message = new ParseObject("Message");
                 message.put("from", sender);
                 message.put("to", receiver);
@@ -523,8 +505,10 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                 message.put("isPlaying", false);
                 if (type.equals("map") && location != null)
                     message.put("location", location);
-                if(type.equals("selfiecon") && gifUrl != null)
+                else if(type.equals("selfiecon") && gifUrl != null)
                     message.put("gifUrl", gifUrl);
+                else if(type.equals("buzz"))
+                    message.put("buzzed", false);
                 messageList.add(message);
                 messageAdapter.notifyDataSetChanged();
 
@@ -533,16 +517,39 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                     public void done(ParseException e) {
                         if (e == null) {
                             message.put("status", "delivered");
-                            message.saveEventually(new SaveCallback() {
+                            message.saveInBackground(new SaveCallback() {
                                 @Override
                                 public void done(ParseException e) {
-                                updateMessageStatus(message, message.getString("status"));
-                                messageAdapter.notifyDataSetChanged();
+                                    updateMessageStatus(message, message.getString("status"));
+                                    messageAdapter.notifyDataSetChanged();
+
+                                    if (!receiver.getBoolean("inApp")) {
+                                        HashMap<String, Object> params = new HashMap<>();
+                                        params.put("toId", receiver.getObjectId());
+                                        params.put("msgType", message.getString("type"));
+                                        params.put("msgId", message.getObjectId());
+                                        Log.v(TAG, message.getObjectId());
+                                        if(message.getString("type").equals("buzz"))
+                                            params.put("buzzable", true);
+                                        else
+                                            params.put("buzzable", false);
+                                        params.put("msgContent", message.getString("content"));
+                                        ParseCloud.callFunctionInBackground("sendPushMessage", params, new FunctionCallback<String>() {
+                                            @Override
+                                            public void done(String s, ParseException e) {
+                                                if (e != null) {
+                                                    Toast.makeText(ChatActivity.this, "Push failed!" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        });
+                                    }
                                 }
                             });
                         }
                     }
                 });
+
             }
         });
     }
@@ -626,6 +633,8 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             });
         } else if (v.getId() == R.id.toggle_more_options) {
             _toggleMoreActions();
+        } else if(v.getId() == R.id.buzz_btn) {
+            sendMessage(receiver, "buzz", "BUZZ", null, null);
         } else if (v.getId() == R.id.record_void_btn) {
             final AlertDialogPro.Builder alert = new AlertDialogPro.Builder(ChatActivity.this);
             LayoutInflater factory = LayoutInflater.from(ChatActivity.this);

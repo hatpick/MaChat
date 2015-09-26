@@ -58,6 +58,9 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
             final String sid = json.getString("group");
             final String imgUrl = json.getString("sender_img_url");
             final String senderId = json.getString("sender_fbId");
+            final String msgId = json.getString("msg_id");
+            final Boolean buzzable = json.getBoolean("buzzable");
+            Log.v(TAG, buzzable.toString());
 
             Integer id = notificationDetails.getInt(sid, -1);
             if(id == -1) {
@@ -66,7 +69,7 @@ public class NotificationReceiver extends ParsePushBroadcastReceiver {
                 editor.apply();
             }
 
-            new SendNotification(context, intent, senderId, title, alert, imgUrl, id, sid).execute();
+            new SendNotification(context, intent, senderId, title, alert, imgUrl, id, sid, msgId, buzzable).execute();
 
         } catch (JSONException e) {
             e.printStackTrace();

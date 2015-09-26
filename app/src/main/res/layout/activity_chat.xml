@@ -82,12 +82,24 @@
                             android:paddingLeft="@dimen/pad_10dp"
                             android:paddingRight="@dimen/pad_10dp"
                             android:layout_marginLeft="30dp"
-                            android:layout_marginRight="30dp"
                             android:imeActionId="100"
                             android:ems="10"
                             android:layout_width="match_parent"
+                            android:layout_marginRight="70dp"
                             android:hint="@string/type_msg"
                             android:layout_height="30dp"/>
+                        <Button
+                            android:layout_gravity="right"
+                            android:visibility="visible"
+                            android:gravity="center"
+                            android:enabled="true"
+                            android:id="@+id/buzz_btn"
+                            android:background="@android:drawable/ic_popup_reminder"
+                            android:minHeight="1dp"
+                            android:minWidth="1dp"
+                            android:layout_marginRight="40dp"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp" />
                         <FrameLayout
                             android:layout_gravity="right"
                             android:layout_width="wrap_content"

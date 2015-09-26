@@ -61,7 +61,9 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
     var senderUser = request.user;
     var toId = request.params.toId;
     var msgType = request.params.msgType;
-    var msgContent = request.params.msgContent;    
+    var msgContent = request.params.msgContent;
+    var msgId = request.params.msgId;    
+    var buzzable = request.params.buzzable;
 
     var sid = toId + senderUser.id;
     Parse.Cloud.useMasterKey();    
@@ -86,6 +88,9 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
         case "recording":
         suffixMsg = " has sent you a VOICE message!";
         break;
+	case "buzz":
+	suffixMsg = " just BUZZed you!"
+	break;
     }
 
     var pushQuery = new Parse.Query(Parse.Installation);
@@ -93,6 +98,8 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
     Parse.Push.send({
         where: pushQuery,
         data: {
+	    msg_id: msgId,
+	    buzzable: buzzable,
             title: "MaChat",
             alert: (msgType == "text")? msgContent : senderUser.get("fName") + suffixMsg,            
             group: sid,
