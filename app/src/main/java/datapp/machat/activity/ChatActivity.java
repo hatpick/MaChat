@@ -237,7 +237,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         }
     };
     private void stopRecording(){
-        if(recorder != null){
+        if(recorder != null) {
             recorder.stop();
             recorder.reset();
             recorder.release();
@@ -412,7 +412,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
     @Override
     protected void onPause() {
         myLocation.stopUpdates();
-        super.onPause();
         isRunning = false;
         UserStatus.setUserOffline();
         if(statusHandler != null && statusUpdater != null) {
@@ -422,6 +421,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         if(messageAdapter.getMediaPlayer() != null) {
             messageAdapter.getMediaPlayer().stop();
         }
+        super.onPause();
     }
 
     @Override
@@ -434,14 +434,11 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
 
         if(moreActionDialog != null && moreActionDialog.isShowing())
             moreActionDialog.dismiss();
-
         statusHandler = null;
     }
 
     @Override
     protected void onResume() {
-        super.onResume();
-
         if(sinchClient == null) {
             sinchClient = Sinch.getSinchClientBuilder()
                     .context(ChatActivity.this)
@@ -487,6 +484,8 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
 
         isRunning = true;
         _fetchReceiver();
+
+        super.onResume();
     }
 
     private void sendMessage(final ParseUser receiver, final String type, final String content, final ParseGeoPoint location, final String gifUrl) {
@@ -498,7 +497,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                 final ParseObject message = new ParseObject("Message");
                 message.put("from", sender);
                 message.put("to", receiver);
-                message.put("content", content);
+                message.put("content", content.trim());
                 message.put("type", type);
                 message.put("sessionId", sender.getObjectId() + receiver.getObjectId());
                 message.put("status", "sent");
@@ -582,12 +581,10 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                     messageList.get(i).put("status", "seen");
             }
             messageAdapter.notifyDataSetChanged();
-            if(statusUpdater != null) {
+            if(statusHandler != null && statusUpdater != null) {
                 statusHandler.removeCallbacks(statusUpdater);
                 statusUpdater = null;
             }
-            else
-                statusHandler.removeCallbacksAndMessages(null);
         }
     }
 
@@ -675,36 +672,42 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                             task.cancel();
                             timer.cancel();
                             timer.purge();
-                            stopRecording();
 
-                            String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MaChat" + AUDIO_RECORDER_FOLDER;
-                            File recording = getLatestFilefromDir(root);
-                            Log.v(TAG, recording.getAbsolutePath());
                             try {
-                                FileInputStream fis = new FileInputStream(recording);
-                                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                byte[] buf = new byte[(int) recording.length()];
+                                stopRecording();
 
-                                for (int readNum; (readNum = fis.read(buf)) != -1; ) {
-                                    bos.write(buf, 0, readNum);
-                                }
+                                String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MaChat" + AUDIO_RECORDER_FOLDER;
+                                File recording = getLatestFilefromDir(root);
+                                Log.v(TAG, recording.getAbsolutePath());
+                                try {
+                                    FileInputStream fis = new FileInputStream(recording);
+                                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                    byte[] buf = new byte[(int) recording.length()];
 
-                                byte[] bytes = bos.toByteArray();
-                                final ParseFile voiceFile = new ParseFile(recording.getName(), bytes);
-                                voiceFile.saveInBackground(new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        if (e == null) {
-                                            Log.v(TAG, "Saved recording on Parse.com");
-                                            sendMessage(receiver, "recording", voiceFile.getUrl(), null, null);
-                                            dialog.dismiss();
-                                        }
+                                    for (int readNum; (readNum = fis.read(buf)) != -1; ) {
+                                        bos.write(buf, 0, readNum);
                                     }
-                                });
-                            } catch (IOException ex) {
-                                Toast.makeText(ChatActivity.this, "Error conerting into byte: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
+
+                                    byte[] bytes = bos.toByteArray();
+                                    final ParseFile voiceFile = new ParseFile(recording.getName(), bytes);
+                                    voiceFile.saveInBackground(new SaveCallback() {
+                                        @Override
+                                        public void done(ParseException e) {
+                                            if (e == null) {
+                                                Log.v(TAG, "Saved recording on Parse.com");
+                                                sendMessage(receiver, "recording", voiceFile.getUrl(), null, null);
+                                                dialog.dismiss();
+                                            }
+                                        }
+                                    });
+                                } catch (IOException ex) {
+                                    Toast.makeText(ChatActivity.this, "Error conerting into byte: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                                return false;
+                            } catch(RuntimeException e) {
+                                Toast.makeText(ChatActivity.this, "Rcording failed: too short!", Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
                             }
-                            return false;
                     }
                     return false;
                 }

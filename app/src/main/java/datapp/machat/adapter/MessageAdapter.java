@@ -10,6 +10,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
+import android.util.Size;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -420,6 +421,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             if(messageType.equals("text")) {
                 messageHolder.messageContent.setBackgroundResource(R.drawable.message_bg_sender);
+                messageHolder.messageContent.setMaxWidth((int) SizeHelper.convertDpToPixel(250f, mContext));
             }
 
             messageHolder.statusWrapper.setVisibility(View.VISIBLE);
@@ -455,6 +457,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             if(messageType.equals("text")) {
                 messageHolder.messageContent.setBackgroundResource(R.drawable.message_bg);
+                messageHolder.messageContent.setMaxWidth((int) SizeHelper.convertDpToPixel(200f, mContext));
             }
 
             messageHolder.statusWrapper.setVisibility(View.GONE);

@@ -162,7 +162,6 @@ public class MainActivity extends CustomActivity {
         Glide.with(this)
                 .load(ParseUser.getCurrentUser().getParseFile("profilePicture").getUrl())
                 .centerCrop()
-                .centerCrop()
                 .transform(transformation)
                 .into(pp_picture);
         ActionBar.LayoutParams imgLayoutParams = new ActionBar.LayoutParams((int) SizeHelper.convertDpToPixel(40, this), (int) SizeHelper.convertDpToPixel(40, this), Gravity.LEFT

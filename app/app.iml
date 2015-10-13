@@ -101,8 +101,8 @@
     <orderEntry type="library" exported="" name="blur-behind-" level="project" />
     <orderEntry type="library" exported="" name="crittercism-android-agent-5.0.6" level="project" />
     <orderEntry type="library" exported="" name="facebook-android-sdk-4.1.0" level="project" />
-    <orderEntry type="library" exported="" name="timeago-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="glide-3.7.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="timeago-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="YouTubeAndroidPlayerApi" level="project" />
     <orderEntry type="library" exported="" name="circleprogress-1.1.0" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-23.0.0" level="project" />
