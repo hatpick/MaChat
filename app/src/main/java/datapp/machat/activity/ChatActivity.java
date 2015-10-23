@@ -29,6 +29,7 @@ import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.text.Editable;
@@ -116,7 +117,15 @@ import datapp.machat.helper.LocationHelper;
 import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
 
-public class ChatActivity extends CustomActivity implements SensorEventListener {
+
+import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
+import com.yalantis.contextmenu.lib.MenuObject;
+import com.yalantis.contextmenu.lib.MenuParams;
+import com.yalantis.contextmenu.lib.interfaces.OnMenuItemClickListener;
+import com.yalantis.contextmenu.lib.interfaces.OnMenuItemLongClickListener;
+
+public class ChatActivity extends CustomActivity implements SensorEventListener, OnMenuItemClickListener,
+        OnMenuItemLongClickListener{
     private final String TAG = "ChatActivity";
     private ParseUser sender;
     private ParseUser receiver;
@@ -177,6 +186,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
     private Button voiceSendBtn;
 
     private SharedPreferences notificationDetails;
+    private DialogFragment mMenuDialogFragment;
 
     private String getRecordingFilename(){
         String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MaChat" + AUDIO_RECORDER_FOLDER;
@@ -259,13 +269,13 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                 Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
                 BitmapDrawable bd = new BitmapDrawable(bitmap);
                 bd.setAlpha(75);
-                bd.setColorFilter(Color.parseColor("#B5008795"), PorterDuff.Mode.DST_ATOP);
+                bd.setColorFilter(Color.parseColor("#B5e2466d"), PorterDuff.Mode.DST_ATOP);
                 getWindow().getDecorView().setBackground(bd);
             }
         } else {
             BlurBehind.getInstance()
                     .withAlpha(75)
-                    .withFilterColor(Color.parseColor("#B5008795"))
+                    .withFilterColor(Color.parseColor("#B5e2466d"))
                     .setBackground(this);
         }
 
@@ -304,6 +314,8 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(field, getLocalClassName());
 
+        initMenuFragment();
+
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
 
         final View activityRootView = findViewById(R.id.main_container);
@@ -332,7 +344,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         setTouchNClick(R.id.buzz_btn);
         setTouchNClick(R.id.new_message_content);
         setTouchNClick(R.id.record_void_btn);
-        setTouchNClick(R.id.toggle_more_options);
 
         loading.setVisibility(View.VISIBLE);
 
@@ -628,8 +639,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                     }
                 }
             });
-        } else if (v.getId() == R.id.toggle_more_options) {
-            _toggleMoreActions();
         } else if(v.getId() == R.id.buzz_btn) {
             sendMessage(receiver, "buzz", "BUZZ", null, null);
         } else if (v.getId() == R.id.record_void_btn) {
@@ -881,7 +890,9 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
         View mCustomView = mInflater.inflate(R.layout.chat_activity_actionbar, null);
         ImageView receiverProfilePicture = (ImageView) mCustomView.findViewById(R.id.receiver_profile_picture);
         Button voipBtn = (Button)mCustomView.findViewById(R.id.voip_btn);
+        Button moreActions = (Button)mCustomView.findViewById(R.id.toggle_more_options);
         voipBtn.setOnTouchListener(TOUCH);
+        moreActions.setOnTouchListener(TOUCH);
         TextView receiverName = (TextView)mCustomView.findViewById(R.id.receiver_name);
         TextView receiverMembershipDate = (TextView)mCustomView.findViewById(R.id.receiver_membership_date);
         Transformation transformation = new CircleTransform(this);
@@ -890,6 +901,14 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
             @Override
             public void onClick(View view) {
                 _makeVoipCall();
+            }
+        });
+        moreActions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (getSupportFragmentManager().findFragmentByTag(ContextMenuDialogFragment.TAG) == null) {
+                    mMenuDialogFragment.show(getSupportFragmentManager(), ContextMenuDialogFragment.TAG);
+                }
             }
         });
 
@@ -953,12 +972,12 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
                     hangupBtn.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                        if(call != null) {
-                            call.hangup();
-                            call = null;
-                            sensorManager.unregisterListener(ChatActivity.this);
-                        }
-                        dialog.dismiss();
+                            if (call != null) {
+                                call.hangup();
+                                call = null;
+                                sensorManager.unregisterListener(ChatActivity.this);
+                            }
+                            dialog.dismiss();
                         }
                     });
                 } else {
@@ -1225,6 +1244,162 @@ public class ChatActivity extends CustomActivity implements SensorEventListener 
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mMenuDialogFragment != null && mMenuDialogFragment.isAdded()) {
+            mMenuDialogFragment.dismiss();
+        } else{
+            super.onBackPressed();
+        }
+    }
+
+    private void initMenuFragment() {
+        MenuParams menuParams = new MenuParams();
+        menuParams.setActionBarSize((int) getResources().getDimension(R.dimen.tool_bar_height));
+        menuParams.setMenuObjects(getMenuObjects());
+        menuParams.setFitsSystemWindow(true);
+        menuParams.setClipToPadding(false);
+        menuParams.setClosableOutside(false);
+        menuParams.setAnimationDuration(75);
+        mMenuDialogFragment = ContextMenuDialogFragment.newInstance(menuParams);
+    }
+
+    private List<MenuObject> getMenuObjects() {
+        List<MenuObject> menuObjects = new ArrayList<>();
+
+        MenuObject close = new MenuObject("Dismiss");
+        close.setBgColor(android.R.color.transparent);
+        close.setResource(R.mipmap.ic_close_actions);
+        close.setDividerColor(android.R.color.transparent);
+
+        MenuObject sendLocation = new MenuObject("Send Location");
+        sendLocation.setBgColor(android.R.color.transparent);
+        sendLocation.setResource(R.mipmap.ic_location);
+        sendLocation.setDividerColor(android.R.color.transparent);
+
+        MenuObject sendSelfiecon = new MenuObject("Send Selfiecon");
+        sendSelfiecon.setBgColor(android.R.color.transparent);
+        sendSelfiecon.setResource(R.mipmap.ic_selfiecon);
+        sendSelfiecon.setDividerColor(android.R.color.transparent);
+
+        MenuObject createSelfiecon = new MenuObject("Create Selfiecon");
+        createSelfiecon.setBgColor(android.R.color.transparent);
+        createSelfiecon.setResource(R.mipmap.ic_camera_selficon);
+        createSelfiecon.setDividerColor(android.R.color.transparent);
+
+        MenuObject sendPhoto = new MenuObject("Send Photo");
+        sendPhoto.setBgColor(android.R.color.transparent);
+        sendPhoto.setResource(R.mipmap.ic_attach);
+        sendPhoto.setDividerColor(android.R.color.transparent);
+
+        MenuObject sendGiphy = new MenuObject("Send Giphy");
+        sendGiphy.setBgColor(android.R.color.transparent);
+        sendGiphy.setResource(R.mipmap.ic_giphy);
+        sendGiphy.setDividerColor(android.R.color.transparent);
+
+        menuObjects.add(close);
+        menuObjects.add(sendLocation);
+        menuObjects.add(sendSelfiecon);
+        menuObjects.add(createSelfiecon);
+        menuObjects.add(sendPhoto);
+        menuObjects.add(sendGiphy);
+        return menuObjects;
+    }
+
+    @Override
+    public void onMenuItemClick(final View clickedView, int position) {
+        switch (position) {
+            case 1:
+                //Send Location
+                clickedView.setEnabled(false);
+                if (mLocation != null) {
+                    final ParseGeoPoint loc = new ParseGeoPoint(mLocation.getLatitude(), mLocation.getLongitude());
+                    receiver.fetchInBackground(new GetCallback<ParseUser>() {
+                        @Override
+                        public void done(ParseUser parseUser, ParseException e) {
+                            if (e == null) {
+                                receiver = parseUser;
+                                sendMessage(receiver, "map", "Location", loc, null);
+                                clickedView.setEnabled(true);
+                                if (mMenuDialogFragment != null && mMenuDialogFragment.isAdded()) {
+                                    mMenuDialogFragment.dismiss();
+                                }
+                            }
+
+                        }
+                    });
+                } else {
+                    myLocation.getLocation(ChatActivity.this, locationResult);
+                    Toast.makeText(ChatActivity.this, "Waiting for location, try again in a moment!", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case 2:
+                //Send Selfiecon
+                BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                    @Override
+                    public void onBlurComplete() {
+                        Intent selfieconIntent = new Intent(ChatActivity.this, SelficonActivity.class);
+                        selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivityForResult(selfieconIntent, RESULT_CREATE_GIF);
+                    }
+                });
+                if (mMenuDialogFragment != null && mMenuDialogFragment.isAdded()) {
+                    mMenuDialogFragment.dismiss();
+                }
+                break;
+            case 3:
+                //Create Selfiecon
+                BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                    @Override
+                    public void onBlurComplete() {
+                        Intent selfieconIntent = new Intent(ChatActivity.this, SelfieconCameraActivity.class);
+                        selfieconIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        selfieconIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivityForResult(selfieconIntent, RESULT_CREATE_GIF_NEW);
+                    }
+                });
+                if (mMenuDialogFragment != null && mMenuDialogFragment.isAdded()) {
+                    mMenuDialogFragment.dismiss();
+                }
+                break;
+            case 4:
+                //Send Photo
+                Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(pickPhoto, RESULT_LOAD_IMAGE);
+                if (mMenuDialogFragment != null && mMenuDialogFragment.isAdded()) {
+                    mMenuDialogFragment.dismiss();
+                }
+                break;
+            case 5:
+                //Send Giphy
+                BlurBehind.getInstance().execute(ChatActivity.this, new OnBlurCompleteListener() {
+                    @Override
+                    public void onBlurComplete() {
+                        Intent giphyIntent = new Intent(ChatActivity.this, GiphyActivity.class);
+                        giphyIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        giphyIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivityForResult(giphyIntent, RESULT_SEARCH_GIPHY);
+                    }
+                });
+                if (mMenuDialogFragment != null && mMenuDialogFragment.isAdded()) {
+                    mMenuDialogFragment.dismiss();
+                }
+                break;
+            case 0:
+                //Close
+                if (mMenuDialogFragment != null && mMenuDialogFragment.isAdded()) {
+                    mMenuDialogFragment.dismiss();
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onMenuItemLongClick(View clickedView, int position) {
 
     }
 

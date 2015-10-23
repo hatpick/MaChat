@@ -56,8 +56,8 @@ public class SelficonActivity extends CustomActivity {
         loading = (FrameLayout) findViewById(R.id.loading_selfiecons);
 
         BlurBehind.getInstance()
-                .withAlpha(65)
-                .withFilterColor(Color.parseColor("#B5008795"))
+                .withAlpha(75)
+                .withFilterColor(Color.parseColor("#B5e2466d"))
                 .setBackground(this);
 
         selficonGridView = (GridView) findViewById(R.id.selfiecon_gridview);

@@ -63,8 +63,8 @@ public class GiphyActivity extends CustomActivity {
         setContentView(R.layout.activity_giphy);
 
         BlurBehind.getInstance()
-                .withAlpha(65)
-                .withFilterColor(Color.parseColor("#B5008795"))
+                .withAlpha(75)
+                .withFilterColor(Color.parseColor("#B5e2466d"))
                 .setBackground(this);
 
         _setupActionBar();

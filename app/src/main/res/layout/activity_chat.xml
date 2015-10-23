@@ -61,17 +61,9 @@
                     <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
-                        <Button
-                            android:id="@+id/toggle_more_options"
-                            android:gravity="center"
-                            android:layout_gravity="left"
-                            android:minHeight="1dp"
-                            android:minWidth="1dp"
-                            android:background="@mipmap/ic_more_options"
-                            android:layout_width="30dp"
-                            android:layout_height="30dp" />
                         <EditText
                             android:clickable="true"
+                            android:textCursorDrawable="@null"
                             android:background="@android:color/transparent"
                             android:gravity="left|center_vertical"
                             android:textColor="@color/white"
@@ -81,7 +73,6 @@
                             android:textSize="@dimen/txt_16sp"
                             android:paddingLeft="@dimen/pad_10dp"
                             android:paddingRight="@dimen/pad_10dp"
-                            android:layout_marginLeft="30dp"
                             android:imeActionId="100"
                             android:ems="10"
                             android:layout_width="match_parent"

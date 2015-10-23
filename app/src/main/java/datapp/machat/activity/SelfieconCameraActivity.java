@@ -58,8 +58,8 @@ public class SelfieconCameraActivity extends CustomActivity  {
         senderFbId = getIntent().getStringExtra("senderFbId");
 
         BlurBehind.getInstance()
-                .withAlpha(80)
-                .withFilterColor(Color.parseColor("#B5008795"))
+                .withAlpha(75)
+                .withFilterColor(Color.parseColor("#B5e2466d"))
                 .setBackground(this);
 
         layout = (FrameLayout)findViewById(R.id.middleSurface);

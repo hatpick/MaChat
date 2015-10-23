@@ -5,6 +5,7 @@
     <item name="text_secondary" type="color">#99808080</item>
     <item name="primary" type="color">#fff</item>
     <item name="secondary" type="color">#fff</item>
+    <item name="colorPrimary" type="color">#fff</item>
 
     <color name="white_smoke">#F7F7F7</color>
     <color name="selficon_keyboard_bg">#41f7f7f7</color>

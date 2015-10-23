@@ -23,15 +23,32 @@
             android:id="@+id/receiver_membership_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-    </LinearLayout>
-    <Button
-        android:gravity="center_vertical"
+    </LinearLayout>d
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_alignParentRight="true"
-        android:id="@+id/voip_btn"
-        android:background="@mipmap/ic_voip"
-        android:minHeight="1dp"
-        android:minWidth="1dp"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_centerVertical="true" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <Button
+            android:gravity="center_vertical"
+            android:layout_alignParentRight="true"
+            android:id="@+id/voip_btn"
+            android:background="@mipmap/ic_voip"
+            android:minHeight="1dp"
+            android:minWidth="1dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_centerVertical="true" />
+        <Button
+            android:layout_marginLeft="8dp"
+            android:gravity="center_vertical"
+            android:layout_alignParentRight="true"
+            android:id="@+id/toggle_more_options"
+            android:background="@mipmap/ic_more_options"
+            android:minHeight="1dp"
+            android:minWidth="1dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_centerVertical="true" />
+    </LinearLayout>
 </RelativeLayout>

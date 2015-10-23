@@ -41,4 +41,5 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.0.0'
     compile files('libs/sinch-android-rtc-3.3.5.jar')
     compile 'com.github.fengdai:alertdialogpro-theme-material:0.2.4'
+    compile 'com.yalantis:contextmenu:1.0.4'
 }
