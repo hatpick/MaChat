@@ -92,6 +92,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -113,9 +114,11 @@ import datapp.machat.custom.CustomActivity;
 import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.GiphyGIF;
 import datapp.machat.dao.Selfiecon;
+import datapp.machat.helper.EmojiExtractor;
 import datapp.machat.helper.LocationHelper;
 import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
+import datapp.machat.helper.TextIndex;
 
 
 import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;

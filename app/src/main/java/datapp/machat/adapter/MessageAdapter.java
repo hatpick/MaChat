@@ -9,6 +9,9 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.AbsoluteSizeSpan;
 import android.util.Log;
 import android.util.Size;
 import android.view.Gravity;
@@ -37,6 +40,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -44,7 +48,9 @@ import java.util.ArrayList;
 import datapp.machat.R;
 import datapp.machat.activity.ChatActivity;
 import datapp.machat.custom.CircleTransform;
+import datapp.machat.helper.EmojiExtractor;
 import datapp.machat.helper.SizeHelper;
+import datapp.machat.helper.TextIndex;
 
 
 public class MessageAdapter extends ArrayAdapter<ParseObject> {
@@ -192,9 +198,20 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
         if (messageType.equals("text")) {
             typeWrapper = messageHolder.messageWrapper;
-
-
-            messageHolder.messageContent.setText(message.getString("content"));
+            //TODO:Spannable
+            String msgContent = message.getString("content");
+            try {
+                SpannableString spannableString = new SpannableString(message.getString("content"));
+                ArrayList<TextIndex> extractedString = EmojiExtractor.extract(msgContent);
+                for(TextIndex ti : extractedString) {
+                    if(ti.isEmoji()) {
+                        spannableString.setSpan(new AbsoluteSizeSpan(25, true), ti.getStart(), ti.getEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+                messageHolder.messageContent.setText(spannableString);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         } else if (messageType.equals("selfiecon")) {
             typeWrapper = messageHolder.selfieconWrapper;
 
