@@ -24,6 +24,7 @@ import com.parse.ParseException;
 import com.parse.ParseInstallation;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.victor.loading.newton.NewtonCradleLoading;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -195,8 +196,9 @@ public class MainActivity extends CustomActivity {
             final ProgressDialog dia = new ProgressDialog(MainActivity.this);
             dia.show();
             dia.setContentView(R.layout.progress_dialog);
-            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
-            diaTitle.setText(getString(R.string.alert_wait_chat));
+            dia.getWindow().setBackgroundDrawable(null);
+            NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
+            progressBar.start();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -218,10 +220,12 @@ public class MainActivity extends CustomActivity {
             final String receiverFbId = intent.getStringExtra("receiverFbId");
             Handler handler = new Handler();
             final ProgressDialog dia = new ProgressDialog(MainActivity.this);
+            dia.setProgressStyle(android.R.attr.progressBarStyleSmall);
             dia.show();
             dia.setContentView(R.layout.progress_dialog);
-            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
-            diaTitle.setText(getString(R.string.alert_wait_chat));
+            dia.getWindow().setBackgroundDrawable(null);
+            NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
+            progressBar.start();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {

@@ -10,6 +10,7 @@
                 android:endColor="#0d1522"
                 android:angle="270"
                 />
+            <corners android:radius="@dimen/pad_5dp"/>
         </shape>
     </item>
 
@@ -24,6 +25,7 @@
                     android:endColor="#06101d"
                     android:angle="270"
                     />
+                <corners android:radius="@dimen/pad_5dp"/>
             </shape>
         </clip>
     </item>

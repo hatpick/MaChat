@@ -30,7 +30,7 @@
     <string name="alert_wait_chat">Loading conversations...</string>
 
     <string name="title_activity_giphy">Giphy Search</string>
-    <string name="giphy_search_endpoint">/v1/gifs/search?q={query}&amp;api_key=dc6zaTOxFJmzC&amp;limit=10</string>
+    <string name="giphy_search_endpoint">/v1/gifs/search?q={query}&amp;api_key=dc6zaTOxFJmzC&amp;limit=25</string>
     <string name="giphy_base_url">http://api.giphy.com</string>
     <string name="no_network_error">Network is not available!</string>
     <string name="title_activity_selficon">SelficonActivity</string>

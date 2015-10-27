@@ -11,6 +11,7 @@
         <EditText
             android:imeOptions="actionSearch"
             android:clickable="true"
+            android:textCursorDrawable="@null"
             android:background="@android:color/transparent"
             android:gravity="left|center_vertical"
             android:textColor="@color/white"

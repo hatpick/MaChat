@@ -43,6 +43,7 @@ import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.victor.loading.newton.NewtonCradleLoading;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -394,8 +395,9 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                     final ProgressDialog dia = new ProgressDialog(getContext());
                     dia.show();
                     dia.setContentView(R.layout.progress_dialog);
-                    TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
-                    diaTitle.setText("Saving your Selficon...");
+                    dia.getWindow().setBackgroundDrawable(null);
+                    NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
+                    progressBar.start();
 
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     RotateBitmap(flip(centerCrop(mImages.get(1))), 90).compress(Bitmap.CompressFormat.JPEG, 100, stream);

@@ -4,7 +4,9 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,6 +22,7 @@ import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.victor.loading.newton.NewtonCradleLoading;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -83,8 +86,9 @@ public class LoginActivity extends CustomActivity {
             final ProgressDialog dia = new ProgressDialog(this);
             dia.show();
             dia.setContentView(R.layout.progress_dialog);
-            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
-            diaTitle.setText(getString(R.string.alert_wait));
+            dia.getWindow().setBackgroundDrawable(null);
+            NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
+            progressBar.start();
 
             ParseUser.logInInBackground(username, password, new LogInCallback() {
                 @Override
@@ -105,8 +109,9 @@ public class LoginActivity extends CustomActivity {
             final ProgressDialog dia = new ProgressDialog(this);
             dia.show();
             dia.setContentView(R.layout.progress_dialog);
-            TextView diaTitle = (TextView) dia.findViewById(R.id.pd_title);
-            diaTitle.setText(getString(R.string.alert_wait));
+            dia.getWindow().setBackgroundDrawable(null);
+            NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
+            progressBar.start();
 
             final List<String> permissions = Arrays.asList("public_profile", "email", "user_friends");
             ParseFacebookUtils.logInWithReadPermissionsInBackground(LoginActivity.this, permissions, new LogInCallback() {
