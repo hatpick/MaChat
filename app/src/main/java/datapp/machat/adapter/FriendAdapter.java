@@ -17,8 +17,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.faradaj.blurbehind.BlurBehind;
-import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.parse.FunctionCallback;
 import com.parse.GetCallback;
 import com.parse.ParseCloud;
@@ -39,6 +37,8 @@ import datapp.machat.activity.ChatActivity;
 import datapp.machat.activity.MainActivity;
 import datapp.machat.application.MaChatApplication;
 import datapp.machat.dao.Friend;
+import datapp.machat.helper.BlurBehind.BlurBehind;
+import datapp.machat.helper.BlurBehind.OnBlurCompleteListener;
 import datapp.machat.helper.MyProfilePictureView;
 import datapp.machat.helper.SizeHelper;
 

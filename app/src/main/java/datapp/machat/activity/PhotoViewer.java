@@ -1,24 +1,16 @@
 package datapp.machat.activity;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 import com.bumptech.glide.Glide;
-import com.faradaj.blurbehind.BlurBehind;
-
-import java.io.ByteArrayOutputStream;
 
 import datapp.machat.R;
+import datapp.machat.helper.BlurBehind.BlurBehind;
 
 public class PhotoViewer extends AppCompatActivity implements View.OnClickListener{
     private ImageView photoViewerImage;

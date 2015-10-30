@@ -33,8 +33,6 @@ import android.widget.VideoView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.faradaj.blurbehind.BlurBehind;
-import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.github.kevinsawicki.timeago.TimeAgo;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
@@ -52,6 +50,8 @@ import datapp.machat.R;
 import datapp.machat.activity.ChatActivity;
 import datapp.machat.activity.PhotoViewer;
 import datapp.machat.custom.CircleTransform;
+import datapp.machat.helper.BlurBehind.BlurBehind;
+import datapp.machat.helper.BlurBehind.OnBlurCompleteListener;
 import datapp.machat.helper.EmojiExtractor;
 import datapp.machat.helper.SizeHelper;
 import datapp.machat.helper.TextIndex;
@@ -528,13 +528,13 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     }
 
     public void showImage(final String url, final View v) {
-        BlurBehind.getInstance().execute((Activity)mContext, new OnBlurCompleteListener() {
+        BlurBehind.getInstance().execute((Activity) mContext, new OnBlurCompleteListener() {
             @Override
             public void onBlurComplete() {
                 Intent intent = new Intent(mContext, PhotoViewer.class);
                 intent.putExtra("imageUrl", url);
                 ActivityOptionsCompat options = ActivityOptionsCompat.
-                        makeSceneTransitionAnimation((Activity)mContext, (View) v, "PhotoView");
+                        makeSceneTransitionAnimation((Activity) mContext, (View) v, "PhotoView");
                 mContext.startActivity(intent, options.toBundle());
             }
         });

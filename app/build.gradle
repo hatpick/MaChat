@@ -39,7 +39,6 @@ dependencies {
     compile 'com.crittercism:crittercism-android-agent:5.0.6'
     compile 'com.github.recruit-lifestyle:WaveSwipeRefreshLayout:1.2'
     compile 'com.mcxiaoke.volley:library:1.0.17'
-    compile(name: 'blur-behind', ext: 'aar')
     compile 'com.android.support:recyclerview-v7:23.1.0'
     compile files('libs/sinch-android-rtc-3.3.5.jar')
     compile 'com.github.fengdai:alertdialogpro-theme-material:0.2.4'

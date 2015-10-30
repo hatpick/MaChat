@@ -21,8 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.faradaj.blurbehind.BlurBehind;
-import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.parse.ParseException;
 import com.parse.ParseInstallation;
 import com.parse.ParseUser;
@@ -41,6 +39,8 @@ import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.Friend;
+import datapp.machat.helper.BlurBehind.BlurBehind;
+import datapp.machat.helper.BlurBehind.OnBlurCompleteListener;
 import datapp.machat.helper.SizeHelper;
 import jp.wasabeef.recyclerview.animators.ScaleInAnimator;
 

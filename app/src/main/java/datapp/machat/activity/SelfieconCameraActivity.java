@@ -11,16 +11,13 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.faradaj.blurbehind.BlurBehind;
-import com.parse.ParseUser;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import datapp.machat.R;
 import datapp.machat.custom.CustomActivity;
-import datapp.machat.custom.UserStatus;
+import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.selfiecon.SelfieconCameraPreview;
 
 /**

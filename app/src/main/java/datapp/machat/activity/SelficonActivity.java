@@ -9,11 +9,8 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -21,31 +18,24 @@ import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.faradaj.blurbehind.BlurBehind;
-import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.parse.FindCallback;
-import com.parse.FunctionCallback;
-import com.parse.GetCallback;
-import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import datapp.machat.R;
 import datapp.machat.adapter.SelfieconAdapter;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.Selfiecon;
+import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.helper.SizeHelper;
 
 public class SelficonActivity extends CustomActivity {

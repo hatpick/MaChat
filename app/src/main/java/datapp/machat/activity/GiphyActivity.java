@@ -35,7 +35,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.faradaj.blurbehind.BlurBehind;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,6 +48,7 @@ import datapp.machat.adapter.GIFAdapter;
 import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.GiphyGIF;
+import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.helper.ConnectionCheck;
 import datapp.machat.helper.RecyclerItemClickListener;
 import datapp.machat.helper.SizeHelper;
