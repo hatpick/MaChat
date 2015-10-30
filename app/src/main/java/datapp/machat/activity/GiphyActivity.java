@@ -3,7 +3,12 @@ package datapp.machat.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -36,6 +41,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
 import datapp.machat.R;
@@ -62,10 +68,22 @@ public class GiphyActivity extends CustomActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_giphy);
 
-        BlurBehind.getInstance()
-                .withAlpha(75)
-                .withFilterColor(Color.parseColor("#B5e2466d"))
-                .setBackground(this);
+        if (savedInstanceState != null) {
+            byte[] bitmapData = savedInstanceState.getByteArray("bg-giphy");
+            if (bitmapData != null) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
+                BitmapDrawable bd = new BitmapDrawable(bitmap);
+                bd.setAlpha(75);
+                bd.setColorFilter(Color.parseColor("#B5e2466d"), PorterDuff.Mode.DST_ATOP);
+                getWindow().getDecorView().setBackground(bd);
+            }
+        } else {
+
+            BlurBehind.getInstance()
+                    .withAlpha(75)
+                    .withFilterColor(Color.parseColor("#B5e2466d"))
+                    .setBackground(this);
+        }
 
         _setupActionBar();
 
@@ -135,6 +153,18 @@ public class GiphyActivity extends CustomActivity {
                 return false;
             }
         });
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        Drawable d = getWindow().getDecorView().getBackground();
+        Bitmap bitmap = ((BitmapDrawable) d).getBitmap();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        byte[] bitmapdata = stream.toByteArray();
+        outState.putByteArray("bg-giphy", bitmapdata);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override

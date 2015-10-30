@@ -3,6 +3,8 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
+    <dimen name="photo_viewer_padding">64dp</dimen>
+
     <dimen name="pad_5dp">5dp</dimen>
     <dimen name="pad_10dp">10dp</dimen>
     <dimen name="pad_15dp">15dp</dimen>

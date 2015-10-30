@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:gravity="center" android:focusable="false"
+    android:background="?android:attr/selectableItemBackground"
+    android:gravity="center" android:focusable="false" android:id="@+id/friend_holder"
     android:padding="10dp" android:layout_height="match_parent">
-    <ImageView
-        android:background="@drawable/circle_bg"
+    <datapp.machat.helper.MyProfilePictureView
+        android:layout_gravity="center"
         android:id="@+id/friend_avatar"
-        android:padding="@dimen/pad_5dp"
         android:layout_width="75dp"
-        android:layout_height="75dp" />
+        android:layout_height="75dp">
+    </datapp.machat.helper.MyProfilePictureView>
     <TextView
         android:gravity="center"
         android:id="@+id/friend_name"

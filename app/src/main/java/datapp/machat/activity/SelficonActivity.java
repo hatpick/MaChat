@@ -2,7 +2,12 @@ package datapp.machat.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -32,6 +37,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,10 +61,21 @@ public class SelficonActivity extends CustomActivity {
 
         loading = (FrameLayout) findViewById(R.id.loading_selfiecons);
 
-        BlurBehind.getInstance()
-                .withAlpha(75)
-                .withFilterColor(Color.parseColor("#B5e2466d"))
-                .setBackground(this);
+        if (savedInstanceState != null) {
+            byte[] bitmapData = savedInstanceState.getByteArray("bg-selfiecon");
+            if (bitmapData != null) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
+                BitmapDrawable bd = new BitmapDrawable(bitmap);
+                bd.setAlpha(75);
+                bd.setColorFilter(Color.parseColor("#B5e2466d"), PorterDuff.Mode.DST_ATOP);
+                getWindow().getDecorView().setBackground(bd);
+            }
+        } else {
+            BlurBehind.getInstance()
+                    .withAlpha(75)
+                    .withFilterColor(Color.parseColor("#B5e2466d"))
+                    .setBackground(this);
+        }
 
         selficonGridView = (GridView) findViewById(R.id.selfiecon_gridview);
 
@@ -125,6 +142,18 @@ public class SelficonActivity extends CustomActivity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        Drawable d = getWindow().getDecorView().getBackground();
+        Bitmap bitmap = ((BitmapDrawable) d).getBitmap();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        byte[] bitmapdata = stream.toByteArray();
+        outState.putByteArray("bg-slfiecon", bitmapdata);
+
+        super.onSaveInstanceState(outState);
     }
 
     private void _setupActionBar() {

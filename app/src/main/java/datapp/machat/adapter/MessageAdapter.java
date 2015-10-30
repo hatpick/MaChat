@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.AbsoluteSizeSpan;
@@ -32,6 +33,8 @@ import android.widget.VideoView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.faradaj.blurbehind.BlurBehind;
+import com.faradaj.blurbehind.OnBlurCompleteListener;
 import com.github.kevinsawicki.timeago.TimeAgo;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
@@ -47,6 +50,7 @@ import java.util.ArrayList;
 
 import datapp.machat.R;
 import datapp.machat.activity.ChatActivity;
+import datapp.machat.activity.PhotoViewer;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.helper.EmojiExtractor;
 import datapp.machat.helper.SizeHelper;
@@ -262,7 +266,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.mediaContent.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    showImage(message.getString("content"));
+                    showImage(message.getString("content"), view);
                 }
             });
         } else if (messageType.equals("giphy")) {
@@ -523,11 +527,17 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         mContext.startActivity(intent);
     }
 
-    public void showImage(String url) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.parse(url), "image/*");
-        mContext.startActivity(intent);
+    public void showImage(final String url, final View v) {
+        BlurBehind.getInstance().execute((Activity)mContext, new OnBlurCompleteListener() {
+            @Override
+            public void onBlurComplete() {
+                Intent intent = new Intent(mContext, PhotoViewer.class);
+                intent.putExtra("imageUrl", url);
+                ActivityOptionsCompat options = ActivityOptionsCompat.
+                        makeSceneTransitionAnimation((Activity)mContext, (View) v, "PhotoView");
+                mContext.startActivity(intent, options.toBundle());
+            }
+        });
     }
 
     private void setDataSource(String path) throws IOException {

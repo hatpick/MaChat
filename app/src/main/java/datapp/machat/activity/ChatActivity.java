@@ -35,6 +35,8 @@ import android.support.v7.app.ActionBar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.transition.Fade;
+import android.transition.Transition;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -119,6 +121,7 @@ import datapp.machat.helper.LocationHelper;
 import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
 import datapp.machat.helper.TextIndex;
+import jp.co.recruit_lifestyle.android.widget.WaveSwipeRefreshLayout;
 
 
 import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
@@ -179,7 +182,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
     private final int RESULT_CREATE_GIF = 1227;
     private final int RESULT_CREATE_GIF_NEW = 1247;
 
-    SwipeRefreshLayout swipeContainer;
+    WaveSwipeRefreshLayout swipeContainer;
     private boolean keyboardVisible = false;
     private LocationHelper myLocation;
     private SharedPreferences.Editor sessionEditor;
@@ -266,6 +269,10 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        Transition fade = new Fade();
+        getWindow().setExitTransition(fade);
+        getWindow().setEnterTransition(fade);
+
         if (savedInstanceState != null) {
             byte[] bitmapData = savedInstanceState.getByteArray("bg");
             if (bitmapData != null) {
@@ -319,7 +326,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
 
         initMenuFragment();
 
-        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+        swipeContainer = (WaveSwipeRefreshLayout) findViewById(R.id.swipeContainer);
 
         final View activityRootView = findViewById(R.id.main_container);
         activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -350,7 +357,9 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
 
         loading.setVisibility(View.VISIBLE);
 
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        swipeContainer.setWaveColor(Color.parseColor("#a5354b"));
+        swipeContainer.setColorSchemeColors(Color.WHITE, Color.WHITE);
+        swipeContainer.setOnRefreshListener(new WaveSwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 isRunning = false;
@@ -358,48 +367,45 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
             }
         });
 
-        swipeContainer.setColorSchemeResources(R.color.color1,
-                R.color.color2, R.color.color3);
 
+                messageEditText.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
 
-        messageEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+                    }
 
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
-                Animation fadeIn = AnimationUtils.loadAnimation(ChatActivity.this, R.anim.fade_in_quick);
-                Animation fadeOut = AnimationUtils.loadAnimation(ChatActivity.this, R.anim.fade_out_quick);
-                fadeIn.setFillAfter(true);
-                fadeOut.setFillAfter(true);
-                fadeIn.setFillEnabled(true);
-                fadeOut.setFillEnabled(true);
-                fadeIn.setInterpolator(new BounceInterpolator());
-                fadeOut.setInterpolator(new BounceInterpolator());
-                if (charSequence.length() > 0) {
-                    messageSendBtn.setEnabled(true);
-                    voiceSendBtn.setEnabled(false);
+                    @Override
+                    public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+                        Animation fadeIn = AnimationUtils.loadAnimation(ChatActivity.this, R.anim.fade_in_quick);
+                        Animation fadeOut = AnimationUtils.loadAnimation(ChatActivity.this, R.anim.fade_out_quick);
+                        fadeIn.setFillAfter(true);
+                        fadeOut.setFillAfter(true);
+                        fadeIn.setFillEnabled(true);
+                        fadeOut.setFillEnabled(true);
+                        fadeIn.setInterpolator(new BounceInterpolator());
+                        fadeOut.setInterpolator(new BounceInterpolator());
+                        if (charSequence.length() > 0) {
+                            messageSendBtn.setEnabled(true);
+                            voiceSendBtn.setEnabled(false);
 //                    messageSendBtn.startAnimation(fadeIn);
 //                    voiceSendBtn.startAnimation(fadeOut);
-                    voiceSendBtn.setVisibility(View.GONE);
-                    messageSendBtn.setVisibility(View.VISIBLE);
-                } else {
-                    messageSendBtn.setEnabled(false);
-                    voiceSendBtn.setEnabled(true);
+                            voiceSendBtn.setVisibility(View.GONE);
+                            messageSendBtn.setVisibility(View.VISIBLE);
+                        } else {
+                            messageSendBtn.setEnabled(false);
+                            voiceSendBtn.setEnabled(true);
 //                    messageSendBtn.startAnimation(fadeOut);
 //                    voiceSendBtn.startAnimation(fadeIn);
-                    voiceSendBtn.setVisibility(View.VISIBLE);
-                    messageSendBtn.setVisibility(View.GONE);
-                }
-            }
+                            voiceSendBtn.setVisibility(View.VISIBLE);
+                            messageSendBtn.setVisibility(View.GONE);
+                        }
+                    }
 
-            @Override
-            public void afterTextChanged(Editable editable) {
+                    @Override
+                    public void afterTextChanged(Editable editable) {
 
-            }
-        });
+                    }
+                });
     }
 
     LocationHelper.LocationResult locationResult = new LocationHelper.LocationResult() {
@@ -885,6 +891,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
     private void _setupActionBar() {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(false);
+        actionBar.setElevation(0);
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 
         LayoutInflater mInflater = LayoutInflater.from(actionBar.getThemedContext());

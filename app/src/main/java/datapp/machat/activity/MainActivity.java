@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -33,57 +36,42 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import datapp.machat.R;
-import datapp.machat.adapter.FriendListAdapter;
+import datapp.machat.adapter.FriendAdapter;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.Friend;
 import datapp.machat.helper.SizeHelper;
+import jp.wasabeef.recyclerview.animators.ScaleInAnimator;
 
 public class MainActivity extends CustomActivity {
     private ArrayList<ParseUser> friends = new ArrayList<>();
-    private GridView friendsListView;
-    private LinearLayout mainContainer;
+    private RecyclerView friendsListView;
     private CircleTransform transformation;
 
     private ArrayList<Friend> friendsArray;
-    private FriendListAdapter friendListAdapter;
+    private FriendAdapter friendAdapter;
     private boolean isFromShare = false;
+    private StaggeredGridLayoutManager mLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        friendsListView = (GridView) findViewById(R.id.friendView);
-        mainContainer = (LinearLayout) findViewById(R.id.main_container);
+        friendsListView = (RecyclerView) findViewById(R.id.friendView);
+        mLayoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
+        friendsListView.setItemAnimator(new ScaleInAnimator(new OvershootInterpolator(1f)));
+        friendsListView.getItemAnimator().setAddDuration(400);
+        friendsListView.setHasFixedSize(true);
+        friendsListView.setLayoutManager(mLayoutManager);
 
         friendsArray = new ArrayList<>();
-        friendListAdapter = new FriendListAdapter(this, R.layout.friend_contact, friendsArray);
-        friendsListView.setAdapter(friendListAdapter);
+        friendAdapter = new FriendAdapter(this, friendsArray, "main");
+        friendsListView.setAdapter(friendAdapter);
         _setupActionBar();
         _setupNotification();
-
+        _setupFriendList();
         //setPadding(mainContainer);
-
-        friendsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                final int position = i;
-                BlurBehind.getInstance().execute(MainActivity.this, new OnBlurCompleteListener() {
-                    @Override
-                    public void onBlurComplete() {
-                        Friend receiver = friendListAdapter.getItem(position);
-                        Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
-                        chatIntent.putExtra("receiverFbId", receiver.getFbId());
-                        chatIntent.putExtra("senderFbId", ParseUser.getCurrentUser().getString("fbId"));
-                        chatIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                        chatIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        chatIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(chatIntent);
-                    }
-                });
-            }
-        });
     }
 
     private boolean isFromNotification = false;
@@ -100,16 +88,14 @@ public class MainActivity extends CustomActivity {
                     for (int i = 0; i < friends.length(); i++) {
                         _friend = (JSONObject) friends.get(i);
                         friend = new Friend(_friend.getString("name"), _friend.getString("id"));
-                        friendsArray.add(friend);
+                        friendAdapter.add(friend, friendAdapter.getItemCount());
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                friendListAdapter.notifyDataSetChanged();
             }
         } catch (JSONException e) {
             Toast.makeText(MainActivity.this, "Loading friends failed!", Toast.LENGTH_SHORT).show();
-            friendListAdapter.notifyDataSetChanged();
             e.printStackTrace();
         }
     }
@@ -181,7 +167,6 @@ public class MainActivity extends CustomActivity {
         super.onResume();
         if(ParseUser.getCurrentUser() != null) {
             UserStatus.setUserOnline();
-            _setupFriendList();
         }
     }
 

@@ -5,9 +5,11 @@
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowContentOverlay">@null</item>
+
         <item name="android:actionBarStyle">@style/MyActionBar</item>
         <item name="actionBarStyle">@style/MyActionBar</item>
         <item name="homeAsUpIndicator">@mipmap/back_arrow</item>
+        <item name="android:windowContentTransitions">true</item>
         <item name="alertDialogProTheme">@style/Theme.AlertDialogPro.Material</item>
     </style>
 
@@ -30,6 +32,8 @@
     <style name="MyActionBar" parent="@style/Widget.AppCompat.ActionBar">
         <item name="android:windowActionBarOverlay">true</item>
         <item name="windowActionBarOverlay">true</item>
+        <item name="android:elevation">0dp</item>
+        <item name="elevation">0dp</item>
     </style>
     
     <style name="ProgressBarTitle" parent="@style/Widget.AppCompat.ActionBar">
