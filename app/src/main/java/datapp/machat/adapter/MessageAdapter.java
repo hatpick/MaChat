@@ -14,7 +14,6 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.AbsoluteSizeSpan;
 import android.util.Log;
-import android.util.Size;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -49,6 +48,7 @@ import java.util.ArrayList;
 import datapp.machat.R;
 import datapp.machat.activity.ChatActivity;
 import datapp.machat.activity.PhotoViewer;
+import datapp.machat.custom.Animations;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.helper.BlurBehind.OnBlurCompleteListener;
@@ -87,6 +87,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
     public View getView(final int position, View convertView, ViewGroup parent) {
         View row = convertView;
         final ParseObject message = getItem(position);
+        ParseObject prevMessage = null;
+        if(position > 0)
+            prevMessage = getItem(position-1);
 
         MessageHolder messageHolder = null;
 
@@ -154,6 +157,18 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                 }
             });
 
+            messageHolder.messageMainContainer.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    View timestampView = v.findViewById(R.id.date_wrapper);
+                    if(timestampView.getVisibility() != View.GONE)
+                        Animations.collapse(timestampView);
+                    else
+                        Animations.expand(timestampView);
+                    return true;
+                }
+            });
+
             messageHolder.vineContent.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent motionEvent) {
@@ -182,6 +197,16 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             row.setTag(messageHolder);
         } else {
             messageHolder = (MessageHolder) row.getTag();
+        }
+
+        messageHolder.dateWrapper.setVisibility(View.GONE);
+
+        if(prevMessage != null && prevMessage.getParseUser("from").getObjectId().equals(message.getParseUser("from").getObjectId())){
+            messageHolder.avatar.getLayoutParams().height = 1;
+            messageHolder.avatar.setVisibility(View.INVISIBLE);
+        } else {
+            messageHolder.avatar.getLayoutParams().height = (int) SizeHelper.convertDpToPixel(30f, mContext);
+            messageHolder.avatar.setVisibility(View.VISIBLE);
         }
 
         final ImageView gifSelfiecon = messageHolder.gifSelfiecon;
@@ -435,17 +460,18 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
             messageHolder.messageMainContainer.removeAllViews();
             messageHolder.messageMainContainer.addView(messageHolder.messageContainer);
-            //messageHolder.messageMainContainer.addView(messageHolder.iconWrapper);
+            messageHolder.messageMainContainer.addView(messageHolder.statusWrapper);
 
             messageHolder.messageContainer.setGravity(Gravity.RIGHT);
             messageHolder.dateWrapper.setGravity(Gravity.RIGHT);
 
+            if(!messageType.equals("buzz") && !messageType.equals("selfiecon"))
+                typeWrapper.setBackgroundResource(R.drawable.message_bg_sender);
+
             if(messageType.equals("text")) {
-                messageHolder.messageContent.setBackgroundResource(R.drawable.message_bg_sender);
                 messageHolder.messageContent.setMaxWidth((int) SizeHelper.convertDpToPixel(250f, mContext));
             }
 
-            messageHolder.statusWrapper.setVisibility(View.VISIBLE);
             String msgStatus = message.getString("status");
             if (msgStatus != null) {
                 if (msgStatus.equals("delivered")) {
@@ -476,12 +502,12 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.messageContainer.setGravity(Gravity.LEFT);
             messageHolder.dateWrapper.setGravity(Gravity.LEFT);
 
+            if(!messageType.equals("buzz") && !messageType.equals("selfiecon"))
+                typeWrapper.setBackgroundResource(R.drawable.message_bg);
+
             if(messageType.equals("text")) {
-                messageHolder.messageContent.setBackgroundResource(R.drawable.message_bg);
                 messageHolder.messageContent.setMaxWidth((int) SizeHelper.convertDpToPixel(200f, mContext));
             }
-
-            messageHolder.statusWrapper.setVisibility(View.GONE);
         }
 
         if (position > mLastPosition) {

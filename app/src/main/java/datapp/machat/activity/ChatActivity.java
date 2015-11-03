@@ -258,9 +258,12 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        Transition fade = new Fade();
-        getWindow().setExitTransition(fade);
-        getWindow().setEnterTransition(fade);
+        int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+        if (currentapiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            Transition fade = new Fade();
+            getWindow().setExitTransition(fade);
+            getWindow().setEnterTransition(fade);
+        }
 
         if (savedInstanceState != null) {
             byte[] bitmapData = savedInstanceState.getByteArray("bg");
@@ -298,8 +301,9 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         loading = (FrameLayout) findViewById(R.id.loading_chat);
 
         chatListView = (ListView) findViewById(R.id.chatSession);
-        chatListView.setDivider(getResources().getDrawable(R.drawable.transparent_divider));
-        chatListView.setDividerHeight(10);
+        /*chatListView.setDivider(getResources().getDrawable(R.drawable.transparent_divider));
+        chatListView.setDividerHeight(5);*/
+        chatListView.setDivider(null);
         chatListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_NORMAL);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -1013,7 +1017,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
             query.whereEqualTo("from", receiver);
         }
         query.orderByDescending("createdAt");
-        query.setLimit(15);
+        query.setLimit(25);
         query.include("gif");
         query.include("from");
         query.include("to");
@@ -1058,7 +1062,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         ParseQuery<ParseObject> query = new ParseQuery("Message");
         query.whereContainedIn("sessionId", Arrays.asList(sender.getObjectId() + receiver.getObjectId(), receiver.getObjectId() + sender.getObjectId()));
         query.orderByDescending("createdAt");
-        query.setLimit(15);
+        query.setLimit(25);
         if (firstMsgDate != null) {
             query.whereLessThan("createdAt", firstMsgDate);
         }
@@ -1087,7 +1091,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
                         messageList.clear();
                         messageList.addAll(tempArray);
                         messageAdapter.notifyDataSetChanged();
-                        chatListView.setSelection(15);
+                        chatListView.setSelection(25);
                     }
                 } else {
                     Toast.makeText(ChatActivity.this, "Network issue!", Toast.LENGTH_SHORT).show();
