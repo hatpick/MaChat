@@ -22,6 +22,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.webkit.URLUtil;
@@ -386,7 +388,8 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             if(!message.getParseUser("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId()) && !message.getBoolean("buzzed")) {
                 ChatActivity activity = (ChatActivity)mContext;
                 YoYo.with(Techniques.Shake)
-                        .duration(1000)
+                        .duration(1200)
+                        .interpolate(new AccelerateDecelerateInterpolator())
                         .playOn(activity.getWindow().getDecorView());
 
                 MediaPlayer mPlayer;
