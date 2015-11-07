@@ -362,7 +362,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
 
         loading.setVisibility(View.VISIBLE);
 
-        swipeContainer.setWaveColor(getResources().getColor(theme.getRefColor()));
+        swipeContainer.setWaveColor(getRefreshColor());
         swipeContainer.setColorSchemeColors(Color.WHITE, Color.WHITE);
         swipeContainer.setOnRefreshListener(new WaveSwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -421,6 +421,17 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
             }
         }
     };
+
+    private int getRefreshColor() {
+        BitmapDrawable bg = (BitmapDrawable) getWindow().getDecorView().getBackground();
+        int pixel = bg.getBitmap().getPixel(bg.getBitmap().getWidth()/2, bg.getBitmap().getHeight()/2);
+        int redVal = Color.red(pixel);
+        int blueVal = Color.blue(pixel);
+        int greenVal = Color.green(pixel);
+        int intColor = Color.rgb(redVal, greenVal, blueVal);
+        Log.v(TAG, String.format("#%06X", (0xFFFFFF & intColor)));
+        return intColor;
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -1157,7 +1168,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
 
         GradientDrawable circleBg = (GradientDrawable) getResources().getDrawable(R.drawable.circle_bg_light);
 
-        circleBg.setColor(getResources().getColor(theme.getColor2()));
+        circleBg.setColor(getResources().getColor(theme.getColor()));
 
         MenuObject close = new MenuObject("Dismiss");
         close.setBgDrawable(circleBg);
