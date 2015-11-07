@@ -1,8 +1,13 @@
 package datapp.machat.activity;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -36,18 +41,26 @@ import java.util.HashMap;
 import java.util.List;
 
 import datapp.machat.R;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.dao.MaChatTheme;
+import datapp.machat.helper.SizeHelper;
 
 
 public class LoginActivity extends CustomActivity {
     private EditText inputUsername;
     private EditText inputPassword;
     private TextView forgotPasswordBtn;
+    private MaChatTheme theme;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        getWindow().getDecorView().setBackgroundResource(theme.getId());
 
         setTouchNClick(R.id.loginBtn);
         setTouchNClick(R.id.registerBtn);
@@ -87,6 +100,8 @@ public class LoginActivity extends CustomActivity {
             dia.show();
             dia.setContentView(R.layout.progress_dialog);
             dia.getWindow().setBackgroundDrawable(null);
+            LayerDrawable backgroundLayer = (LayerDrawable) dia.getWindow().getDecorView().findViewById(R.id.dialog_container).getBackground();
+            backgroundLayer.findDrawableByLayerId(android.R.id.background).setColorFilter(getResources().getColor(theme.getColor()), PorterDuff.Mode.SRC_ATOP);
             NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
             progressBar.start();
 
@@ -110,6 +125,8 @@ public class LoginActivity extends CustomActivity {
             dia.show();
             dia.setContentView(R.layout.progress_dialog);
             dia.getWindow().setBackgroundDrawable(null);
+            LayerDrawable backgroundLayer = (LayerDrawable) dia.getWindow().getDecorView().findViewById(R.id.dialog_container).getBackground();
+            backgroundLayer.findDrawableByLayerId(android.R.id.background).setColorFilter(getResources().getColor(theme.getColor()), PorterDuff.Mode.SRC_ATOP);
             NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
             progressBar.start();
 

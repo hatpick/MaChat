@@ -1,5 +1,6 @@
 package datapp.machat.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -17,8 +18,10 @@ import java.util.ArrayList;
 
 import datapp.machat.R;
 import datapp.machat.adapter.FriendAdapter;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.Friend;
+import datapp.machat.dao.MaChatTheme;
 import jp.wasabeef.recyclerview.animators.ScaleInAnimator;
 
 public class ShareActivity extends CustomActivity{
@@ -32,6 +35,10 @@ public class ShareActivity extends CustomActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
+
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        MaChatTheme theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        getWindow().getDecorView().setBackgroundResource(theme.getId());
 
         friendsListView = (RecyclerView) findViewById(R.id.friendView);
         mLayoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);

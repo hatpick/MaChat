@@ -12,6 +12,8 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -104,10 +106,12 @@ import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.custom.UserStatus;
 import datapp.machat.dao.GiphyGIF;
+import datapp.machat.dao.MaChatTheme;
 import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.helper.BlurBehind.OnBlurCompleteListener;
 import datapp.machat.helper.LocationHelper;
+import datapp.machat.helper.MyProfilePictureView;
 import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
 import jp.co.recruit_lifestyle.android.widget.WaveSwipeRefreshLayout;
@@ -182,6 +186,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
 
     private SharedPreferences notificationDetails;
     private DialogFragment mMenuDialogFragment;
+    private MaChatTheme theme;
 
     private String getRecordingFilename(){
         String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MaChat" + AUDIO_RECORDER_FOLDER;
@@ -265,19 +270,26 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
             getWindow().setEnterTransition(fade);
         }
 
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        int overlayColor = getResources().getColor(theme.getColor());
+
+
         if (savedInstanceState != null) {
-            byte[] bitmapData = savedInstanceState.getByteArray("bg");
-            if (bitmapData != null) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
-                BitmapDrawable bd = new BitmapDrawable(bitmap);
-                bd.setAlpha(75);
-                bd.setColorFilter(Color.parseColor("#B5e2466d"), PorterDuff.Mode.DST_ATOP);
-                getWindow().getDecorView().setBackground(bd);
+            if(themeName.equals(savedInstanceState.getString("Theme"))) {
+                byte[] bitmapData = savedInstanceState.getByteArray("bg");
+                if (bitmapData != null) {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
+                    BitmapDrawable bd = new BitmapDrawable(bitmap);
+                    bd.setAlpha(75);
+                    bd.setColorFilter(overlayColor, PorterDuff.Mode.DST_ATOP);
+                    getWindow().getDecorView().setBackground(bd);
+                }
             }
         } else {
             BlurBehind.getInstance()
                     .withAlpha(75)
-                    .withFilterColor(Color.parseColor("#B5e2466d"))
+                    .withFilterColor(overlayColor)
                     .setBackground(this);
         }
 
@@ -350,7 +362,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
 
         loading.setVisibility(View.VISIBLE);
 
-        swipeContainer.setWaveColor(Color.parseColor("#a5354b"));
+        swipeContainer.setWaveColor(getResources().getColor(theme.getRefColor()));
         swipeContainer.setColorSchemeColors(Color.WHITE, Color.WHITE);
         swipeContainer.setOnRefreshListener(new WaveSwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -418,6 +430,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
         byte[] bitmapdata = stream.toByteArray();
         outState.putByteArray("bg", bitmapdata);
+        outState.putString("Theme", theme.getName());
 
         super.onSaveInstanceState(outState);
     }
@@ -881,6 +894,10 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         });
     }
 
+    public MaChatTheme getMaChatTheme() {
+        return theme;
+    }
+
     private void _setupActionBar() {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(false);
@@ -889,7 +906,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
 
         LayoutInflater mInflater = LayoutInflater.from(actionBar.getThemedContext());
         View mCustomView = mInflater.inflate(R.layout.chat_activity_actionbar, null);
-        ImageView receiverProfilePicture = (ImageView) mCustomView.findViewById(R.id.receiver_profile_picture);
+        MyProfilePictureView receiverProfilePicture = (MyProfilePictureView) mCustomView.findViewById(R.id.receiver_profile_picture);
         Button voipBtn = (Button)mCustomView.findViewById(R.id.voip_btn);
         Button moreActions = (Button)mCustomView.findViewById(R.id.toggle_more_options);
         voipBtn.setOnTouchListener(TOUCH);
@@ -913,12 +930,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
             }
         });
 
-        Glide.with(this)
-                .load(receiver.getParseFile("profilePicture").getUrl())
-                .centerCrop()
-                .crossFade()
-                .transform(transformation)
-                .into(receiverProfilePicture);
+        receiverProfilePicture.setProfileId(receiverFbId);
 
         receiverName.setText(receiver.getString("fName") + " " + receiver.getString("lName"));
 
@@ -1143,33 +1155,37 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
     private List<MenuObject> getMenuObjects() {
         List<MenuObject> menuObjects = new ArrayList<>();
 
+        GradientDrawable circleBg = (GradientDrawable) getResources().getDrawable(R.drawable.circle_bg_light);
+
+        circleBg.setColor(getResources().getColor(theme.getColor2()));
+
         MenuObject close = new MenuObject("Dismiss");
-        close.setBgColor(android.R.color.transparent);
+        close.setBgDrawable(circleBg);
         close.setResource(R.mipmap.ic_close_actions);
         close.setDividerColor(android.R.color.transparent);
 
         MenuObject sendLocation = new MenuObject("Send Location");
-        sendLocation.setBgColor(android.R.color.transparent);
+        sendLocation.setBgDrawable(circleBg);
         sendLocation.setResource(R.mipmap.ic_location);
         sendLocation.setDividerColor(android.R.color.transparent);
 
         MenuObject sendSelfiecon = new MenuObject("Send Selfiecon");
-        sendSelfiecon.setBgColor(android.R.color.transparent);
+        sendSelfiecon.setBgDrawable(circleBg);
         sendSelfiecon.setResource(R.mipmap.ic_selfiecon);
         sendSelfiecon.setDividerColor(android.R.color.transparent);
 
         MenuObject createSelfiecon = new MenuObject("Create Selfiecon");
-        createSelfiecon.setBgColor(android.R.color.transparent);
+        createSelfiecon.setBgDrawable(circleBg);
         createSelfiecon.setResource(R.mipmap.ic_camera_selficon);
         createSelfiecon.setDividerColor(android.R.color.transparent);
 
         MenuObject sendPhoto = new MenuObject("Send Photo");
-        sendPhoto.setBgColor(android.R.color.transparent);
+        sendPhoto.setBgDrawable(circleBg);
         sendPhoto.setResource(R.mipmap.ic_attach);
         sendPhoto.setDividerColor(android.R.color.transparent);
 
         MenuObject sendGiphy = new MenuObject("Send Giphy");
-        sendGiphy.setBgColor(android.R.color.transparent);
+        sendGiphy.setBgDrawable(circleBg);
         sendGiphy.setResource(R.mipmap.ic_giphy);
         sendGiphy.setDividerColor(android.R.color.transparent);
 

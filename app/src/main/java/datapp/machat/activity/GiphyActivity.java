@@ -48,6 +48,7 @@ import datapp.machat.adapter.GIFAdapter;
 import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.dao.GiphyGIF;
+import datapp.machat.dao.MaChatTheme;
 import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.helper.ConnectionCheck;
 import datapp.machat.helper.RecyclerItemClickListener;
@@ -62,26 +63,31 @@ public class GiphyActivity extends CustomActivity {
     private ProgressBar progressBar;
     private RecyclerView.LayoutManager mLayoutManager;
     private static final String TAG = "GiphyActivity";
+    private MaChatTheme theme;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_giphy);
 
-        if (savedInstanceState != null) {
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        int overlayColor = getResources().getColor(theme.getColor());
+
+        if (savedInstanceState != null && themeName.equals(savedInstanceState.getString("Theme"))) {
             byte[] bitmapData = savedInstanceState.getByteArray("bg-giphy");
             if (bitmapData != null) {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
                 BitmapDrawable bd = new BitmapDrawable(bitmap);
                 bd.setAlpha(75);
-                bd.setColorFilter(Color.parseColor("#B5e2466d"), PorterDuff.Mode.DST_ATOP);
+                bd.setColorFilter(overlayColor, PorterDuff.Mode.DST_ATOP);
                 getWindow().getDecorView().setBackground(bd);
             }
         } else {
 
             BlurBehind.getInstance()
                     .withAlpha(75)
-                    .withFilterColor(Color.parseColor("#B5e2466d"))
+                    .withFilterColor(overlayColor)
                     .setBackground(this);
         }
 
@@ -163,6 +169,7 @@ public class GiphyActivity extends CustomActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
         byte[] bitmapdata = stream.toByteArray();
         outState.putByteArray("bg-giphy", bitmapdata);
+        outState.putString("Theme", theme.getName());
 
         super.onSaveInstanceState(outState);
     }
@@ -176,12 +183,7 @@ public class GiphyActivity extends CustomActivity {
     @Override
     public void onClick(View v) {
         if(v.getId() == R.id.search_gif){
-            String tempKeyword = searchTerm.getText().toString();
-            String keyword = tempKeyword;
-            if(tempKeyword.indexOf(' ') > 0){
-                keyword = TextUtils.join("+", tempKeyword.split("\\s+"));
-            }
-
+            String keyword = searchTerm.getText().toString();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(searchTerm.getWindowToken(), 0);
             _searchGiphy(keyword);
@@ -227,8 +229,13 @@ public class GiphyActivity extends CustomActivity {
     }
 
     private void _searchGiphy(String keyword) {
-        String url = getString(R.string.giphy_base_url) + getString(R.string.giphy_search_endpoint).replace("{query}", keyword);
+        String tempKeyword = keyword;
+        if(keyword.indexOf(' ') > 0){
+            tempKeyword = TextUtils.join("+", keyword.split("\\s+"));
+        }
+        String url = getString(R.string.giphy_base_url) + getString(R.string.giphy_search_endpoint).replace("{query}", tempKeyword);
         progressBar.setVisibility(View.VISIBLE);
+
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {

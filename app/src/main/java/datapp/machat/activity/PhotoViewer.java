@@ -1,5 +1,6 @@
 package datapp.machat.activity;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,6 +11,8 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 
 import datapp.machat.R;
+import datapp.machat.application.MaChatApplication;
+import datapp.machat.dao.MaChatTheme;
 import datapp.machat.helper.BlurBehind.BlurBehind;
 
 public class PhotoViewer extends AppCompatActivity implements View.OnClickListener{
@@ -20,9 +23,13 @@ public class PhotoViewer extends AppCompatActivity implements View.OnClickListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_viewer);
 
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        MaChatTheme theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        int overlayColor = getResources().getColor(theme.getColor());
+
         BlurBehind.getInstance()
                 .withAlpha(75)
-                .withFilterColor(Color.parseColor("#B5e2466d"))
+                .withFilterColor(overlayColor)
                 .setBackground(this);
 
         String url = getIntent().getStringExtra("imageUrl");

@@ -21,6 +21,7 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -58,6 +59,7 @@ import java.util.List;
 import java.util.Random;
 
 import datapp.machat.R;
+import datapp.machat.activity.SelfieconCameraActivity;
 import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.dao.Selfiecon;
@@ -74,7 +76,7 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
     protected final Path path = new Path();
     private Camera.Size mPreviewSize;
     private float ratio;
-    final private Activity activity = ((Activity) getContext());
+    final private SelfieconCameraActivity activity = ((SelfieconCameraActivity) getContext());
     private Camera mCamera;
     private List<Camera.Size> mSupportedPreviewSizes;
     private List<Bitmap> mImages = new ArrayList<Bitmap>();
@@ -395,7 +397,9 @@ public class SelfieconCameraPreview extends SurfaceView implements SurfaceHolder
                     final ProgressDialog dia = new ProgressDialog(getContext());
                     dia.show();
                     dia.setContentView(R.layout.progress_dialog);
-                    dia.getWindow().setBackgroundDrawable(null);
+                    dia.getWindow().setBackgroundDrawableResource(activity.getMaChatTheme().getId());
+                    dia.getWindow().setGravity(Gravity.CENTER);
+                    dia.getWindow().setLayout((int) SizeHelper.convertDpToPixel(250f, getContext()), (int) SizeHelper.convertDpToPixel(80f, getContext()));
                     NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
                     progressBar.start();
 

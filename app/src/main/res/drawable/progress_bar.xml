@@ -1,15 +1,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-
     <!-- Define the background properties like color etc -->
     <item android:id="@android:id/background">
         <shape>
-            <gradient
-                android:startColor="#ccfd5b5d"
-                android:centerColor="#FFfd5b5d"
-                android:centerY="1.0"
-                android:endColor="#0d1522"
-                android:angle="270"
-                />
             <corners android:radius="@dimen/pad_5dp"/>
         </shape>
     </item>
@@ -18,15 +10,8 @@
     <item android:id="@android:id/progress">
         <clip>
             <shape>
-                <gradient
-                    android:startColor="#FFc6317d"
-                    android:centerColor="#FFc6317d"
-                    android:centerY="1.0"
-                    android:endColor="#06101d"
-                    android:angle="270"
-                    />
                 <corners android:radius="@dimen/pad_5dp"/>
             </shape>
         </clip>
     </item>
-</layer-list> 
+</layer-list>

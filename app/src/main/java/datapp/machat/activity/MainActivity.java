@@ -1,20 +1,22 @@
 package datapp.machat.activity;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
-import android.widget.AdapterView;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -35,30 +37,49 @@ import java.util.ArrayList;
 
 import datapp.machat.R;
 import datapp.machat.adapter.FriendAdapter;
+import datapp.machat.adapter.ThemeAdapter;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CircleTransform;
 import datapp.machat.custom.CustomActivity;
 import datapp.machat.custom.UserStatus;
+import datapp.machat.custom.WrappableGridLayoutManager;
 import datapp.machat.dao.Friend;
+import datapp.machat.dao.MaChatTheme;
 import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.helper.BlurBehind.OnBlurCompleteListener;
 import datapp.machat.helper.SizeHelper;
 import jp.wasabeef.recyclerview.animators.ScaleInAnimator;
 
 public class MainActivity extends CustomActivity {
-    private ArrayList<ParseUser> friends = new ArrayList<>();
     private RecyclerView friendsListView;
     private CircleTransform transformation;
+    private ArrayList<MaChatTheme> themes;
 
     private ArrayList<Friend> friendsArray;
     private FriendAdapter friendAdapter;
     private boolean isFromShare = false;
     private StaggeredGridLayoutManager mLayoutManager;
+    private MaChatTheme theme;
+
+    public MaChatTheme getMaChatTheme() {
+        return theme;
+    }
+
+    public void setMaChatTheme(MaChatTheme theme) {
+        this.theme = theme;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        getWindow().getDecorView().setBackgroundResource(theme.getId());
+
         friendsListView = (RecyclerView) findViewById(R.id.friendView);
+
         mLayoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
         friendsListView.setItemAnimator(new ScaleInAnimator(new OvershootInterpolator(1f)));
         friendsListView.getItemAnimator().setAddDuration(400);
@@ -68,6 +89,9 @@ public class MainActivity extends CustomActivity {
         friendsArray = new ArrayList<>();
         friendAdapter = new FriendAdapter(this, friendsArray, "main");
         friendsListView.setAdapter(friendAdapter);
+
+        themes = MaChatApplication.getInstance().getThemes();
+
         _setupActionBar();
         _setupNotification();
         _setupFriendList();
@@ -182,6 +206,8 @@ public class MainActivity extends CustomActivity {
             dia.show();
             dia.setContentView(R.layout.progress_dialog);
             dia.getWindow().setBackgroundDrawable(null);
+            LayerDrawable backgroundLayer = (LayerDrawable) dia.getWindow().getDecorView().findViewById(R.id.dialog_container).getBackground();
+            backgroundLayer.findDrawableByLayerId(android.R.id.background).setColorFilter(getResources().getColor(theme.getColor()), PorterDuff.Mode.SRC_ATOP);
             NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
             progressBar.start();
             handler.postDelayed(new Runnable() {
@@ -209,6 +235,8 @@ public class MainActivity extends CustomActivity {
             dia.show();
             dia.setContentView(R.layout.progress_dialog);
             dia.getWindow().setBackgroundDrawable(null);
+            LayerDrawable backgroundLayer = (LayerDrawable) dia.getWindow().getDecorView().findViewById(R.id.dialog_container).getBackground();
+            backgroundLayer.findDrawableByLayerId(android.R.id.background).setColorFilter(getResources().getColor(theme.getColor()), PorterDuff.Mode.SRC_ATOP);
             NewtonCradleLoading progressBar = (NewtonCradleLoading ) dia.findViewById(R.id.pd_progressBar);
             progressBar.start();
             handler.postDelayed(new Runnable() {
@@ -257,6 +285,12 @@ public class MainActivity extends CustomActivity {
         return true;
     }
 
+    public void dismissThemeDialog() {
+        if(themeDialog != null) themeDialog.dismiss();
+    }
+
+    private android.support.v7.app.AlertDialog themeDialog;
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -275,6 +309,24 @@ public class MainActivity extends CustomActivity {
                     finish();
                 }
             });
+            return true;
+        } else if(id == R.id.action_theme_changer) {
+            ThemeAdapter themeAdapter = new ThemeAdapter(this, new ArrayList<MaChatTheme>());
+            android.support.v7.app.AlertDialog.Builder themePicker = new android.support.v7.app.AlertDialog.Builder(this);
+            LayoutInflater factory = LayoutInflater.from(this);
+            View innerView = factory.inflate(R.layout.theme_selector, null);
+            WrappableGridLayoutManager themeLayoutManager = new WrappableGridLayoutManager(this, 4);
+            RecyclerView themeListView = (RecyclerView) innerView.findViewById(R.id.theme_view);
+            themeListView.setLayoutManager(themeLayoutManager);
+            themeListView.setAdapter(themeAdapter);
+            for (int i = 0; i < themes.size(); i++) {
+                themeAdapter.add(themes.get(i), i);
+            }
+
+            themePicker.setView(innerView);
+            themeDialog = themePicker.create();
+            themeDialog.show();
+            themeDialog.getWindow().setBackgroundDrawable(null);
             return true;
         }
 

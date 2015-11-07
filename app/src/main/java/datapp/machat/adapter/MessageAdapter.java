@@ -5,6 +5,9 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -32,6 +35,8 @@ import android.widget.VideoView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 import com.github.kevinsawicki.timeago.TimeAgo;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
@@ -326,7 +331,13 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                     .centerCrop()
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .into(messageHolder.mapContent);
-
+            ChatActivity activity = (ChatActivity) mContext;
+            LayerDrawable locationIcon = (LayerDrawable) mContext.getResources().getDrawable(R.drawable.map_location_bg);
+            LayerDrawable navigateIcon = (LayerDrawable) mContext.getResources().getDrawable(R.drawable.map_navigate);
+            locationIcon.findDrawableByLayerId(R.id.btn_bg).setColorFilter(mContext.getResources().getColor(activity.getMaChatTheme().getColor()), PorterDuff.Mode.SRC_ATOP);
+            navigateIcon.findDrawableByLayerId(R.id.btn_bg).setColorFilter(mContext.getResources().getColor(activity.getMaChatTheme().getColor()), PorterDuff.Mode.SRC_ATOP);
+            messageHolder.openMapsBtn.setBackground(locationIcon);
+            messageHolder.navigateBtn.setBackground(navigateIcon);
             messageHolder.openMapsBtn.setOnTouchListener(ChatActivity.TOUCH);
             messageHolder.navigateBtn.setOnTouchListener(ChatActivity.TOUCH);
 
@@ -373,17 +384,17 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
         } else if (messageType.equals("buzz")) {
             typeWrapper = messageHolder.buzzWrapper;
             if(!message.getParseUser("from").getObjectId().equals(ParseUser.getCurrentUser().getObjectId()) && !message.getBoolean("buzzed")) {
+                ChatActivity activity = (ChatActivity)mContext;
+                YoYo.with(Techniques.Shake)
+                        .duration(1000)
+                        .playOn(activity.getWindow().getDecorView());
+
                 MediaPlayer mPlayer;
                 mPlayer = MediaPlayer.create(mContext, R.raw.buzz);
                 mPlayer.start();
                 message.put("buzzed", true);
                 message.saveInBackground();
             }
-
-            Animation shake = AnimationUtils.loadAnimation(mContext, R.anim.shake);
-            shake.setFillAfter(true);
-            shake.setFillEnabled(true);
-            messageHolder.buzzWrapper.startAnimation(shake);
 
         } else if (messageType.equals("recording")) {
             typeWrapper = messageHolder.recordingWrapper;
@@ -476,13 +487,13 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             if (msgStatus != null) {
                 if (msgStatus.equals("delivered")) {
                     messageHolder.statusDelivered.setVisibility(View.VISIBLE);
-                    messageHolder.statusSeen.setVisibility(View.GONE);
+                    messageHolder.statusSeen.setVisibility(View.INVISIBLE);
                 } else if (msgStatus.equals("seen")) {
-                    messageHolder.statusDelivered.setVisibility(View.GONE);
+                    messageHolder.statusDelivered.setVisibility(View.INVISIBLE);
                     messageHolder.statusSeen.setVisibility(View.VISIBLE);
                 } else {
-                    messageHolder.statusDelivered.setVisibility(View.GONE);
-                    messageHolder.statusSeen.setVisibility(View.GONE);
+                    messageHolder.statusDelivered.setVisibility(View.INVISIBLE);
+                    messageHolder.statusSeen.setVisibility(View.INVISIBLE);
                 }
             }
         } else {

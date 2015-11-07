@@ -1,5 +1,6 @@
 package datapp.machat.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -13,7 +14,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import datapp.machat.R;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.dao.MaChatTheme;
 
 public class ForgotPassword extends CustomActivity {
     private EditText inputEmail;
@@ -24,6 +27,10 @@ public class ForgotPassword extends CustomActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
+
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        MaChatTheme theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        getWindow().getDecorView().setBackgroundResource(theme.getId());
 
         setTouchNClick(R.id.resetPasswordBtn);
 

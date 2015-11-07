@@ -1,6 +1,7 @@
 package datapp.machat.activity;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -18,7 +19,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import datapp.machat.R;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.dao.MaChatTheme;
 
 public class RegisterActivity extends CustomActivity {
     private EditText inputUsername;
@@ -32,6 +35,10 @@ public class RegisterActivity extends CustomActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        MaChatTheme theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        getWindow().getDecorView().setBackgroundResource(theme.getId());
 
         setTouchNClick(R.id.registerBtn);
 

@@ -1,6 +1,7 @@
 package datapp.machat.activity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -33,7 +34,9 @@ import java.util.List;
 
 import datapp.machat.R;
 import datapp.machat.adapter.SelfieconAdapter;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.dao.MaChatTheme;
 import datapp.machat.dao.Selfiecon;
 import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.helper.SizeHelper;
@@ -43,6 +46,7 @@ public class SelficonActivity extends CustomActivity {
     private ArrayList<Selfiecon> selficonList;
     private SelfieconAdapter selfieconAdapter;
     private FrameLayout loading;
+    private MaChatTheme theme;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,19 +55,23 @@ public class SelficonActivity extends CustomActivity {
 
         loading = (FrameLayout) findViewById(R.id.loading_selfiecons);
 
-        if (savedInstanceState != null) {
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        int overlayColor = getResources().getColor(theme.getColor());
+
+        if (savedInstanceState != null && themeName.equals(savedInstanceState.getString("Theme"))) {
             byte[] bitmapData = savedInstanceState.getByteArray("bg-selfiecon");
             if (bitmapData != null) {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
                 BitmapDrawable bd = new BitmapDrawable(bitmap);
                 bd.setAlpha(75);
-                bd.setColorFilter(Color.parseColor("#B5e2466d"), PorterDuff.Mode.DST_ATOP);
+                bd.setColorFilter(overlayColor, PorterDuff.Mode.DST_ATOP);
                 getWindow().getDecorView().setBackground(bd);
             }
         } else {
             BlurBehind.getInstance()
                     .withAlpha(75)
-                    .withFilterColor(Color.parseColor("#B5e2466d"))
+                    .withFilterColor(overlayColor)
                     .setBackground(this);
         }
 
@@ -142,6 +150,7 @@ public class SelficonActivity extends CustomActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
         byte[] bitmapdata = stream.toByteArray();
         outState.putByteArray("bg-slfiecon", bitmapdata);
+        outState.putString("Theme", theme.getName());
 
         super.onSaveInstanceState(outState);
     }

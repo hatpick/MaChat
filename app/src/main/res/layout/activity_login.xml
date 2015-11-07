@@ -1,5 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:background="@drawable/bg_alt"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:id="@+id/main_container"
     android:orientation="vertical" android:gravity="center_horizontal" android:layout_height="match_parent"
     android:paddingLeft="@dimen/activity_horizontal_margin" android:paddingRight="@dimen/activity_horizontal_margin" android:paddingBottom="@dimen/activity_horizontal_margin" tools:context="datapp.machat.activity.LoginActivity" android:paddingTop="50dp">
     <ImageView

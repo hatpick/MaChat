@@ -23,7 +23,48 @@
     <color name="color2">#ff008795</color>
     <color name="color3">#ff00ac4c</color>
 
-    <color name="sender_color">#6690A4AE</color>
+    <color name="sender_color">#701c648c</color>
 
     <color name="color4">#ffe8442b</color>
+
+    <color name="theme_def_color1">#FFfd5b5d</color>
+    <color name="theme_def_color">#FFe2466d</color>
+    <color name="theme_def_ref">#e2466d</color>
+    <color name="theme_def_color2">#FFc6317d</color>
+
+    <color name="theme_one_color1">#FF6E48AA</color>
+    <color name="theme_one_color">#FF8258ba</color>
+    <color name="theme_one_ref">#8258ba</color>
+    <color name="theme_one_color2">#FF9D50BB</color>
+
+    <color name="theme_two_color1">#ff0060d9</color>
+    <color name="theme_two_color">#ff008795</color>
+    <color name="theme_two_ref">#008795</color>
+    <color name="theme_two_color2">#ff00ac4c</color>
+
+    <color name="theme_three_color1">#FF003973</color>
+    <color name="theme_three_color">#FF4c95df</color>
+    <color name="theme_three_ref">#4c95df</color>
+    <color name="theme_three_color2">#FFE5E5BE</color>
+
+    <color name="theme_four_color1">#FF2c3e50</color>
+    <color name="theme_four_color">#FF0d6bab</color>
+    <color name="theme_four_ref">#0d6bab</color>
+    <color name="theme_four_color2">#FF3498db</color>
+
+    <color name="theme_five_color1">#FFDD5E89</color>
+    <color name="theme_five_color">#FFEA8D90</color>
+    <color name="theme_five_ref">#EA8D90</color>
+    <color name="theme_five_color2">#FFF7BB97</color>
+
+    <color name="theme_six_color1">#FF360033</color>
+    <color name="theme_six_color">#FF1c536e</color>
+    <color name="theme_six_ref">#1c536e</color>
+    <color name="theme_six_color2">#FF0b8793</color>
+
+    <color name="theme_seven_color1">#FFFF512F</color>
+    <color name="theme_seven_color">#FFf58120</color>
+    <color name="theme_seven_ref">#f58120</color>
+    <color name="theme_seven_color2">#FFF09819</color>
+
 </resources>

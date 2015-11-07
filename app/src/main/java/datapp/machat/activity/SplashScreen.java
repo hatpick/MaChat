@@ -1,6 +1,7 @@
 package datapp.machat.activity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -30,6 +31,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import datapp.machat.R;
+import datapp.machat.application.MaChatApplication;
+import datapp.machat.dao.MaChatTheme;
 
 public class SplashScreen extends Activity {
     private final int SPLASH_TIME_OUT = 3000;
@@ -39,6 +42,10 @@ public class SplashScreen extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
+
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        MaChatTheme theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        getWindow().getDecorView().setBackgroundResource(theme.getId());
 
         if(ParseUser.getCurrentUser() != null) {
             Intent mainIntent = new Intent(SplashScreen.this, MainActivity.class);

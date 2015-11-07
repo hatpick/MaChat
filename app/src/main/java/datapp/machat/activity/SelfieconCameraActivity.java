@@ -1,5 +1,6 @@
 package datapp.machat.activity;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -16,7 +17,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import datapp.machat.R;
+import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CustomActivity;
+import datapp.machat.dao.MaChatTheme;
 import datapp.machat.helper.BlurBehind.BlurBehind;
 import datapp.machat.selfiecon.SelfieconCameraPreview;
 
@@ -35,6 +38,7 @@ public class SelfieconCameraActivity extends CustomActivity  {
     private String receiverFbId;
     private String senderFbId;
     private FrameLayout layout;
+    private MaChatTheme theme;
 
     private Camera getCameraInstance() {
         Camera c = null;
@@ -51,12 +55,16 @@ public class SelfieconCameraActivity extends CustomActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selfiecon_camera);
 
+        String themeName = getSharedPreferences("Theme", Context.MODE_PRIVATE).getString("Theme", "Default");
+        theme = MaChatApplication.getInstance().getThemeByName(themeName);
+        int overlayColor = getResources().getColor(theme.getColor());
+
         receiverFbId = getIntent().getStringExtra("receiverFbId");
         senderFbId = getIntent().getStringExtra("senderFbId");
 
         BlurBehind.getInstance()
                 .withAlpha(75)
-                .withFilterColor(Color.parseColor("#B5e2466d"))
+                .withFilterColor(overlayColor)
                 .setBackground(this);
 
         layout = (FrameLayout)findViewById(R.id.middleSurface);
@@ -80,6 +88,10 @@ public class SelfieconCameraActivity extends CustomActivity  {
         layout.addView(preview);
         ArrayList<ImageView> selfiePreviews = new ArrayList<>(Arrays.asList(selfie1, selfie2, selfie3));
         preview.setSelfiePreviews(selfiePreviews);
+    }
+
+    public MaChatTheme getMaChatTheme() {
+        return theme;
     }
 
     private void _resizeSelfiePreviews() {

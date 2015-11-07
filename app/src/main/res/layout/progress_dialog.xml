@@ -2,10 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="wrap_content"
     android:paddingTop="20dp" android:paddingBottom="20dp" android:layout_height="wrap_content" android:layout_gravity="center"
-    android:paddingLeft="40dp" android:paddingRight="40dp" android:background="@drawable/progress_bar"
+    android:paddingLeft="20dp" android:paddingRight="20dp" android:id="@+id/dialog_container" android:background="@drawable/progress_bar"
     android:gravity="center">
     <com.victor.loading.newton.NewtonCradleLoading
         android:id="@+id/pd_progressBar"
         android:layout_width="wrap_content"
-        android:layout_height="60dp"/>
+        android:layout_height="40dp"/>
 </LinearLayout>
