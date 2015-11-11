@@ -57,6 +57,16 @@ Parse.Cloud.define("getFacebookImgByfbId", function(request, response) {
 	});
 });
 
+Parse.Cloud.httpRequest({
+  method: "POST",
+  url: "https://<account_sid>:<auth_token>@api.twilio.com/2010-04-01/Accounts/<account_sid>/SMS/Messages.json",
+  body: {
+     From:"+14085550693",
+     To: "+14085551212",
+     Body:"Hi, Parse can send SMS via Twilio!"
+  }
+});
+
 Parse.Cloud.define("sendPushMessage", function(request, response) {
     var senderUser = request.user;
     var toId = request.params.toId;

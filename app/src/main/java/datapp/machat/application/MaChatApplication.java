@@ -71,6 +71,10 @@ public class MaChatApplication extends Application {
         MaChatTheme themeFive= new MaChatTheme("ThemeFive", R.drawable.theme_five_bg, R.color.theme_five_color1, R.color.theme_five_color2, R.color.theme_five_color, R.color.theme_five_ref);
         MaChatTheme themeSix= new MaChatTheme("ThemeSix", R.drawable.theme_six_bg, R.color.theme_six_color1, R.color.theme_six_color2, R.color.theme_six_color, R.color.theme_six_ref);
         MaChatTheme themeSeven= new MaChatTheme("ThemeSeven", R.drawable.theme_seven_bg, R.color.theme_seven_color1, R.color.theme_seven_color2, R.color.theme_seven_color, R.color.theme_seven_ref);
+        MaChatTheme themeVirgin = new MaChatTheme("ThemeVirgin", R.drawable.theme_virgin_bg, R.color.theme_virgin_color1, R.color.theme_virgin_color2, R.color.theme_virgin_color, R.color.theme_virgin_ref);
+        MaChatTheme themeTitanium = new MaChatTheme("ThemeTitanium", R.drawable.theme_titanium_bg, R.color.theme_titanium_color1, R.color.theme_titanium_color2, R.color.theme_titanium_color, R.color.theme_titanium_ref);
+        MaChatTheme themeAutumn = new MaChatTheme("ThemeAutumn", R.drawable.theme_autumn_bg, R.color.theme_autumn_color1, R.color.theme_autumn_color2, R.color.theme_autumn_color, R.color.theme_autumn_ref);
+        MaChatTheme themeClouds = new MaChatTheme("ThemeClouds", R.drawable.theme_clouds_bg, R.color.theme_clouds_color1, R.color.theme_clouds_color2, R.color.theme_clouds_color, R.color.theme_clouds_ref);
 
         themes.add(themeDef);
         themes.add(themeOne);
@@ -80,6 +84,10 @@ public class MaChatApplication extends Application {
         themes.add(themeFive);
         themes.add(themeSix);
         themes.add(themeSeven);
+        themes.add(themeVirgin);
+        themes.add(themeTitanium);
+        themes.add(themeAutumn);
+        themes.add(themeClouds);
     }
 
     public ArrayList<MaChatTheme> getThemes() {

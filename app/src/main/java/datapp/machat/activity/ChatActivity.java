@@ -429,7 +429,6 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         int blueVal = Color.blue(pixel);
         int greenVal = Color.green(pixel);
         int intColor = Color.rgb(redVal, greenVal, blueVal);
-        Log.v(TAG, String.format("#%06X", (0xFFFFFF & intColor)));
         return intColor;
     }
 

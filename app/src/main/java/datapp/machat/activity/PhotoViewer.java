@@ -40,7 +40,6 @@ public class PhotoViewer extends AppCompatActivity implements View.OnClickListen
         photoViwerCloseBtn.setOnClickListener(this);
         Glide.with(this)
                 .load(url)
-                .centerCrop()
                 .into(photoViewerImage);
     }
 

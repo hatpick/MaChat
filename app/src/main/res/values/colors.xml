@@ -67,4 +67,24 @@
     <color name="theme_seven_ref">#f58120</color>
     <color name="theme_seven_color2">#FFF09819</color>
 
+    <color name="theme_virgin_color1">#FF7b4397</color>
+    <color name="theme_virgin_color">#FFac3363</color>
+    <color name="theme_virgin_ref">#ac3363</color>
+    <color name="theme_virgin_color2">#FFdc2430</color>
+
+    <color name="theme_titanium_color1">#FF283048</color>
+    <color name="theme_titanium_color">#FF5a6573</color>
+    <color name="theme_titanium_ref">#5a6573</color>
+    <color name="theme_titanium_color2">#FF859398</color>
+
+    <color name="theme_autumn_color1">#FFDAD299</color>
+    <color name="theme_autumn_color">#FFc5d5a8</color>
+    <color name="theme_autumn_ref">#c5d5a8</color>
+    <color name="theme_autumn_color2">#FFB0DAB9</color>
+
+    <color name="theme_clouds_color1">#FF73C8A9</color>
+    <color name="theme_clouds_color">#FF598c7e</color>
+    <color name="theme_clouds_ref">#598c7e</color>
+    <color name="theme_clouds_color2">#FF373B44</color>
+
 </resources>
