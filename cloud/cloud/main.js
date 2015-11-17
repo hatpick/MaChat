@@ -57,14 +57,67 @@ Parse.Cloud.define("getFacebookImgByfbId", function(request, response) {
 	});
 });
 
-Parse.Cloud.httpRequest({
-  method: "POST",
-  url: "https://<account_sid>:<auth_token>@api.twilio.com/2010-04-01/Accounts/<account_sid>/SMS/Messages.json",
-  body: {
-     From:"+14085550693",
-     To: "+14085551212",
-     Body:"Hi, Parse can send SMS via Twilio!"
-  }
+Parse.Cloud.job("fetchThemes", function(request, status) {
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    function avgColor(c1, c2) {
+        var c1RGB = hexToRgb(c1);
+        var c2RGB = hexToRgb(c2);
+        var avgRGB = {};
+        avgRGB.r = parseInt((c1RGB.r + c2RGB.r)/2, 10);
+        avgRGB.g = parseInt((c1RGB.g + c2RGB.g)/2, 10);
+        avgRGB.b = parseInt((c1RGB.b + c2RGB.b)/2, 10);
+
+        return rgbToHex(avgRGB);
+    }
+
+    function componentToHex(c) {
+        var hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
+    }
+
+    function rgbToHex(rgb) {
+        return "#" + componentToHex(rgb.r) + componentToHex(rgb.g) + componentToHex(rgb.b);
+    }
+
+    var user = request.user;
+    var themeUrl = "http://uigradients.com/gradients.json";
+    Parse.Cloud.httpRequest({
+        method: "GET",
+        url: themeUrl,
+        followRedirects: true
+    }).then(function(response) {
+        var themes = new Array();
+        var Theme = Parse.Object.extend("Theme");
+        var theme;
+        for(var i=0 ; i < response.data.length ; i++){
+            var t = response.data[i];
+            theme = new Theme();
+            theme.set("name", t.name.split(" ").join("") + "Theme");
+            theme.set("color1", t.colors[0]);
+            theme.set("color2", t.colors[1]);
+            var _color = avgColor(t.colors[0], t.colors[1]);
+            theme.set("color", _color);
+            theme.set("refColor", _color);
+            themes.push(theme);
+        };
+        Parse.Object.saveAll(themes, function(){
+            status.success("Themes were updated successfully.");
+        }, function(error){
+            console.log(error);
+            status.error("Uh oh, something went wrong.");
+        });
+
+    }, function(error){
+        status.error("Uh oh, something went wrong.");
+    });
 });
 
 Parse.Cloud.define("sendPushMessage", function(request, response) {
