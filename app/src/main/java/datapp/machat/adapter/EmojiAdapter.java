@@ -1,7 +1,10 @@
 package datapp.machat.adapter;
 
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Point;
 import android.support.v7.widget.RecyclerView;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,11 +21,13 @@ import java.util.ArrayList;
 
 import datapp.machat.R;
 import datapp.machat.activity.ChatActivity;
+import datapp.machat.helper.SizeHelper;
 
 /**
  * Created by hat on 11/23/15.
  */
 public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.EmojiHolder> {
+    private final int imageWidth;
     private Context mContext;
     private ChatActivity activity;
     private ArrayList<ParseObject> dataList;
@@ -42,13 +47,21 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.EmojiHolder>
         this.dataList = emojies;
         this.activity = (ChatActivity) mContext;
         this.mContext = mContext;
+
+        Display display = ((Activity) mContext).getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+
+        int totalMargin = (int) SizeHelper.convertDpToPixel(10.0f, mContext);
+        imageWidth = (width - totalMargin)/10;
     }
 
     @Override
     public EmojiHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.custom_emoji, parent, false);
-        EmojiHolder emojiHolder = new EmojiHolder(v, new EmojiHolder.IMyViewHolderClicks() {
+        EmojiHolder emojiHolder = new EmojiHolder(v, imageWidth, new EmojiHolder.IMyViewHolderClicks() {
             @Override
             public void onClick(View caller, int position) {
                 final ParseObject selectedEmoji = dataList.get(position);
@@ -87,11 +100,13 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.EmojiHolder>
         public ImageView emojiView;
         public IMyViewHolderClicks mListener;
 
-        EmojiHolder(View view, IMyViewHolderClicks listener) {
+        EmojiHolder(View view, int width, IMyViewHolderClicks listener) {
             super(view);
             this.mListener = listener;
             this.emojiView = (ImageView) view.findViewById(R.id.emoji_holder);
             this.emojiView.setOnClickListener(this);
+            this.emojiView.getLayoutParams().width = width;
+            this.emojiView.getLayoutParams().height = width;
         }
 
         @Override
