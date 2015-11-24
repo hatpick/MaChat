@@ -809,7 +809,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
     public void toggleEmojiHolder() {
         final View mRevealView = findViewById(R.id.emojis_holder);
         int cx = mRevealView.getLeft();
-        int cy = mRevealView.getTop();
+        int cy = mRevealView.getBottom();
 
         int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
 
@@ -1276,7 +1276,9 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
     public void onBackPressed() {
         if (mMenuDialogFragment != null && mMenuDialogFragment.isAdded()) {
             mMenuDialogFragment.dismiss();
-        } else{
+        } else if(!hidden) {
+            toggleEmojiHolder();
+        } else {
             super.onBackPressed();
         }
     }
