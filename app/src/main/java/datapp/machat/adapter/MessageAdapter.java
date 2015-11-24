@@ -110,6 +110,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.ytContent = (ImageView) row.findViewById(R.id.yt_content);
             messageHolder.ytPlay = (ImageView) row.findViewById(R.id.yt_play);
             messageHolder.mediaContent = (ImageView) row.findViewById(R.id.media_content);
+            messageHolder.emojiContent = (ImageView) row.findViewById(R.id.emoji_content);
             messageHolder.mapContent = (ImageView) row.findViewById(R.id.map_content);
             messageHolder.openMapsBtn = (Button) row.findViewById(R.id.open_maps_btn);
             messageHolder.navigateBtn = (Button) row.findViewById(R.id.navigate_to_btn);
@@ -123,6 +124,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             messageHolder.selfieconWrapper = (LinearLayout) row.findViewById(R.id.selficon_wrapper);
             messageHolder.ytWrapper = (LinearLayout) row.findViewById(R.id.yt_wrapper);
             messageHolder.mediaWrapper = (LinearLayout) row.findViewById(R.id.media_wrapper);
+            messageHolder.emojiWrapper = (LinearLayout) row.findViewById(R.id.emoji_wrapper);
             messageHolder.giphyWrapper = (LinearLayout) row.findViewById(R.id.giphy_wrapper);
             messageHolder.buzzWrapper = (LinearLayout) row.findViewById(R.id.buzz_wrapper);
             messageHolder.mapWrapper = (LinearLayout) row.findViewById(R.id.map_wrapper);
@@ -248,6 +250,11 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
+        } else if(messageType.equals("emoji")){
+            Glide.with(mContext)
+                    .load(message.getString("content"))
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .into(messageHolder.emojiContent);
         } else if (messageType.equals("selfiecon")) {
             typeWrapper = messageHolder.selfieconWrapper;
 
@@ -626,6 +633,9 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
 
         LinearLayout mediaWrapper;
         ImageView mediaContent;
+
+        LinearLayout emojiWrapper;
+        ImageView emojiContent;
 
         LinearLayout giphyWrapper;
         ImageView giphyContent;

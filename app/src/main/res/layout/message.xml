@@ -103,6 +103,18 @@
                 <!--android:id="@+id/message_date_media" />-->
             </LinearLayout>
             <LinearLayout
+                android:background="@drawable/circle_bg"
+                android:visibility="gone"
+                android:id="@+id/emoji_wrapper"
+                android:orientation="vertical"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+                <ImageView
+                    android:id="@+id/emoji_content"
+                    android:layout_height="75dp"
+                    android:layout_width="75dp"/>
+            </LinearLayout>
+            <LinearLayout
                 android:visibility="gone"
                 android:id="@+id/map_wrapper"
                 android:orientation="vertical"

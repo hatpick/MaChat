@@ -1,5 +1,7 @@
 package datapp.machat.activity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,7 +15,6 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.ShapeDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -30,6 +31,8 @@ import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -39,10 +42,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.BounceInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -100,6 +105,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import datapp.machat.R;
+import datapp.machat.adapter.EmojiAdapter;
 import datapp.machat.adapter.MessageAdapter;
 import datapp.machat.application.MaChatApplication;
 import datapp.machat.custom.CircleTransform;
@@ -115,6 +121,7 @@ import datapp.machat.helper.MyProfilePictureView;
 import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
 import jp.co.recruit_lifestyle.android.widget.WaveSwipeRefreshLayout;
+import jp.wasabeef.recyclerview.animators.ScaleInAnimator;
 
 
 import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
@@ -161,6 +168,9 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
     private ArrayList<ParseObject> messageList;
     private MessageAdapter messageAdapter;
 
+    private ArrayList<ParseObject> emojiList;
+    private EmojiAdapter emojiAdapter;
+
     private boolean isRunning;
 
     private Date lastMsgDate;
@@ -187,6 +197,8 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
     private SharedPreferences notificationDetails;
     private DialogFragment mMenuDialogFragment;
     private MaChatTheme theme;
+    private RecyclerView emojiView;
+    private StaggeredGridLayoutManager mLayoutManager;
 
     private String getRecordingFilename(){
         String root = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MaChat" + AUDIO_RECORDER_FOLDER;
@@ -352,6 +364,19 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         messageAdapter = new MessageAdapter(this, messageList);
         chatListView.setAdapter(messageAdapter);
 
+        emojiList = new ArrayList<>();
+        emojiAdapter = new EmojiAdapter(this, emojiList);
+
+        emojiView = (RecyclerView) findViewById(R.id.emojis_view);
+        mLayoutManager = new StaggeredGridLayoutManager(10, StaggeredGridLayoutManager.VERTICAL);
+        emojiView.setItemAnimator(new ScaleInAnimator(new OvershootInterpolator(1f)));
+        emojiView.getItemAnimator().setAddDuration(400);
+        emojiView.setHasFixedSize(true);
+        emojiView.setLayoutManager(mLayoutManager);
+        emojiList = new ArrayList<>();
+        emojiAdapter = new EmojiAdapter(this, emojiList);
+        emojiView.setAdapter(emojiAdapter);
+
         //setPadding(mainContainer);
         handler = new Handler();
 
@@ -421,6 +446,55 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
             }
         }
     };
+
+    void enterReveal() {
+        // previously invisible view
+        _fetchEmojis();
+        final View myView = findViewById(R.id.emojis_holder);
+
+        // get the center for the clipping circle
+        int cx = myView.getMeasuredWidth() / 2;
+        int cy = myView.getMeasuredHeight() / 2;
+
+        // get the final radius for the clipping circle
+        int finalRadius = Math.max(myView.getWidth(), myView.getHeight()) / 2;
+
+        // create the animator for this view (the start radius is zero)
+        Animator anim =
+                ViewAnimationUtils.createCircularReveal(myView, cx, cy, 0, finalRadius);
+
+        // make the view visible and start the animation
+        myView.setVisibility(View.VISIBLE);
+        anim.start();
+    }
+
+    void exitReveal() {
+        // previously visible view
+        final View myView = findViewById(R.id.emojis_holder);
+
+        // get the center for the clipping circle
+        int cx = myView.getMeasuredWidth() / 2;
+        int cy = myView.getMeasuredHeight() / 2;
+
+        // get the initial radius for the clipping circle
+        int initialRadius = myView.getWidth() / 2;
+
+        // create the animation (the final radius is zero)
+        Animator anim =
+                ViewAnimationUtils.createCircularReveal(myView, cx, cy, initialRadius, 0);
+
+        // make the view invisible when the animation is done
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                myView.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        // start the animation
+        anim.start();
+    }
 
     private int getRefreshColor() {
         BitmapDrawable bg = (BitmapDrawable) getWindow().getDecorView().getBackground();
@@ -522,7 +596,11 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         super.onResume();
     }
 
-    private void sendMessage(final ParseUser receiver, final String type, final String content, final ParseGeoPoint location, final String gifUrl) {
+    public ParseUser getReceiver() {
+        return receiver;
+    }
+
+    public void sendMessage(final ParseUser receiver, final String type, final String content, final ParseGeoPoint location, final String gifUrl) {
         ParseQuery<ParseSession> query = ParseSession.getQuery();
         query.whereEqualTo("user", receiver);
         query.findInBackground(new FindCallback<ParseSession>() {
@@ -664,6 +742,11 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
             });
         } else if(v.getId() == R.id.buzz_btn) {
             sendMessage(receiver, "buzz", "BUZZ", null, null);
+        } else if(v.getId() == R.id.emoji_btn) {
+            if(findViewById(R.id.emojis_holder).getVisibility() == View.INVISIBLE)
+                enterReveal();
+            else
+                exitReveal();
         } else if (v.getId() == R.id.record_void_btn) {
             final AlertDialogPro.Builder alert = new AlertDialogPro.Builder(ChatActivity.this);
             LayoutInflater factory = LayoutInflater.from(ChatActivity.this);
@@ -745,6 +828,25 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
                 }
             });
         }
+    }
+
+    private void _fetchEmojis() {
+        if(emojiAdapter.getItemCount() > 0) return;
+        ParseQuery<ParseObject> query = new ParseQuery("CustomEmoji");
+        query.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> list, ParseException e) {
+                if(e == null) {
+                    for (int i = 0; i < list.size(); i++) {
+                        ParseObject em = list.get(i);
+                        emojiAdapter.add(em, i);
+                    }
+                } else {
+                    finish();
+                    Toast.makeText(ChatActivity.this, "Error loading custom emojis!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private Bitmap decodeFile(File f, int scale) {
