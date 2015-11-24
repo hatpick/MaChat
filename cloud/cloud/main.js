@@ -1,8 +1,8 @@
-
 // Use Parse.Cloud.define to define as many cloud functions as you want.
 // For example:
-Parse.Cloud.define("fetchProfilePicture", function(request, response) {
-    var Image = require("parse-image");
+var Image = require("parse-image");
+ 
+Parse.Cloud.define("fetchProfilePicture", function(request, response) {    
     var user = request.user;
     var profilePictureURL = "https://graph.facebook.com/" + user.get("fbId") + "/picture?width=200";
     Parse.Cloud.httpRequest({
@@ -35,28 +35,28 @@ Parse.Cloud.define("fetchProfilePicture", function(request, response) {
         });
     });
 });
-
+ 
 Parse.Cloud.define("getFacebookImgByfbId", function(request, response) {
     var senderUser = request.user;
     var fbId = request.params.fbId;
     Parse.Cloud.useMasterKey();    
-
+ 
     var query = new Parse.Query(Parse.User);
     query.equalTo("fbId", fbId);    
     query.limit(1);
     query.find({
-	  success: function(people) {
-	  	var person = people[0];	  	
-	  	var profilePicture = person.get("profilePicture");
-	  	person.fbUrl = profilePicture.url();
-	  	console.log(person);
-	    response.success(JSON.stringify(person));
-	  }, error: function(error){
+      success: function(people) {
+        var person = people[0];     
+        var profilePicture = person.get("profilePicture");
+        person.fbUrl = profilePicture.url();
+        console.log(person);
+        response.success(JSON.stringify(person));
+      }, error: function(error){
         response.error("get by fbId error: " + error.message);
       }
-	});
+    });
 });
-
+ 
 Parse.Cloud.job("fetchThemes", function(request, status) {
     function hexToRgb(hex) {
         var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -66,7 +66,7 @@ Parse.Cloud.job("fetchThemes", function(request, status) {
             b: parseInt(result[3], 16)
         } : null;
     }
-
+ 
     function avgColor(c1, c2) {
         var c1RGB = hexToRgb(c1);
         var c2RGB = hexToRgb(c2);
@@ -74,19 +74,19 @@ Parse.Cloud.job("fetchThemes", function(request, status) {
         avgRGB.r = parseInt((c1RGB.r + c2RGB.r)/2, 10);
         avgRGB.g = parseInt((c1RGB.g + c2RGB.g)/2, 10);
         avgRGB.b = parseInt((c1RGB.b + c2RGB.b)/2, 10);
-
+ 
         return rgbToHex(avgRGB);
     }
-
+ 
     function componentToHex(c) {
         var hex = c.toString(16);
         return hex.length == 1 ? "0" + hex : hex;
     }
-
+ 
     function rgbToHex(rgb) {
         return "#" + componentToHex(rgb.r) + componentToHex(rgb.g) + componentToHex(rgb.b);
     }
-
+ 
     var user = request.user;
     var themeUrl = "http://uigradients.com/gradients.json";
     Parse.Cloud.httpRequest({
@@ -114,12 +114,63 @@ Parse.Cloud.job("fetchThemes", function(request, status) {
             console.log(error);
             status.error("Uh oh, something went wrong.");
         });
-
+ 
     }, function(error){
         status.error("Uh oh, something went wrong.");
     });
 });
-
+ 
+ 
+Parse.Cloud.job("fetchEmojis", function(request, status) {    
+    var emojiUrls = "http://73.240.14.140:3000/gifs";
+    var emojiUrl = "http://73.240.14.140:3000/gif/{name}";
+    var Emoji = Parse.Object.extend("CustomEmoji");
+    var user = request.user;
+     
+    Parse.Cloud.httpRequest({
+        method: "GET",
+        url: emojiUrls,
+        followRedirects: true
+    }).then(function(response) {        
+        var data = JSON.parse(response.data).data;        
+        var files = new Array();        
+        for(var i = 0 ; i < data.length ; i++){
+            var em = data[i];                
+            (function(a, b) {
+                Parse.Cloud.httpRequest({
+                    url: emojiUrl.replace("{name}", a.name),
+                    followRedirects: true
+                }).then(function(response) {                           
+                    var file = new Parse.File(a.name + ".gif", {base64: response.buffer.toString('base64', 0, response.buffer.length)});
+                    files.push(file);                         
+                    if(files.length == b-1) {
+                        Parse.Object.saveAll(files, function() {   
+                            var emoji;
+                            var emojis = new Array();
+                            for(var j = 0 ; j < b; j++) {
+                                emoji = new Emoji();
+                                emoji.set("emoji", files[j]);
+                                emojis.push(emoji);
+                            }                                              
+                            Parse.Object.saveAll(emojis, function(){                                    
+                                    status.success("Emojis were updated successfully.");
+                                }, function(err){
+                                    console.log(err);
+                                    status.error("Uh oh, something went wrong.");
+                            });
+                        }, function(err) {
+                            console.log(err);
+                            status.error("Uh oh, something went wrong.");
+                        });
+                    }
+                });
+            })(em, data.length);
+        };                
+    }, function(error){
+        status.error("Uh oh, something went wrong.");
+    });
+});
+ 
 Parse.Cloud.define("sendPushMessage", function(request, response) {
     var senderUser = request.user;
     var toId = request.params.toId;
@@ -127,10 +178,10 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
     var msgContent = request.params.msgContent;
     var msgId = request.params.msgId;    
     var buzzable = request.params.buzzable;
-
+ 
     var sid = toId + senderUser.id;
     Parse.Cloud.useMasterKey();    
-
+ 
     var suffixMsg;
     switch(msgType){        
         case "selfiecon":
@@ -142,27 +193,27 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
         case "youtube":
         suffixMsg = " has sent you a Youtube video!";
         break;
-    	case "map":
-    	suffixMsg = " has shared their location with you!";
-    	break;
+        case "map":
+        suffixMsg = " has shared their location with you!";
+        break;
         case "giphy":
         suffixMsg = " has sent you a GIPHY!";
         break;
         case "recording":
         suffixMsg = " has sent you a VOICE message!";
         break;
-    	case "buzz":
-    	suffixMsg = " just BUZZed you!"
-    	break;
+        case "buzz":
+        suffixMsg = " just BUZZed you!"
+        break;
     }
-
+ 
     var pushQuery = new Parse.Query(Parse.Installation);
     pushQuery.equalTo("user", toId);
     Parse.Push.send({
         where: pushQuery,
         data: {
-	    msg_id: msgId,
-	    buzzable: buzzable,
+        msg_id: msgId,
+        buzzable: buzzable,
             title: "MaChat",
             alert: (msgType == "text")? msgContent : senderUser.get("fName") + suffixMsg,            
             group: sid,
