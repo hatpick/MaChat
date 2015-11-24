@@ -100,7 +100,7 @@
                             android:gravity="center"
                             android:enabled="true"
                             android:id="@+id/buzz_btn"
-                            android:background="@android:drawable/ic_popup_reminder"
+                            android:background="@mipmap/ic_buzz"
                             android:minHeight="1dp"
                             android:minWidth="1dp"
                             android:layout_marginRight="40dp"

@@ -701,6 +701,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         } else if(v.getId() == R.id.buzz_btn) {
             sendMessage(receiver, "buzz", "BUZZ", null, null);
         } else if(v.getId() == R.id.emoji_btn) {
+            _fetchEmojis();
             final View mRevealView = findViewById(R.id.emojis_holder);
             int cx = (mRevealView.getLeft() + mRevealView.getRight());
             int cy = mRevealView.getTop();
@@ -713,7 +714,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
                 SupportAnimator animator =
                         io.codetail.animation.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
                 animator.setInterpolator(new AccelerateDecelerateInterpolator());
-                animator.setDuration(800);
+                animator.setDuration(700);
 
                 SupportAnimator animator_reverse = animator.reverse();
 
