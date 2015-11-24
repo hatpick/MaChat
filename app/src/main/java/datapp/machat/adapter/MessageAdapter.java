@@ -251,6 +251,7 @@ public class MessageAdapter extends ArrayAdapter<ParseObject> {
                 e.printStackTrace();
             }
         } else if(messageType.equals("emoji")){
+            typeWrapper = messageHolder.emojiWrapper;
             Glide.with(mContext)
                     .load(message.getString("content"))
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)

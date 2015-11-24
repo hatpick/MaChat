@@ -373,7 +373,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         emojiAdapter = new EmojiAdapter(this, emojiList);
 
         emojiView = (RecyclerView) findViewById(R.id.emojis_view);
-        mLayoutManager = new StaggeredGridLayoutManager(10, StaggeredGridLayoutManager.VERTICAL);
+        mLayoutManager = new StaggeredGridLayoutManager(12, StaggeredGridLayoutManager.VERTICAL);
         emojiView.setItemAnimator(new ScaleInAnimator(new OvershootInterpolator(1f)));
         emojiView.getItemAnimator().setAddDuration(400);
         emojiView.setHasFixedSize(true);
@@ -389,6 +389,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         setTouchNClick(R.id.buzz_btn);
         setTouchNClick(R.id.new_message_content);
         setTouchNClick(R.id.record_void_btn);
+        setTouchNClick(R.id.emoji_btn);
 
         loading.setVisibility(View.VISIBLE);
 
@@ -702,74 +703,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
             sendMessage(receiver, "buzz", "BUZZ", null, null);
         } else if(v.getId() == R.id.emoji_btn) {
             _fetchEmojis();
-            final View mRevealView = findViewById(R.id.emojis_holder);
-            int cx = (mRevealView.getLeft() + mRevealView.getRight());
-            int cy = mRevealView.getTop();
-
-            int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
-
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-
-
-                SupportAnimator animator =
-                        io.codetail.animation.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
-                animator.setInterpolator(new AccelerateDecelerateInterpolator());
-                animator.setDuration(700);
-
-                SupportAnimator animator_reverse = animator.reverse();
-
-                if (hidden) {
-                    mRevealView.setVisibility(View.VISIBLE);
-                    animator.start();
-                    hidden = false;
-                } else {
-                    animator_reverse.addListener(new SupportAnimator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart() {
-
-                        }
-
-                        @Override
-                        public void onAnimationEnd() {
-                            mRevealView.setVisibility(View.INVISIBLE);
-                            hidden = true;
-
-                        }
-
-                        @Override
-                        public void onAnimationCancel() {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat() {
-
-                        }
-                    });
-                    animator_reverse.start();
-
-                }
-            } else {
-                if (hidden) {
-                    Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
-                    mRevealView.setVisibility(View.VISIBLE);
-                    anim.start();
-                    hidden = false;
-
-                } else {
-                    Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, radius, 0);
-                    anim.addListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-                            mRevealView.setVisibility(View.INVISIBLE);
-                            hidden = true;
-                        }
-                    });
-                    anim.start();
-
-                }
-            }
+            toggleEmojiHolder();
         } else if (v.getId() == R.id.record_void_btn) {
             final AlertDialogPro.Builder alert = new AlertDialogPro.Builder(ChatActivity.this);
             LayoutInflater factory = LayoutInflater.from(ChatActivity.this);
@@ -859,7 +793,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> list, ParseException e) {
-                if(e == null) {
+                if (e == null) {
                     for (int i = 0; i < list.size(); i++) {
                         ParseObject em = list.get(i);
                         emojiAdapter.add(em, i);
@@ -870,6 +804,77 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
                 }
             }
         });
+    }
+
+    public void toggleEmojiHolder() {
+        final View mRevealView = findViewById(R.id.emojis_holder);
+        int cx = mRevealView.getLeft();
+        int cy = mRevealView.getTop();
+
+        int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+
+
+            SupportAnimator animator =
+                    io.codetail.animation.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+            animator.setInterpolator(new AccelerateDecelerateInterpolator());
+            animator.setDuration(700);
+
+            SupportAnimator animator_reverse = animator.reverse();
+
+            if (hidden) {
+                mRevealView.setVisibility(View.VISIBLE);
+                animator.start();
+                hidden = false;
+            } else {
+                animator_reverse.addListener(new SupportAnimator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart() {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd() {
+                        mRevealView.setVisibility(View.INVISIBLE);
+                        hidden = true;
+
+                    }
+
+                    @Override
+                    public void onAnimationCancel() {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat() {
+
+                    }
+                });
+                animator_reverse.start();
+
+            }
+        } else {
+            if (hidden) {
+                Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+                mRevealView.setVisibility(View.VISIBLE);
+                anim.start();
+                hidden = false;
+
+            } else {
+                Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, radius, 0);
+                anim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        mRevealView.setVisibility(View.INVISIBLE);
+                        hidden = true;
+                    }
+                });
+                anim.start();
+
+            }
+        }
     }
 
     private Bitmap decodeFile(File f, int scale) {

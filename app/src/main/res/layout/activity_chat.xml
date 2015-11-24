@@ -90,8 +90,8 @@
                             android:imeActionId="100"
                             android:ems="10"
                             android:layout_width="match_parent"
-                            android:layout_marginRight="70dp"
-                            android:layout_marginLeft="35dp"
+                            android:layout_marginRight="60dp"
+                            android:layout_marginLeft="30dp"
                             android:hint="@string/type_msg"
                             android:layout_height="30dp"/>
                         <Button
@@ -103,7 +103,7 @@
                             android:background="@mipmap/ic_buzz"
                             android:minHeight="1dp"
                             android:minWidth="1dp"
-                            android:layout_marginRight="40dp"
+                            android:layout_marginRight="30dp"
                             android:layout_width="30dp"
                             android:layout_height="30dp" />
                         <FrameLayout
@@ -143,7 +143,7 @@
             android:layout_width="match_parent"
             android:layout_height="150dp">
             <android.support.v7.widget.RecyclerView
-                android:padding="5dp"
+                android:padding="1dp"
                 android:background="@android:color/transparent"
                 android:gravity="center"
                 android:id="@+id/emojis_view"

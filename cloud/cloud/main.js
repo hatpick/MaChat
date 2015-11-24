@@ -205,6 +205,9 @@ Parse.Cloud.define("sendPushMessage", function(request, response) {
         case "buzz":
         suffixMsg = " just BUZZed you!"
         break;
+        case "emoji":
+        suffixMsg = " has sent you an EMOJI!"
+        break;
     }
  
     var pushQuery = new Parse.Query(Parse.Installation);

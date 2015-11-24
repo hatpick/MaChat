@@ -53,8 +53,8 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.EmojiHolder>
         display.getSize(size);
         int width = size.x;
 
-        int totalMargin = (int) SizeHelper.convertDpToPixel(10.0f, mContext);
-        imageWidth = (width - totalMargin)/10;
+        int totalMargin = (int) SizeHelper.convertDpToPixel(4.0f, mContext);
+        imageWidth = (width - totalMargin)/12;
     }
 
     @Override
@@ -67,6 +67,7 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.EmojiHolder>
                 final ParseObject selectedEmoji = dataList.get(position);
                 //Do shit with it
                 activity.sendMessage(activity.getReceiver(), "emoji", selectedEmoji.getParseFile("emoji").getUrl(), null, null);
+                activity.toggleEmojiHolder();
             }
         });
 
