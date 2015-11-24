@@ -23,6 +23,7 @@ import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -44,6 +45,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.BounceInterpolator;
@@ -120,6 +122,7 @@ import datapp.machat.helper.LocationHelper;
 import datapp.machat.helper.MyProfilePictureView;
 import datapp.machat.helper.SendNotification;
 import datapp.machat.helper.SizeHelper;
+import io.codetail.animation.SupportAnimator;
 import jp.co.recruit_lifestyle.android.widget.WaveSwipeRefreshLayout;
 import jp.wasabeef.recyclerview.animators.ScaleInAnimator;
 
@@ -315,6 +318,8 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         sessionDetails = this.getSharedPreferences("sessionDetails", MODE_PRIVATE);
         sessionEditor = sessionDetails.edit();
 
+        findViewById(R.id.emojis_holder).setVisibility(View.INVISIBLE);
+
         sender = ParseUser.getCurrentUser();
 
         messageEditText = (EditText) findViewById(R.id.new_message_content);
@@ -447,54 +452,7 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         }
     };
 
-    void enterReveal() {
-        // previously invisible view
-        _fetchEmojis();
-        final View myView = findViewById(R.id.emojis_holder);
-
-        // get the center for the clipping circle
-        int cx = myView.getMeasuredWidth() / 2;
-        int cy = myView.getMeasuredHeight() / 2;
-
-        // get the final radius for the clipping circle
-        int finalRadius = Math.max(myView.getWidth(), myView.getHeight()) / 2;
-
-        // create the animator for this view (the start radius is zero)
-        Animator anim =
-                ViewAnimationUtils.createCircularReveal(myView, cx, cy, 0, finalRadius);
-
-        // make the view visible and start the animation
-        myView.setVisibility(View.VISIBLE);
-        anim.start();
-    }
-
-    void exitReveal() {
-        // previously visible view
-        final View myView = findViewById(R.id.emojis_holder);
-
-        // get the center for the clipping circle
-        int cx = myView.getMeasuredWidth() / 2;
-        int cy = myView.getMeasuredHeight() / 2;
-
-        // get the initial radius for the clipping circle
-        int initialRadius = myView.getWidth() / 2;
-
-        // create the animation (the final radius is zero)
-        Animator anim =
-                ViewAnimationUtils.createCircularReveal(myView, cx, cy, initialRadius, 0);
-
-        // make the view invisible when the animation is done
-        anim.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                myView.setVisibility(View.INVISIBLE);
-            }
-        });
-
-        // start the animation
-        anim.start();
-    }
+    private boolean hidden = true;
 
     private int getRefreshColor() {
         BitmapDrawable bg = (BitmapDrawable) getWindow().getDecorView().getBackground();
@@ -743,10 +701,74 @@ public class ChatActivity extends CustomActivity implements SensorEventListener,
         } else if(v.getId() == R.id.buzz_btn) {
             sendMessage(receiver, "buzz", "BUZZ", null, null);
         } else if(v.getId() == R.id.emoji_btn) {
-            if(findViewById(R.id.emojis_holder).getVisibility() == View.INVISIBLE)
-                enterReveal();
-            else
-                exitReveal();
+            final View mRevealView = findViewById(R.id.emojis_holder);
+            int cx = (mRevealView.getLeft() + mRevealView.getRight());
+            int cy = mRevealView.getTop();
+
+            int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+
+
+                SupportAnimator animator =
+                        io.codetail.animation.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+                animator.setInterpolator(new AccelerateDecelerateInterpolator());
+                animator.setDuration(800);
+
+                SupportAnimator animator_reverse = animator.reverse();
+
+                if (hidden) {
+                    mRevealView.setVisibility(View.VISIBLE);
+                    animator.start();
+                    hidden = false;
+                } else {
+                    animator_reverse.addListener(new SupportAnimator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart() {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd() {
+                            mRevealView.setVisibility(View.INVISIBLE);
+                            hidden = true;
+
+                        }
+
+                        @Override
+                        public void onAnimationCancel() {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat() {
+
+                        }
+                    });
+                    animator_reverse.start();
+
+                }
+            } else {
+                if (hidden) {
+                    Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+                    mRevealView.setVisibility(View.VISIBLE);
+                    anim.start();
+                    hidden = false;
+
+                } else {
+                    Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, radius, 0);
+                    anim.addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+                            mRevealView.setVisibility(View.INVISIBLE);
+                            hidden = true;
+                        }
+                    });
+                    anim.start();
+
+                }
+            }
         } else if (v.getId() == R.id.record_void_btn) {
             final AlertDialogPro.Builder alert = new AlertDialogPro.Builder(ChatActivity.this);
             LayoutInflater factory = LayoutInflater.from(ChatActivity.this);

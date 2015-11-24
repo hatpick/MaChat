@@ -73,7 +73,6 @@
                             android:background="@mipmap/ic_emoji"
                             android:minHeight="1dp"
                             android:minWidth="1dp"
-                            android:layout_marginRight="40dp"
                             android:layout_width="30dp"
                             android:layout_height="30dp" />
                         <EditText
@@ -137,7 +136,6 @@
             </FrameLayout>
         </LinearLayout>
         <FrameLayout
-            android:visibility="invisible"
             android:id="@+id/emojis_holder"
             android:background="#80000000"
             android:layout_marginBottom="@dimen/pad_40dp"
