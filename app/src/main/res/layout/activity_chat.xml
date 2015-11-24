@@ -85,8 +85,8 @@
                             android:id="@+id/new_message_content"
                             android:inputType="textAutoComplete|textLongMessage"
                             android:textSize="@dimen/txt_16sp"
-                            android:paddingLeft="@dimen/pad_10dp"
-                            android:paddingRight="@dimen/pad_10dp"
+                            android:paddingLeft="@dimen/pad_5dp"
+                            android:paddingRight="@dimen/pad_5dp"
                             android:imeActionId="100"
                             android:ems="10"
                             android:layout_width="match_parent"
@@ -103,7 +103,7 @@
                             android:background="@mipmap/ic_buzz"
                             android:minHeight="1dp"
                             android:minWidth="1dp"
-                            android:layout_marginRight="30dp"
+                            android:layout_marginRight="35dp"
                             android:layout_width="30dp"
                             android:layout_height="30dp" />
                         <FrameLayout
