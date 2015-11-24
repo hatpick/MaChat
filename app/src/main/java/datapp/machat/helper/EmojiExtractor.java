@@ -22,6 +22,7 @@ public class EmojiExtractor {
         TextIndex ti;
 
         while (matcher.find()) {
+            if(matcher.end() - matcher.start() == 1) continue;
             anyEmoji = true;
             if (matcher.start() != i) {
                 ti = new TextIndex(i, matcher.start() - 1, false);
